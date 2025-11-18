@@ -1,0 +1,711 @@
+import 'package:flutter/material.dart';
+
+import 'package:provider/provider.dart';
+import 'package:truenorthflutterfrontend/user_screens/task_detail_screen.dart';
+import 'package:truenorthflutterfrontend/usersProvider/user_dashboard_provider.dart';
+import 'package:truenorthflutterfrontend/utils/size_config.dart';
+
+
+class ProjectDetails extends StatefulWidget {
+  const ProjectDetails({super.key});
+
+  @override
+  State<ProjectDetails> createState() => _MyProjectDetailsUI();
+}
+
+class _MyProjectDetailsUI extends State<ProjectDetails> {
+  List<dynamic> downloadItem = <dynamic>[
+    {
+      "image": "./assets/font/download1.png",
+
+      "projectName": "Map of E diagram",
+      "size": "1.5MB Download",
+    },
+
+    {
+      "projectName": "Card Board logo",
+      "size": "1.5MB Download",
+      "image": "./assets/font/download2.png",
+    },
+    {
+      "projectName": "Contour map",
+      "size": "1.5MB Download",
+      "image": "./assets/font/item.png",
+    },
+    {
+      "projectName": "safe file.pdf",
+      "size": "1.5MB Download",
+      "image": "./assets/font/download1.png",
+    },
+    {
+      "projectName": "L section pdf",
+      "size": "1.5MB Download",
+      "image": "./assets/font/download1.png",
+    },
+  ];
+  List<dynamic> taskItem = <dynamic>[
+    {
+      "projectCode": "TNP01",
+      "projectName": "Endward Thomas  map and  geolocation",
+      "date": "1-1-2025",
+      "time": "10:15 AM",
+      "description": "Site preparation and garden layout.",
+      "remainingDays": "5 day left",
+      "progress report": "1",
+      "totalTask": "10",
+      "completeTask": "2",
+    },
+    {
+      "projectCode": "TNP02",
+      "projectName": "Edward Thomas",
+      "date": "1-1-2025",
+      "time": "10:15 AM",
+      "description": "Site preparation and garden layout.",
+      "remainingDays": "5 day left",
+      "progress report": "1",
+      "totalTask": "10",
+      "completeTask": "2",
+    },
+    {
+      "projectCode": "TNP03",
+
+      "projectName": "Edward Thomas",
+      "date": "1-1-2025",
+      "time": "10:15 AM",
+      "description": "Site preparation and garden layout.",
+      "remainingDays": "5 day left",
+      "progress report": "1",
+      "totalTask": "10",
+      "completeTask": "2",
+    },
+    {
+      "projectCode": "TNP04",
+      "projectName": "Edward Thomas",
+      "date": "1-1-2025",
+      "time": "10:15 AM",
+      "description": "Site preparation and garden layout.",
+      "remainingDays": "5 day left",
+      "progress report": "1",
+      "totalTask": "10",
+      "completeTask": "2",
+    },
+  ];
+  List<dynamic> pendingTask = <dynamic>[
+    {
+      "projectCode": "TNP01",
+      "projectName": "Endward Thomas  map and  geolocation",
+      "date": "1-1-2025",
+      "time": "10:15 AM",
+      "description": "Site preparation and garden layout.",
+      "remainingDays": "5 day left",
+      "progress report": "1",
+      "totalTask": "10",
+      "completeTask": "2",
+      "status":"pending",
+    },
+    {
+      "projectCode": "TNP02",
+      "projectName": "Edward Thomas",
+      "date": "1-1-2025",
+      "time": "10:15 AM",
+      "description": "Site preparation and garden layout.",
+      "remainingDays": "5 day left",
+      "progress report": "1",
+      "totalTask": "10",
+      "completeTask": "2",
+      "status":"pending",
+    },
+    
+  ];
+  List<dynamic> completedTask = <dynamic>[
+    {
+      "projectCode": "TNP01",
+      "projectName": "Endward Thomas  map and  geolocation",
+      "date": "1-1-2025",
+      "time": "10:15 AM",
+      "description": "Site preparation and garden layout.",
+      "remainingDays": "5 day left",
+      "progress report": "1",
+      "totalTask": "10",
+      "completeTask": "2",
+      
+    },
+  ];
+  @override
+  Widget build(BuildContext context) {
+    Provider.of<UserDashboardProvider>(context, listen: false);
+    return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+      body: Center(
+        child: SafeArea(
+          child: Column(
+            children: [
+              Container(
+                height: SizeConFig.screenHeight * 25 / 100,
+                width: SizeConFig.screenWidth * 95 / 100,
+                decoration: BoxDecoration(
+                  // color: const Color.fromARGB(255, 179, 223, 232),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: SizeConFig.screenHeight * 3 / 100),
+                    Text(
+                      "Aastha rani pura survey",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        fontStyle: FontStyle.normal,
+                      ),
+                    ),
+
+                    SizedBox(height: SizeConFig.screenHeight * 3 / 100),
+                    Container(
+                      height: SizeConFig.screenHeight * 15 / 100,
+                      width: SizeConFig.screenWidth * 46 / 100,
+                      decoration: BoxDecoration(
+                        //      color:const Color.fromARGB(255, 232, 229, 179)
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Icon(Icons.add_alert, size: 20.0),
+                                  SizedBox(
+                                    width: SizeConFig.screenWidth * 2 / 100,
+                                  ),
+                                  customText("status"),
+                                ],
+                              ),
+
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  Icon(
+                                    Icons.shape_line,
+                                    size: 20.0,
+                                  ),
+                                  SizedBox(
+                                    width: SizeConFig.screenWidth * 2 / 100,
+                                  ),
+                                  customText("progress"),
+                                ],
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: SizeConFig.screenHeight * 3 / 100),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              customText("Due date"),
+                              Text(
+                                "4-march-2025",
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: SizeConFig.screenHeight * 3 / 100),
+
+                          Row(
+                            children: [
+                              Icon(Icons.disc_full, size: 20.0),
+                              SizedBox(width: SizeConFig.screenWidth * 2 / 100),
+                              customText("Description"),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                height: SizeConFig.screenHeight * 8 / 100,
+                width: SizeConFig.screenWidth * 95 / 100,
+                decoration: BoxDecoration(
+                  color: const Color.fromARGB(255, 255, 252, 252),
+                  border: Border.all(width: 0.5),
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                ),
+
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    "The vision of given project as we already work on that project",
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
+                  ),
+                ),
+              ),
+              SizedBox(height: SizeConFig.screenHeight * 1 / 100),
+              Padding(
+                padding: const EdgeInsets.all(5.0),
+                child: Row(
+                  children: [
+                    Icon(Icons.download, size: 20.0),
+                    SizedBox(width: SizeConFig.screenWidth * 2 / 100),
+                    customText("Downlaod All "),
+                  ],
+                ),
+              ),
+              SizedBox(height: SizeConFig.screenHeight * 1 / 100),
+
+              Container(
+                decoration: BoxDecoration(
+                  // color:Colors.red
+                ),
+                height: SizeConFig.screenHeight * 7 / 100,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemBuilder: (context, index) {
+                    return Container(
+                      width: SizeConFig.screenWidth * 40 / 100,
+                      decoration: BoxDecoration(
+                        // color: const Color.fromARGB(255, 214, 210, 210),
+                        border: Border.all(width: 0.5),
+                        borderRadius: BorderRadius.all(Radius.circular(6)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Container(
+                            height: SizeConFig.screenHeight * 3 / 100,
+                            width: SizeConFig.screenWidth * 5 / 100,
+                            // color:Colors.amber,
+                            decoration: BoxDecoration(
+                              image: DecorationImage(
+                                image: AssetImage(downloadItem[index]["image"]),
+
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                downloadItem[index]["projectName"],
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Text(
+                                downloadItem[index]["size"],
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w300,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  separatorBuilder:
+                      (context, index) =>
+                          SizedBox(width: SizeConFig.screenWidth * 6 / 100),
+                  itemCount: downloadItem.length,
+                ),
+              ),
+
+              SizedBox(height: SizeConFig.screenHeight * 3 / 100),
+              Consumer<UserDashboardProvider>(
+                builder: (context, update, child) {
+                  return Container(
+                    height: SizeConFig.screenHeight * 25 / 100,
+                    width: SizeConFig.screenWidth * 95 / 100,
+                    decoration: BoxDecoration(
+                      // color: const Color.fromARGB(255, 179, 223, 232),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              children: [
+                                customButtom("New Task", 0),
+                                SizedBox(
+                                  height: SizeConFig.screenHeight * 1 / 100,
+                                ),
+                                customLine(0),
+                              ],
+                            ),
+                            Column(
+                              children: [
+                                customButtom("Pending Task", 1),
+                                SizedBox(
+                                  height: SizeConFig.screenHeight * 1 / 100,
+                                ),
+                                customLine(1),
+                              ],
+                            ),
+                            Column(
+                              children: [
+                                customButtom("Completed Task", 2),
+                                SizedBox(
+                                  height: SizeConFig.screenHeight * 1 / 100,
+                                ),
+                                customLine(2),
+                              ],
+                            ),
+                          ],
+                        ),
+                        //   SizedBox(height: SizeConFig.screenHeight * 1 / 100),
+                        // Row(
+                        //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        //   children: [
+                        //     // customLine(0),
+                        //     // customLine(1),
+                        //     // customLine(2),
+                        //   ],
+                        // ),
+                        SizedBox(height: SizeConFig.screenHeight * 1 / 100),
+                        Consumer<UserDashboardProvider>(
+                          builder: (context, val1, child) {
+                            if (val1.initailCount == 0) {
+                              return Expanded(
+                                child: ListView.separated(
+                                  itemCount: taskItem.length,
+                                  separatorBuilder:
+                                      (context, index) => SizedBox(height: 10),
+                                  scrollDirection: Axis.vertical,
+
+                                  itemBuilder: (context, index) {
+                                    return GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (context) => TaskDetailScreen(),
+                                          ),
+                                        );
+                                        // ShowTaostMessage.toastMessage(
+                                        //   context,
+                                        //   "project details",
+                                        // );
+                                      },
+                                      child: Column(
+                                        children: [
+                                          Container(
+                                            height:
+                                                SizeConFig.screenHeight *
+                                                5 /
+                                                100,
+                                            width:
+                                                SizeConFig.screenWidth *
+                                                92 /
+                                                100,
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.all(
+                                                Radius.circular(20),
+                                              ),
+                                              color: const Color.fromARGB(
+                                                255,
+                                                254,
+                                                253,
+                                                253,
+                                              ),
+                                              border: Border.all(
+                                                color: const Color.fromARGB(
+                                                  255,
+                                                  245,
+                                                  244,
+                                                  244,
+                                                ),
+                                                width: 2,
+                                                style: BorderStyle.values[1],
+                                              ),
+                                            ),
+                                            child: Row(
+                                              //  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                              children: [
+                                                customWidget(
+                                                  taskItem[index]["projectCode"],
+                                                ),
+
+                                                customWidget(
+                                                  taskItem[index]["projectName"],
+                                                ),
+                                                SizedBox(
+                                                  height:
+                                                      SizeConFig.screenHeight *
+                                                      1 /
+                                                      100,
+                                                ),
+                                                customWidget(
+                                                  taskItem[index]["date"],
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                              );
+                            }
+                            if (val1.initailCount == 1) {
+                             return Expanded(
+                                child: ListView.separated(
+                                  itemCount: pendingTask.length,
+                                  separatorBuilder:
+                                      (context, index) => SizedBox(height: 10),
+                                  scrollDirection: Axis.vertical,
+
+                                  itemBuilder: (context, index) {
+                                    return GestureDetector(
+                                      onTap: () {
+                                       Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (context) => TaskDetailScreen(),
+                                          ),
+                                        );
+                                        // ShowTaostMessage.toastMessage(
+                                        //   context,
+                                        //   "project details",
+                                        // );
+                                      },
+                                      child: Column(
+                                        children: [
+                                          Container(
+                                            height:
+                                                SizeConFig.screenHeight *
+                                                5 /
+                                                100,
+                                            width:
+                                                SizeConFig.screenWidth *
+                                                92 /
+                                                100,
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.all(
+                                                Radius.circular(20),
+                                              ),
+                                              color: const Color.fromARGB(
+                                                255,
+                                                254,
+                                                253,
+                                                253,
+                                              ),
+                                              border: Border.all(
+                                                color: const Color.fromARGB(
+                                                  255,
+                                                  245,
+                                                  244,
+                                                  244,
+                                                ),
+                                                width: 2,
+                                                style: BorderStyle.values[1],
+                                              ),
+                                            ),
+                                            child: Row(
+                                              //  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                              children: [
+                                                customWidget(
+                                                  taskItem[index]["projectCode"],
+                                                ),
+
+                                                customWidget(
+                                                  taskItem[index]["projectName"],
+                                                ),
+                                                SizedBox(
+                                                  height:
+                                                      SizeConFig.screenHeight *
+                                                      1 /
+                                                      100,
+                                                ),
+                                                customWidget(
+                                                  taskItem[index]["date"],
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                              );
+                            }
+                            if(val1.initailCount==2)
+                            {
+                              return Expanded(
+                                child: ListView.separated(
+                                  itemCount: completedTask.length,
+                                  separatorBuilder:
+                                      (context, index) => SizedBox(height: 10),
+                                  scrollDirection: Axis.vertical,
+
+                                  itemBuilder: (context, index) {
+                                    return GestureDetector(
+                                      onTap: () {
+                                         Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (context) => TaskDetailScreen(),
+                                          ),
+                                        );
+                                        // ShowTaostMessage.toastMessage(
+                                        //   context,
+                                        //   "project details",
+                                        // );
+                                      },
+                                      child: Column(
+                                        children: [
+                                          Container(
+                                            height:
+                                                SizeConFig.screenHeight *
+                                                5 /
+                                                100,
+                                            width:
+                                                SizeConFig.screenWidth *
+                                                92 /
+                                                100,
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.all(
+                                                Radius.circular(20),
+                                              ),
+                                              color: const Color.fromARGB(
+                                                255,
+                                                254,
+                                                253,
+                                                253,
+                                              ),
+                                              border: Border.all(
+                                                color: const Color.fromARGB(
+                                                  255,
+                                                  245,
+                                                  244,
+                                                  244,
+                                                ),
+                                                width: 2,
+                                                style: BorderStyle.values[1],
+                                              ),
+                                            ),
+                                            child: Row(
+                                              //  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                              children: [
+                                                customWidget(
+                                                  taskItem[index]["projectCode"],
+                                                ),
+
+                                                customWidget(
+                                                  taskItem[index]["projectName"],
+                                                ),
+                                                SizedBox(
+                                                  height:
+                                                      SizeConFig.screenHeight *
+                                                      1 /
+                                                      100,
+                                                ),
+                                                customWidget(
+                                                  taskItem[index]["date"],
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                              );
+                            }
+                            return Container();
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget customText(String textName) {
+    return Text(
+      textName,
+      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+    );
+  }
+
+  Widget customButtom(String name, int i) {
+    final updateStatus = Provider.of<UserDashboardProvider>(context);
+    bool isSelected = updateStatus.initailCount == i;
+
+    return SizedBox(
+      width: SizeConFig.screenWidth * 25 / 100,
+      child: Center(
+        child: GestureDetector(
+          onTap: () {
+            updateStatus.chanageListview(i);
+            //print(i);
+          },
+          child: Text(
+            name,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: isSelected ? Colors.green : Colors.black,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget customLine(int i) {
+    final update2 = Provider.of<UserDashboardProvider>(context);
+    bool isSelected2 = update2.initailCount == i;
+    return isSelected2
+        ? Container(
+          height: SizeConFig.screenHeight * 0.5 / 100,
+          width: SizeConFig.screenWidth * 25 / 100,
+          decoration: BoxDecoration(
+            color: isSelected2 ? Colors.green : Colors.red,
+          ),
+        )
+        : Container();
+  }
+
+  Widget customWidget(projectItem) {
+    return Padding(
+      padding: const EdgeInsets.all(0.0),
+      child: SizedBox(
+        // color:Colors.red,
+        width: SizeConFig.screenWidth * 25 / 100,
+        child: Text(
+          projectItem,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          softWrap: false,
+          style: TextStyle(
+            color: const Color.fromARGB(255, 164, 172, 171),
+            fontWeight: FontWeight.bold,
+            fontSize: 11.0,
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -1,0 +1,16 @@
+val url = "https://gist.github.com/trueNorthDeveloper/c9d91e97283633a0cf102ad349f771ce#file-api-config-json"
+
+val client = OkHttpClient()
+val request = Request.Builder().url(url).build()
+
+client.newCall(request).enqueue(object : Callback {
+    override fun onResponse(call: Call, response: Response) {
+        val json = JSONObject(response.body!!.string())
+        val baseUrl = json.getString("base_url")
+        // Use baseUrl dynamically for API calls
+    }
+
+    override fun onFailure(call: Call, e: IOException) {
+        e.printStackTrace()
+    }
+})

@@ -1,0 +1,498 @@
+ String title="";
+
+Future<void> sendSurvey() async {
+  final url = Uri.parse('http://192.168.1.30:8585/api/v1/surveys/jpa');
+
+  final headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Basic ' + base64Encode(utf8.encode('admin:admin123')),
+  };
+
+  final body = jsonEncode({
+    "title": "hey how are hii",
+    "description": "new aoi reques",
+    "location": "device api  mobile",
+  });
+
+  try {
+    final response = await http.post(url, headers: headers, body: body);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+         final responseData = jsonDecode(response.body);
+    final id = responseData['id'];
+
+    setState(() {
+          final title = responseData['new tittle'];
+    });
+    final desc = responseData['description'];
+    final location = responseData['location'];
+      print('✅ Success: ${response.body}');
+    } else {
+      print('❌ Failed: ${response.statusCode} - ${response.body}');
+    }
+  } catch (e) {
+    print('⚠️ Error: $e');
+  }
+}
+///////
+// THIA IS OLD CODE---------------------------------------------------------------------------------------------------------------//
+                              // Container(
+                              //   width: double.infinity,
+                              //   height: 200,
+                              //   decoration: BoxDecoration(
+                              //     color: Colors.grey[300],
+                              //     borderRadius: BorderRadius.circular(10),
+                              //     border: Border.all(color: Colors.grey),
+                              //   ),
+                              //   child: Center(
+                              //       child: Column(
+                              //     children: [
+                              //       ElevatedButton.icon(
+                              //         onPressed: () {},
+                              //         icon: Icon(Icons.image),
+                              //         label: Text('Select Image from Gallery'),
+                              //         style: ElevatedButton.styleFrom(
+                              //           backgroundColor: Colors.blue,
+                              //           foregroundColor: Colors.white,
+                              //           //minimumSize: Size(double.infinity, 50),
+                              //         ),
+                              //       ),
+                              //       ElevatedButton.icon(
+                              //         onPressed: () {},
+                              //         icon: Icon(Icons.image),
+                              //         label: Text('Click and drop your file '),
+                              //         style: ElevatedButton.styleFrom(
+                              //           backgroundColor: Colors.blue,
+                              //           foregroundColor: Colors.white,
+                              //           //minimumSize: Size(double.infinity, 50),
+                              //         ),
+                              //       ),
+                              //     ],
+                              //   )),
+                              // ),
+                              // Padding(
+                              //   padding: const EdgeInsets.only(left: 30),
+                              //   child: SizedBox(
+                              //     width: SizeConFig.screenWidth * 70 / 100,
+                              //     child: Row(
+                              //       mainAxisAlignment:
+                              //           MainAxisAlignment.spaceBetween,
+                              //       children: [
+                              //         Column(
+                              //           children: [
+                              //             customButtomD("Comment", 0),
+                              //             SizedBox(
+                              //               height: SizeConFig.screenHeight *
+                              //                   1 /
+                              //                   100,
+                              //             ),
+                              //             customLineD(0),
+                              //           ],
+                              //         ),
+                              //         Column(
+                              //           children: [
+                              //             customButtomD("Submit task", 1),
+                              //             SizedBox(
+                              //               height: SizeConFig.screenHeight *
+                              //                   1 /
+                              //                   100,
+                              //             ),
+                              //             customLineD(1),
+                              //           ],
+                              //         ),
+
+                              //       ],
+                              //     ),
+                              //   ),
+                              // ),
+                              // SizedBox(
+                              //     height: SizeConFig.screenHeight * 2 / 100),
+                              // Consumer<UserDashboardProvider>(
+                              //   builder: (context, ch1, child) {
+                              //     if (ch1.intchangeColorInTaskDetail == 0) {
+                              //       return Stack(
+                              //         children: [
+                              //           Positioned(
+                              //             child: Container(
+                              //               height: SizeConFig.screenHeight *
+                              //                   10 /
+                              //                   100,
+                              //               decoration: BoxDecoration(
+                              //                 color: const Color.fromARGB(
+                              //                   255,
+                              //                   244,
+                              //                   243,
+                              //                   243,
+                              //                 ),
+                              //               ),
+                              //               child: TextField(
+                              //                 decoration: InputDecoration(
+                              //                   hintText:
+                              //                       "Add a comment........",
+                              //                   hintStyle: TextStyle(
+                              //                     color: Colors.blueGrey,
+                              //                     fontSize: 14,
+                              //                     fontWeight: FontWeight.w500,
+                              //                   ),
+                              //                   border: OutlineInputBorder(
+                              //                     borderSide: BorderSide.none,
+                              //                     //  borderSide:BorderSide(color:const Color.fromARGB(255, 22, 80, 70)),
+                              //                     borderRadius:
+                              //                         BorderRadius.all(
+                              //                       Radius.circular(10),
+                              //                     ),
+                              //                   ),
+                              //                 ),
+                              //               ),
+                              //             ),
+                              //           ),
+                              //           Positioned(
+                              //             left: 250,
+                              //             top: 30,
+                              //             child: Row(
+                              //               children: [
+                              //                 ElevatedButton(
+                              //                   onPressed: () {
+                              //                     // print("comment");
+                              //                   },
+                              //                   child: Center(
+                              //                       child: Text("Comment")),
+                              //                 ),
+                              //               ],
+                              //             ),
+                              //           ),
+                              //         ],
+                              //       );
+                              //     }
+                              //     return Stack(
+                              //       children: [
+                              //         Positioned(
+                              //           child: Container(
+                              //             height: SizeConFig.screenHeight *
+                              //                 10 /
+                              //                 100,
+                              //             decoration: BoxDecoration(
+                              //               color: const Color.fromARGB(
+                              //                 255,
+                              //                 244,
+                              //                 243,
+                              //                 243,
+                              //               ),
+                              //             ),
+                              //             child: TextField(
+                              //               controller: message,
+                              //               decoration: InputDecoration(
+                              //                 hintText: "Submit task...",
+                              //                 hintStyle: TextStyle(
+                              //                   color: Colors.blueGrey,
+                              //                   fontSize: 14,
+                              //                   fontWeight: FontWeight.w500,
+                              //                 ),
+                              //                 border: OutlineInputBorder(
+                              //                   borderSide: BorderSide.none,
+                              //                   //  borderSide:BorderSide(color:const Color.fromARGB(255, 22, 80, 70)),
+                              //                   borderRadius: BorderRadius.all(
+                              //                     Radius.circular(10),
+                              //                   ),
+                              //                 ),
+                              //               ),
+                              //             ),
+                              //           ),
+                              //         ),
+                              //         // Positioned(
+                              //         //   left: 220,
+                              //         //   top: 30,
+                              //         //   child: Row(
+                              //         //     mainAxisAlignment:
+                              //         //         MainAxisAlignment.spaceEvenly,
+                              //         //     children: [
+                              //         //       Icon(Icons.picture_as_pdf),
+                              //         //       Icon(Icons.image),
+                              //         //       Consumer<UserProjectProvider>(
+                              //         //         builder: (context, value, child) {
+                              //         //           return value.isSubmitTask == false
+                              //         //               ? ElevatedButton(
+                              //         //                   onPressed: () async {
+                              //         //                     final prefs =
+                              //         //                         await SharedPreferences
+                              //         //                             .getInstance();
+                              //         //                     final uuid =
+                              //         //                         prefs.getInt("uuid");
+                              //         //                     int taskId =
+                              //         //                         widget.task.taskId;
+                              //         //                     int taskSubitId = uuid!;
+                              //         //                     int taskSubmitbyId = 2;
+
+                              //         //                     TaskSubmit obj = TaskSubmit(
+                              //         //                         message:
+                              //         //                             message.text.trim(),
+                              //         //                         taskId: taskId,
+                              //         //                         submittedById:
+                              //         //                             taskSubitId,
+                              //         //                         submittedToId:
+                              //         //                             taskSubmitbyId);
+                              //         //                     value.submitTask(
+                              //         //                         obj.toJson());
+                              //         //                   },
+                              //         //                   child: Center(
+                              //         //                       child: Text("submit")),
+                              //         //                 )
+                              //         //               : Center(
+                              //         //                   child:
+                              //         //                       CircularProgressIndicator(),
+                              //         //                 );
+                              //         //         },
+                              //         //       ),
+                              //         //     ],
+                              //         //   ),
+                              //         // ),
+                              //       ],
+                              //     );
+                              //   },
+                              // ),
+                              // SizedBox(
+                              //   height: 20,
+                              // ),
+                              // Consumer<UserDashboardProvider>(
+                              //     builder: (context, value, child) {
+                              //   return value.intchangeColorInTaskDetail == 1
+                              //       ? Center(
+                              //           child: Consumer<UserProjectProvider>(
+                              //           builder: (context, value, child) {
+                              //             return value.isSubmitTask == false
+                              //                 ? AppButton(
+                              //                     text: "Submit Task",
+                              //                     onPressed: () async {
+                              //                       // final prefs =
+                              //                       //     await SharedPreferences
+                              //                       //         .getInstance();
+                              //                       // final uuid =
+                              //                       //     prefs.getInt("uuid");
+                              //                       // int taskId = widget.task.taskId;
+                              //                       // int taskSubitId = uuid!;
+                              //                       // int taskSubmitbyId = 2;
+
+                              //                       if (message.text.isEmpty) {
+                              //                         ShowTaostMessage
+                              //                             .toastMessage(context,
+                              //                                 "Add Task Report");
+
+                              //                         return;
+                              //                       }
+
+                              //                       // TaskSubmit obj = TaskSubmit(
+                              //                       //     message:
+                              //                       //         message.text.trim(),
+                              //                       //     taskId: taskId,
+                              //                       //     submittedById: taskSubitId,
+                              //                       //     submittedToId:
+                              //                       //         taskSubmitbyId);
+                              //                       // value.submitTask(obj.toJson());
+                              //                     },
+                              //                     buttonColor: Colors.blue,
+                              //                     borderRadius: 80,
+                              //                     elevation: 4,
+                              //                     padding: 12,
+                              //                     fontSize: 12,
+                              //                     textColor: Colors.white,
+                              //                     fontWeight: FontWeight.bold,
+                              //                     width: MediaQuery.of(context)
+                              //                             .size
+                              //                             .width *
+                              //                         0.8,
+                              //                     height: 40,
+                              //                     borderWidth: 0,
+                              //                   )
+                              //                 : Center(
+                              //                     child:
+                              //                         CircularProgressIndicator(),
+                              //                   );
+                              //           },
+                              //         ))
+                              //       : Center(
+                              //           child: Container(),
+                              //         );
+                              // })
+                              //--------------------------------------------------------
+                              // SizedBox(
+                              //     height: SizeConFig.screenHeight * 2 / 100),
+                              // Row(
+                              //   mainAxisAlignment:
+                              //       MainAxisAlignment.spaceEvenly,
+                              //   children: [
+                              //     Column(
+                              //       children: [
+                              //         customButtomD("Comment", 0),
+                              //         SizedBox(
+                              //           height:
+                              //               SizeConFig.screenHeight * 1 / 100,
+                              //         ),
+                              //         customLineD(0),
+                              //       ],
+                              //     ),
+                              //     Column(
+                              //       children: [
+                              //         customButtomD("Submit-Task", 1),
+                              //         SizedBox(
+                              //           height:
+                              //               SizeConFig.screenHeight * 1 / 100,
+                              //         ),
+                              //         customLineD(1),
+                              //       ],
+                              //     ),
+                              //   ],
+                              // ),
+                              //Here open  comment submit report/upload file......
+                              // SizedBox(
+                              //   height: SizeConFig.screenHeight * 1 / 100,
+                              // ),
+                              // Consumer<UserDashboardProvider>(
+                              //     builder: (context, ch1, child) {
+                              //   if (ch1.intchangeColorInTaskDetail == 0) {
+                              //     return Stack(children: [
+                              //       Positioned(
+                              //         child: Container(
+                              //           height:
+                              //               SizeConFig.screenHeight * 10 / 100,
+                              //           decoration: BoxDecoration(
+                              //             color: const Color.fromARGB(
+                              //               255,
+                              //               244,
+                              //               243,
+                              //               243,
+                              //             ),
+                              //           ),
+                              //           child: TextField(
+                              //             decoration: InputDecoration(
+                              //               hintText: "Add a comment........",
+                              //               hintStyle: TextStyle(
+                              //                 color: Colors.blueGrey,
+                              //                 fontSize: 14,
+                              //                 fontWeight: FontWeight.w500,
+                              //               ),
+                              //               border: OutlineInputBorder(
+                              //                 borderSide: BorderSide.none,
+                              //                 //  borderSide:BorderSide(color:const Color.fromARGB(255, 22, 80, 70)),
+                              //                 borderRadius: BorderRadius.all(
+                              //                   Radius.circular(10),
+                              //                 ),
+                              //               ),
+                              //             ),
+                              //           ),
+                              //         ),
+                              //       ),
+                              //     ]);
+                              //   }
+                              //   return Container();
+                              // }),
+
+                              ///SUBMIT TASK WITH FILE OR IMAGE AND PDF task.................................
+                              // Consumer<UserDashboardProvider>(
+                              //   builder: (context, value, child) {
+                              //     if (value.intchangeColorInTaskDetail == 1) {
+                              //       return Stack(
+                              //         children: [
+                              //           Positioned(
+                              //             child: Container(
+                              //               height: SizeConFig.screenHeight *
+                              //                   10 /
+                              //                   100,
+                              //               decoration: BoxDecoration(
+                              //                 color: const Color.fromARGB(
+                              //                   255,
+                              //                   244,
+                              //                   243,
+                              //                   243,
+                              //                 ),
+                              //               ),
+                              //               child: TextField(
+                              //                 controller: message,
+                              //                 decoration: InputDecoration(
+                              //                   hintText: "Submit task...",
+                              //                   hintStyle: TextStyle(
+                              //                     color: Colors.blueGrey,
+                              //                     fontSize: 14,
+                              //                     fontWeight: FontWeight.w500,
+                              //                   ),
+                              //                   border: OutlineInputBorder(
+                              //                     borderSide: BorderSide.none,
+                              //                     //  borderSide:BorderSide(color:const Color.fromARGB(255, 22, 80, 70)),
+                              //                     borderRadius:
+                              //                         BorderRadius.all(
+                              //                       Radius.circular(10),
+                              //                     ),
+                              //                   ),
+                              //                 ),
+                              //               ),
+                              //             ),
+                              //           ),
+                              //           // Positioned(
+                              //           //   left: 300,
+                              //           //    top: 50,
+                              //           //     child: Row(
+                              //           //   children: [
+                              //           //      Icon(Icons.picture_as_pdf),
+                              //           //       Icon(Icons.image),
+                              //           //   ],
+                              //           // ))
+                              //         ],
+                              //       );
+                              //     }
+                              //     return Container();
+                              //   },
+                              // )
+                              ///date.......................................15-9-2025.
+                               Consumer<UserDashboardProvider>(
+                                builder: (context, provider, child) {
+                                  if (provider.listofImage != null &&
+                                      provider.listofImage.isNotEmpty) {
+                                    final image = provider.listofImage;
+                                    return Column(
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: GridView.builder(
+                                            shrinkWrap: true,
+                                            physics:
+                                                NeverScrollableScrollPhysics(), // Optional
+
+                                            gridDelegate:
+                                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                              crossAxisCount: 3,
+                                            ),
+                                            itemCount:
+                                                provider.listofImage!.length,
+                                            //image.length + 1,
+                                            itemBuilder: (context, index) {
+                                              final images = image[index];
+                                          
+                                              if(images!=null)
+                                              {
+                                                    return Image.file(
+                                                File(provider
+                                                    .listofImage[index].path),
+                                                fit: BoxFit.cover,
+                                              );
+                                              }
+                                            },
+                                          ),
+                                        ),
+                                        // here i will use clear function.............
+                                        Padding(
+                                          padding: EdgeInsets.all(8.0),
+                                          child: ElevatedButton(
+                                              onPressed: () {
+                                                context
+                                                    .read<
+                                                        UserDashboardProvider>()
+                                                    .clearImageFromList(1);
+                                              },
+                                              child: Text("Cancel")),
+                                        )
+                                      ],
+                                    );
+                                  } else {
+                                    return const SizedBox();
+                                  }
+                                },
+                              ),

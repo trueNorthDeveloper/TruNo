@@ -1,0 +1,23 @@
+import 'package:flutter/material.dart';
+import 'package:truenorthflutterfrontend/utils/size_config.dart';
+
+class AdminUiScreen5 extends StatefulWidget {
+  const AdminUiScreen5({super.key});
+
+  @override
+  State<AdminUiScreen5> createState() => _AdminUiScreen5State();
+}
+
+class _AdminUiScreen5State extends State<AdminUiScreen5> {
+  Widget build(BuildContext context) {
+    SizeConFig.init(context);
+    return Scaffold(
+        body: SafeArea(
+            child: SizedBox(
+                height: SizeConFig.screenHeight,
+                width: SizeConFig.screenWidth,
+                child: Column(children: [
+         ]
+         ))));
+  }
+}

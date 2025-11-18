@@ -1,0 +1,265 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
+
+import 'package:image_picker/image_picker.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class UserDashboardProvider extends ChangeNotifier {
+  bool _changeColor = false;
+  bool get changeColor => _changeColor;
+  void chnageColorOnOff() {
+    _changeColor = !_changeColor;
+    notifyListeners();
+  }
+
+  int _currentIndex = 0;
+  int get currentIndex => _currentIndex;
+
+  void changePostion(int index) {
+    print("🔁 Setting currentIndex = $index");
+    _currentIndex = index;
+    notifyListeners();
+  }
+
+  int _initailCount = 0;
+
+  int get initailCount => _initailCount;
+//this provider for project details screen
+  void chanageListview(int update) {
+    _initailCount = update;
+    notifyListeners();
+  }
+
+  // this provider for task detaails screeen
+  int _intchangeColorInTaskDetail = 0;
+
+  int get intchangeColorInTaskDetail => _intchangeColorInTaskDetail;
+  void changeColorInTaskDetail(int indexNumber) {
+    _intchangeColorInTaskDetail = indexNumber;
+    notifyListeners();
+  }
+
+  List<String> _listofImage = [];
+
+  List<String> get listofImage => _listofImage;
+  final ImagePicker imagePicker = ImagePicker();
+//select multiple image from gallery.......................
+  void selectMutliImageFromGallery() async {
+    final List<XFile>? selectedImages = await imagePicker.pickMultiImage();
+
+    if (selectedImages!.isNotEmpty) {
+      List<String> item = selectedImages.map((item) => (item.path)).toList();
+      _listofImage.addAll(item);
+      notifyListeners();
+    }
+  }
+
+//delte image from the list when user click on cross icon image will remove automatic from the list.
+  void clearImageFromList(int index) {
+    _listofImage.removeAt(index);
+    notifyListeners();
+  }
+
+//here we will select muliple file from device just like image selected from the galllery.............
+  List<String> _listOfFiles = [];
+  List<String> get listOfFiles => _listOfFiles;
+
+// Function to select multiple files
+  void selectListOfFile() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        allowMultiple: true,
+        type: FileType.any,
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        // ✅ Collect valid file paths
+        List<String> filesPath = result.paths
+            .whereType<String>() // filters out nulls
+            .toList();
+
+        _listOfFiles.addAll(filesPath);
+        notifyListeners();
+      }
+    } catch (e) {
+      print("Error picking files: $e");
+    }
+  }
+
+  void clearListFiles(int index) {
+    try {
+      _listOfFiles.removeAt(index);
+      notifyListeners();
+    } catch (e) {
+      print("Error picking files: $e");
+    }
+  }
+
+  XFile? _pickImage;
+  String? _filePath;
+  bool _isImage = false;
+  XFile? get pickImage => _pickImage;
+  String? get filePath => _filePath;
+  bool get isImage => _isImage;
+
+//SET IMAGE.............
+  void setImage(XFile file) {
+    _pickImage = file;
+    _filePath = file.path;
+    _isImage = true;
+    notifyListeners();
+  }
+  //SET fILE LIKE PDF DOC
+
+  File? _file;
+  bool _isFile = false;
+  File? get file => _file;
+  bool get isFile => _isFile;
+  void setFile(File file) {
+    _pickImage = null;
+    _filePath = file.path;
+    _file = file;
+    _isFile = true;
+    notifyListeners();
+  }
+
+  void clear() {
+    _pickImage = null;
+    _filePath = null;
+    _file = null;
+    _isImage = false;
+    notifyListeners();
+  }
+
+  void clearFile() {
+    _file = null;
+    _isFile = false;
+    _pickImage = null;
+    _filePath = null;
+    _file = null;
+    _isImage = false;
+    notifyListeners();
+  }
+
+  //datepicker....................
+  int? userUid;
+  Future<void> getUserBySharedPreferenceId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('uuid');
+    if (userId != null) {
+      userUid = userId;
+      notifyListeners();
+    } else {
+      // Handle null userId (e.g., show error or navigate to login)
+    }
+  }
+
+  //Date 24-10-25 user attendance for date picker
+  //
+  //
+  DateTime focusedDay = DateTime.now();
+  Map<DateTime, List<dynamic>> events = {};
+
+  Future<void> attendanceEvent(BuildContext context) async {
+    print("🔁 attendanceDatePicker called");
+
+    events = {
+      DateTime.utc(2025, 10, 1): ['Present'],
+      DateTime.utc(2025, 10, 5): ['Absent'],
+      DateTime.utc(2025, 10, 10): ['Present'],
+      DateTime.utc(2025, 10, 14): ['Absent'],
+      DateTime.utc(2025, 10, 15): ['Present'],
+    };
+    notifyListeners();
+  }
+
+  ///this provider function for download file
+
+  // double _progress = 0.0;
+  // bool _isDownloading = false;
+  // double get progress => _progress;
+
+  // bool get isDownloading => _isDownloading;
+
+  // String _downloadMessage = "Press the button to download";
+  // String get downloadMessage => _downloadMessage;
+
+  // Future<void> downloadApk(String url) async {
+  //   _isDownloading = true;
+  //   _progress = 0.0;
+  //   _downloadMessage = "Starting download...";
+  //   notifyListeners();
+
+  //   Directory appDocDir = await getApplicationDocumentsDirectory();
+  //   String path = "${appDocDir.path}/update.apk";
+
+  //   final file = File(path);
+
+  //   await Dio().download(url, path,
+  //       onReceiveProgress: ((receivedBytes, totalBytes) {
+  //     if (totalBytes != 1) {
+  //       _progress = receivedBytes / totalBytes;
+  //       _downloadMessage =
+  //           "DownLoading.....${receivedBytes / totalBytes * 100}.toStringAsFixed(0)}%";
+  //     }
+  //   }));
+
+  //   print("Downloaded size: ${await file.length()}");
+
+  //   await OpenFilex.open(path);
+  //   _isDownloading = false;
+  //   _downloadMessage = "Download completed!";
+  //   notifyListeners();
+  // }
+  double _progress = 0.0;
+  bool _isDownloading = false;
+  String _downloadMessage = "Press the button to download";
+
+  double get progress => _progress;
+  bool get isDownloading => _isDownloading;
+  String get downloadMessage => _downloadMessage;
+
+  Future<void> downloadApk(String url) async {
+    try {
+      _isDownloading = true;
+      _progress = 0.0;
+      _downloadMessage = "Starting download...";
+      notifyListeners();
+
+      Directory appDocDir = await getApplicationDocumentsDirectory();
+      String path = "${appDocDir.path}/update.apk";
+
+      await Dio().download(
+        url,
+        path,
+        onReceiveProgress: (received, total) {
+          if (total > 0) {
+            _progress = received / total;
+
+            final percent = (_progress * 100).toStringAsFixed(0);
+            _downloadMessage = "Downloading... $percent%";
+
+            notifyListeners(); // <- Required for UI updates!
+          }
+        },
+      );
+
+      _downloadMessage = "Download complete! Opening installer...";
+      notifyListeners();
+
+      await OpenFilex.open(path);
+
+      _isDownloading = false;
+      notifyListeners();
+    } catch (e) {
+      _isDownloading = false;
+      _downloadMessage = "Download failed: $e";
+      notifyListeners();
+    }
+  }
+}

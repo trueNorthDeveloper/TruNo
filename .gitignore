@@ -1,0 +1,107 @@
+# -----------------------------------
+# Flutter & Dart Defaults
+# -----------------------------------
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.melos_tool/
+.idea/
+android/.gradle/
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/doc/api/
+
+# -----------------------------------
+# Android & iOS
+# -----------------------------------
+android/app/debug
+android/app/profile
+android/app/release
+*.keystore
+*.jks
+*.gradle
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Generated.xcconfig
+macos/Flutter/ephemeral/
+macos/Flutter/GeneratedPluginRegistrant.swift
+
+# -----------------------------------
+# Xcode
+# -----------------------------------
+*.xcworkspace
+*.xcuserstate
+*.xcuserdatad
+*.xcsettings
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+*.pbxuser
+
+# -----------------------------------
+# VS Code (Optional: Uncomment if you want to ignore it)
+# -----------------------------------
+# .vscode/
+
+# -----------------------------------
+# IntelliJ & Android Studio
+# -----------------------------------
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# -----------------------------------
+# System Files
+# -----------------------------------
+.DS_Store
+Thumbs.db
+*.swp
+
+# -----------------------------------
+# Python (just in case)
+# -----------------------------------
+*.pyc
+__pycache__/
+
+# -----------------------------------
+# Node.js (if used)
+# -----------------------------------
+node_modules/
+npm-debug.log*
+
+# -----------------------------------
+# Ignore Large/Binary Files
+# -----------------------------------
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.zip
+*.tar.gz
+*.rar
+*.7z
+*.apk
+*.exe
+*.iso
+*.dmg
+*.obj
+*.bin
+*.lock
+
+# -----------------------------------
+# Logs
+# -----------------------------------
+*.log
+buildlog/
+.history
+
+# -----------------------------------
+# Misc
+# -----------------------------------
+migrate_working_dir/
