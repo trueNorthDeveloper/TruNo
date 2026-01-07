@@ -1,18 +1,23 @@
-import 'dart:ffi';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:truenorthflutterfrontend/app/view/userView/userHomeView/user_list_of_screen.dart';
 
 import 'package:truenorthflutterfrontend/app/controller/userController/user_dashboard_provider.dart';
 import 'package:truenorthflutterfrontend/app/view/userView/userHomeView/versionDownload_screen.dart';
 import 'package:truenorthflutterfrontend/app/view/userView/userLogRegsView/select_screen.dart';
+import 'package:truenorthflutterfrontend/public/config/api_const.dart';
+import 'package:truenorthflutterfrontend/public/config/deviceConfig.dart';
 import 'package:truenorthflutterfrontend/public/config/downlaod_latest_version.dart';
-
 import 'package:truenorthflutterfrontend/public/utils/userUtil/app_image.dart';
+import 'package:truenorthflutterfrontend/public/utils/userUtil/mesage_snack_bar.dart';
+
 import 'package:truenorthflutterfrontend/public/utils/userUtil/size_config.dart';
+import 'package:truenorthflutterfrontend/service/token/tokenService.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -26,88 +31,116 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
 
-    _checkAutoLogin();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAutoLogin();
+    });
   }
-//DONT TRY TO DELETE THIS FUNCTION------------------------------------------------------------
 
-  // Future<void> _checkAutoLogin() async {
-  //   try {
-  //     final prefs = await SharedPreferences.getInstance();
-  //     final id = prefs.getString('empId');
-  //     final empName = prefs.getString('empName');
+  void _goToLogin() {
+    Future.delayed(const Duration(seconds: 2), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const SelectScreenForService()),
+      );
+    });
+  }
 
-  //     if (id != null && empName != null) {
-  //       WidgetsBinding.instance.addPostFrameCallback((_) {
-  //         if (!mounted) return;
-  //         Provider.of<UserDashboardProvider>(context, listen: false)
-  //             .changePostion(0);
-  //         Navigator.pushReplacement(
-  //           context,
-  //           MaterialPageRoute(builder: (_) => ListOfUiScreen()),
-  //         );
-  //       });
-  //     } else {
-  //       Future.delayed(const Duration(seconds: 3), () {
-  //         if (!mounted) return;
-  //         Navigator.pushReplacement(
-  //           context,
-  //           MaterialPageRoute(builder: (_) => const SelectScreenForService()),
-  //         );
-  //       });
-  //     }
-  //   } catch (e) {
-  //     debugPrint("Auto-login error: $e");
-  //   }
-  // }
+  Future<String?> getApiUrl() async {
+    final url =
+        "https://gist.githubusercontent.com/trueNorthDeveloper/c9d91e97283633a0cf102ad349f771ce/raw/api-config.json?timestamp=${DateTime.now().millisecondsSinceEpoch}";
 
-  //
+    try {
+      final ngrokResponse = await http.get(Uri.parse(url));
+      if (ngrokResponse.statusCode == 200) {
+        final jsonRespones = jsonDecode(ngrokResponse.body);
+        return jsonRespones['base_url'];
+      } else {
+        return null;
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+
+//download latest version if user exit or not.............
+  Future<bool> DownloadLatestVersionOfApp() async {
+    bool connection = await Deviceconfig.checkInternetConnection();
+
+    // 🔇 Silent fail on no internet (offline flow handles this)
+    if (!connection) {
+      return false;
+    }
+
+    bool updateAvailable = await DownlaodLatestVersion.getUpdate() ?? false;
+
+    if (updateAvailable && mounted) {
+      bool shouldContinue = await showUpdateDialog(context);
+
+      if (!shouldContinue && mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => VersiondownloadScreen(),
+          ),
+        );
+        return true; // Update flow started
+      }
+    }
+
+    return false; // No update or user skipped
+  }
+
   Future<void> _checkAutoLogin() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final id = prefs.getString('empId');
-      final empName = prefs.getString('empName');
+//end 23-12-25...........
+// 1️⃣ Get refresh token
+      String? refreshToken = await TokenService.getRefreshToken();
 
-      bool? updateAvailable = await DownlaodLatestVersion.getUpdate();
+      // 2️⃣ Check internet
+      bool hasInternet = await Deviceconfig.checkInternetConnection();
 
-      if (updateAvailable == true) {
-        bool shouldContinue = await showUpdateDialog(context);
-
-        if (!shouldContinue) {
-          // User chooses to logout for update
-          print("User chooses to update; stopping auto-login.");
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => VersiondownloadScreen(),
-              ));
-
-          return; // Stop the process here
-        }
-
-        print("User wants to continue without updating.");
+      // 3️⃣ OFFLINE FLOW (User logged in)
+      if (!hasInternet && refreshToken != null && refreshToken.isNotEmpty) {
+        ShowTaostMessage.toastMessage(context, "Offline mode");
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => ListOfUiScreen()),
+        );
+        return;
       }
 
-      if (id != null && empName != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
+      // 4️⃣ ONLINE FLOW → check update
+      bool isUpdating = await DownloadLatestVersionOfApp();
+      if (isUpdating) return;
+
+      // 5️⃣ Load API URL
+      String? rokurl = await getApiUrl();
+      if (rokurl != null) {
+        Apiconstants.url = rokurl;
+        TokenService.url = rokurl;
+      }
+
+      // 6️⃣ Refresh token if exists
+      if (refreshToken != null && refreshToken.isNotEmpty) {
+        bool refreshed = await TokenService.getRefreshAccessToken();
+
+        if (refreshed) {
           Provider.of<UserDashboardProvider>(context, listen: false)
               .changePostion(0);
+
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (_) => ListOfUiScreen()),
           );
-        });
-      } else {
-        Future.delayed(const Duration(seconds: 3), () {
-          if (!mounted) return;
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const SelectScreenForService()),
-          );
-        });
+          return;
+        }
       }
+
+      // 7️⃣ No token → Login
+      _goToLogin();
     } catch (e) {
       debugPrint("Auto-login error: $e");
+      _goToLogin();
     }
   }
 
@@ -174,3 +207,87 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 }
+//DONT TRY TO DELETE THIS FUNCTION------------------------------------------------------------
+
+  // Future<void> _checkAutoLogin() async {
+  //   try {
+  //     final prefs = await SharedPreferences.getInstance();
+  //     final id = prefs.getString('empId');
+  //     final empName = prefs.getString('empName');
+
+  //     if (id != null && empName != null) {
+  //       WidgetsBinding.instance.addPostFrameCallback((_) {
+  //         if (!mounted) return;
+  //         Provider.of<UserDashboardProvider>(context, listen: false)
+  //             .changePostion(0);
+  //         Navigator.pushReplacement(
+  //           context,
+  //           MaterialPageRoute(builder: (_) => ListOfUiScreen()),
+  //         );
+  //       });
+  //     } else {
+  //       Future.delayed(const Duration(seconds: 3), () {
+  //         if (!mounted) return;
+  //         Navigator.pushReplacement(
+  //           context,
+  //           MaterialPageRoute(builder: (_) => const SelectScreenForService()),
+  //         );
+  //       });
+  //     }
+  //   } catch (e) {
+  //     debugPrint("Auto-login error: $e");
+  //   }
+  // }
+
+//NEW CODE AUTOLOGIN COMMENTED DATE 23-12-2025-----------------------------------------------------------------------  
+  // Future<void> _checkAutoLogin() async {
+  //   try {
+  //     String? accessToken = await TokenService.getAccessToken();
+  //     String? refreshToken = await TokenService.getRefreshToken();
+      
+  //     String? rokurl = await getApiUrl();
+
+  //     if (rokurl != null) {
+  //       Apiconstants.url = rokurl;
+  //       TokenService.url = rokurl;
+  //     }
+
+  //     bool? updateAvailable = await DownlaodLatestVersion.getUpdate();
+
+  //     if (updateAvailable == true) {
+  //       bool shouldContinue = await showUpdateDialog(context);
+
+  //       if (!shouldContinue) {
+  //         // User chooses to logout for update
+  //         print("User chooses to update; stopping auto-login.");
+  //         Navigator.push(
+  //             context,
+  //             MaterialPageRoute(
+  //               builder: (context) => VersiondownloadScreen(),
+  //             ));
+
+  //         return;
+  //       }
+  //     }
+  //     if (accessToken == null && refreshToken == null) {
+  //       _goToLogin;
+  //     }
+  //     bool isRefreshed = await TokenService.getRefreshAccessToken();
+  //     if (isRefreshed) {
+  //       Provider.of<UserDashboardProvider>(context, listen: false)
+  //           .changePostion(0);
+
+  //       Navigator.pushReplacement(
+  //         context,
+  //         MaterialPageRoute(builder: (_) => ListOfUiScreen()),
+  //       );
+  //     } else {
+  //       // refresh failed → token expired → auto logout
+  //       // await TokenService.clearTokens();
+  //       _goToLogin();
+  //     }
+  //   } catch (e) {
+  //     debugPrint("Auto-login error: $e");
+  //     _goToLogin();
+  //   }
+  // }

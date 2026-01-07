@@ -91,9 +91,6 @@ class TaskInfo {
       createdAt: json['createdAt'] ?? " ",
     );
   }
-
-
-  
 }
 
 class UserInfo {
@@ -173,7 +170,7 @@ class Submit {
       submitTo:
           json["submitTo"] != null ? UserInfo.fromJson(json['submitTo']) : null,
       taskSubmittedAt: json['taskSubmittedAt'] ?? " ",
-      taskReviewAt: json['taskReviewAt'] ?? " ",
+      taskReviewAt: json['taskReviewAt'] = null ?? " ",
     );
   }
 }

@@ -1,9 +1,5 @@
-import 'dart:io';
-
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:open_filex/open_filex.dart';
-import 'package:path_provider/path_provider.dart';
+
 import 'package:provider/provider.dart';
 import 'package:truenorthflutterfrontend/app/controller/userController/user_dashboard_provider.dart';
 import 'package:truenorthflutterfrontend/public/config/downlaod_latest_version.dart';
@@ -35,7 +31,7 @@ class _VersiondownloadScreenState extends State<VersiondownloadScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<UserDashboardProvider>(context, listen: false);
+    final provider = Provider.of<UserDashboardProvider>(context, listen: true);
 
     return SafeArea(
       child: Scaffold(
@@ -54,7 +50,7 @@ class _VersiondownloadScreenState extends State<VersiondownloadScreen> {
                         Text(provider.downloadMessage),
                       ],
                     )
-                  : const Text("finalizing..."),
+                  : Center(child: const Text("finalizing...")),
             ],
           ),
         ),

@@ -16,12 +16,13 @@ import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:truenorthflutterfrontend/app/view/adminView/admin_dashboard_page.dart';
 import 'package:truenorthflutterfrontend/app/view/userView/userHomeView/user_list_of_screen.dart';
 import 'package:truenorthflutterfrontend/app/view/userView/userLogRegsView/select_screen.dart';
 
 import 'package:truenorthflutterfrontend/public/config/api_const.dart';
-import 'package:truenorthflutterfrontend/public/config/backgroundLocationService.dart';
+import 'package:truenorthflutterfrontend/public/utils/resultt.dart';
 
 import 'package:truenorthflutterfrontend/service/userServices/user_services_for_api.dart';
 
@@ -45,6 +46,180 @@ class LoginProvider extends ChangeNotifier {
 
   bool _isLoading = false;
   get isLoading => _isLoading;
+  Future<void> userlogin2(
+    String userId,
+    String password,
+    BuildContext context,
+  ) async {
+    if (userId.isEmpty) {
+      if (context.mounted) {
+        ShowTaostMessage.toastMessage(context, "Enter Your login Id");
+      }
+      return;
+    } else if (password.isEmpty) {
+      if (context.mounted) {
+        ShowTaostMessage.toastMessage(context, "Enter your password");
+      }
+      return;
+    }
+    try {
+      _isLoading = true;
+      notifyListeners();
+      bool networkResult = await checkInternetConnection(context);
+      if (!networkResult) {
+        await Future.delayed(Duration(seconds: 2));
+        _isLoading = false;
+        notifyListeners();
+        if (context.mounted) {
+          ShowTaostMessage.toastMessage(context, "No internet connection");
+        }
+        return;
+      }
+      List deviceInfo = await getDeviceInfo();
+      if (deviceInfo.isEmpty) {
+        _isLoading = false;
+        notifyListeners();
+        ShowTaostMessage.toastMessage(context, "Failed to get device info");
+        return;
+      }
+      Position? position = await _deteminPosition(context);
+      if (position == null) {
+        _isLoading = false;
+        notifyListeners();
+        ShowTaostMessage.toastMessage(context, "Failed to get location");
+        return;
+      }
+      String address = await _getAddressFromLatLng(
+        position.latitude,
+        position.longitude,
+      );
+      XFile? imagePath = await pickImage(ImageSource.camera);
+      if (imagePath == null) {
+        _isLoading = false;
+        notifyListeners();
+        ShowTaostMessage.toastMessage(context, "Image capture failed");
+        return;
+      }
+      // print(imagePath.path);
+      //    _isLoading = false;
+      //    notifyListeners();
+
+      LoginRequestModel loginRequestModel = LoginRequestModel(
+        empLoginId: userId,
+        empPassword: password,
+        device: deviceInfo[0],
+        deviceId: deviceInfo[1],
+        deviceBrand: deviceInfo[2],
+        model: deviceInfo[3],
+        latitude: position.latitude.toString(),
+        longitude: position.longitude.toString(),
+        address: address,
+        // loginImage: imagePath.path
+      );
+
+      final result = await loginWithJwt(
+        loginRequestModel.toJson(),
+        imagePath.path,
+      );
+      print("${loginRequestModel.toJson()}+" + "${imagePath.path}");
+      _isLoading = false;
+      notifyListeners();
+
+      if (result.isSuccess) {
+        if (result.data != null) {
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+
+          prefs.setString("access-token", result.data["Access-Token"]);
+          prefs.setString("refresh-token", result.data["Refresh-Token"]);
+          ShowTaostMessage.toastMessage(context, "Login Successfully");
+          // UsermeModel? user = await UserServicesForApi().loginAfterMeService();
+          // print(user!.id);
+          // print(user.name);
+          // print(user.email);
+          // print(user.role);
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => ListOfUiScreen()),
+          );
+        }
+      } else {
+        ShowTaostMessage.toastMessage(
+          context,
+          result.message ?? "Something went wrong",
+        );
+        if (result.message == "User already logged in somewhere") ;
+        {
+          showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: Text("Already Logged In"),
+                content: Text(result.message ??
+                    "You are logged in on somewhere. Do you want to log out?"),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      // Call backend API to force logout other devices
+                      // forceLogoutOtherDevices(userId, imagePath.path,);
+                    },
+                    child: Text("Logout"),
+                  ),
+                ],
+              );
+            },
+          );
+          return;
+        }
+      }
+
+//HERE LOGIN WITH IMAGE.........
+    } catch (e) {}
+  }
+
+  Future<Resultt> loginWithJwt(
+      Map<String, dynamic> toJson, String filePath) async {
+    try {
+      final url = Uri.parse(Apiconstants.login);
+      final request = http.MultipartRequest("POST", url);
+
+      // Add DTO as JSON
+      request.files.add(
+        http.MultipartFile.fromString(
+          'dto',
+          jsonEncode(toJson),
+          contentType: MediaType('application', 'json'),
+        ),
+      );
+
+      // Add file
+      request.files.add(await http.MultipartFile.fromPath('file', filePath));
+
+      final responseStream = await request.send();
+      final responseBody = await responseStream.stream.bytesToString();
+
+      if (responseStream.statusCode == 200) {
+        return Resultt.success(jsonDecode(responseBody));
+      }
+
+      // Any API error
+      try {
+        final errorJson = jsonDecode(responseBody);
+        return Resultt.apiError(errorJson);
+      } catch (_) {
+        return Resultt.systemError(ApiError.server);
+      }
+    } on SocketException {
+      return Resultt.systemError(ApiError.network);
+    } on TimeoutException {
+      return Resultt.systemError(ApiError.timeout);
+    } on http.ClientException {
+      return Resultt.systemError(ApiError.client);
+    } catch (_) {
+      return Resultt.systemError(ApiError.server);
+    }
+  }
 
   Future<void> userlogin(
     String userId,
@@ -145,7 +320,8 @@ class LoginProvider extends ChangeNotifier {
           latitude: position.latitude.toString(),
           longitude: position.longitude.toString(),
           address: address,
-          loginImage: LoginImage(imageId: imgId),
+          // loginImage: LoginImage(imageId: imgId),
+          //loginImage: imagePath.path
         );
 
         Map<String, dynamic> apiResponse = await loginWithIdAndPassword(
@@ -170,12 +346,11 @@ class LoginProvider extends ChangeNotifier {
 
         ShowTaostMessage.toastMessage(context, "Login Successfully");
         // BackgroundLocationService.start();
-    
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => ListOfUiScreen()),
         );
-        
       } else {
         ShowTaostMessage.toastMessage(context, "Invalid user role");
       }
@@ -811,7 +986,6 @@ class LoginProvider extends ChangeNotifier {
     notifyListeners();
 
     final result = await _userServicesForApi.getSessionInfo();
-    print("API result: $result");
 
     if (result.isSuccess) {
       userLoginInfoModel = result.data;
@@ -830,5 +1004,106 @@ class LoginProvider extends ChangeNotifier {
       print("Background location fetch triggered in provider");
     });
     //notifyListeners();
+  }
+  //Automatic logout when user session has been expire............................
+
+  Future<void> AutomaticLogout(BuildContext context, bool image) async {
+    _isLoggingOut = true;
+    notifyListeners();
+
+    await Future.delayed(Duration(seconds: 3));
+    bool networkResult = await checkInternetConnectionForLogout(context);
+    if (!networkResult) {
+      _isLoggingOut = false;
+      notifyListeners();
+
+      return;
+    }
+    Position? position = await _deteminPosition(context);
+    if (position == null) {
+      _isLoggingOut = false;
+      notifyListeners();
+      if (context.mounted) {
+        ShowTaostMessage.toastMessage(context, "Failed to get location");
+      }
+      return;
+    }
+
+    String address = await _getAddressFromLatLng(
+      position.latitude,
+      position.longitude,
+    );
+
+    List deviceInfo = await getDeviceInfo();
+    if (deviceInfo.isEmpty) {
+      _isLoggingOut = false;
+      notifyListeners();
+      if (context.mounted) {
+        ShowTaostMessage.toastMessage(context, "Failed to get device info");
+      }
+      return;
+    }
+    String? imagePath;
+    if (image) {
+      XFile? path = await pickImage(ImageSource.camera);
+      imagePath = path!.path;
+    }
+
+    LogoutModel model = LogoutModel(
+      // userId: uuid?? 0,
+      logoutAddress: address,
+      logoutLatitude: position.latitude.toString(),
+      logoutLongitude: position.longitude.toString(),
+      logoutDeviceBrand: deviceInfo[2],
+      logoutDeviceId: deviceInfo[1],
+      logoutDeviceModel: deviceInfo[3],
+      logoutModel: deviceInfo[0],
+    );
+    automaticLogoutService(model.toJson(), imagePath, image);
+  }
+
+  ///autmatic logout
+
+  Future<Resultt> automaticLogoutService(
+      Map<String, dynamic> toJson, String? filePath, bool image) async {
+    try {
+      final url = Uri.parse(Apiconstants.login);
+      final request = http.MultipartRequest("POST", url);
+
+      request.files.add(
+        http.MultipartFile.fromString(
+          'dto',
+          jsonEncode(toJson),
+          contentType: MediaType('application', 'json'),
+        ),
+      );
+
+      if (image) {
+        request.files.add(await http.MultipartFile.fromPath('file', filePath!));
+      }
+
+      final responseStream = await request.send();
+      final responseBody = await responseStream.stream.bytesToString();
+
+      if (responseStream.statusCode == 200) {
+        return Resultt.success(jsonDecode(responseBody));
+      }
+
+      // Any API error
+      try {
+        final errorJson = jsonDecode(responseBody);
+        return Resultt.apiError(errorJson);
+      } catch (_) {
+        return Resultt.systemError(ApiError.server);
+      }
+    } on SocketException {
+      return Resultt.systemError(ApiError.network);
+    } on TimeoutException {
+      return Resultt.systemError(ApiError.timeout);
+    } on http.ClientException {
+      return Resultt.systemError(ApiError.client);
+    } catch (_) {
+      return Resultt.systemError(ApiError.server);
+    }
   }
 }

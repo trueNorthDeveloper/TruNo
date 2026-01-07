@@ -25,7 +25,7 @@
      <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     
     <application
-        android:label="TrueNo"
+        android:label="TruNo"
         android:name="${applicationName}"
 
         android:icon="@mipmap/launcher_icon">

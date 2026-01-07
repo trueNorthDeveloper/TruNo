@@ -1,16 +1,9 @@
-import 'dart:async';
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
-import 'package:flutter/services.dart';
 
-import 'package:geocoding/geocoding.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:truenorthflutterfrontend/app/controller/adminController/admin_dashBoard_provider.dart';
+import 'package:truenorthflutterfrontend/app/controller/teamLeaderController/teamLeaderCon.dart';
+import 'package:truenorthflutterfrontend/app/controller/userController/login_provider.dart';
 
 import 'package:truenorthflutterfrontend/app/view/adminView/admin_splash_screen.dart';
 import 'package:truenorthflutterfrontend/app/view/userView/userLogRegsView/user_splash_screen.dart';
@@ -18,11 +11,10 @@ import 'package:truenorthflutterfrontend/app/controller/userController/login_con
 
 import 'package:truenorthflutterfrontend/app/controller/userController/user_dashboard_provider.dart';
 import 'package:truenorthflutterfrontend/app/controller/userController/user_project_provider.dart';
-import 'package:truenorthflutterfrontend/public/config/api_const.dart';
-import 'package:truenorthflutterfrontend/public/config/downlaod_latest_version.dart';
 
 import 'package:truenorthflutterfrontend/public/config/platform_type.dart';
 import 'package:truenorthflutterfrontend/public/config/themdata.dart';
+import 'package:truenorthflutterfrontend/public/utils/userUtil/size_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,6 +26,8 @@ void main() async {
         ChangeNotifierProvider(create: (_) => UserDashboardProvider()),
         ChangeNotifierProvider(create: (_) => AdminDashboardProvider()),
         ChangeNotifierProvider(create: (_) => UserProjectProvider()),
+        ChangeNotifierProvider(create: (_) => LoginControll()),
+        ChangeNotifierProvider(create: (_) => TeamleaderControllerPro()),
       ],
       child: const MyApp(),
     ),
@@ -55,6 +49,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    SizeConFig.init(context);
     final platform = getPlatformType();
 
     return MaterialApp(
@@ -74,7 +69,7 @@ class _MyAppState extends State<MyApp> {
   //   if (response.statusCode == 200) {
   //     final json = jsonDecode(response.body);
   //    var baseUrl =json['base_url'];
-  //    print(baseUrl);
+  //    print(baseUrl);                                                                                 
   //    Apiconstants.url=baseUrl;
 
   //     return json['base_url'];

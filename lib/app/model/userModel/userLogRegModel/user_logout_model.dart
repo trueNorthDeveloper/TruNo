@@ -1,5 +1,5 @@
 class LogoutModel {
-  int userId;
+  int? userId;
   String logoutAddress;
   String logoutLatitude;
   String logoutLongitude;
@@ -7,18 +7,24 @@ class LogoutModel {
   String logoutDeviceModel;
   String logoutDeviceBrand;
   String logoutModel;
-  LogoutImage logoutimage;
-  LogoutModel({
-    required this.userId,
-    required this.logoutAddress,
-    required this.logoutLatitude,
-    required this.logoutLongitude,
-    required this.logoutDeviceBrand,
-    required this.logoutDeviceId,
-    required this.logoutDeviceModel,
-    required this.logoutModel,
-    required this.logoutimage,
-  });
+  String? logOutExcuse;
+  String? empEid;
+
+   LogoutImage? logoutimage;
+
+  LogoutModel(
+      {this.userId,
+      required this.logoutAddress,
+      required this.logoutLatitude,
+      required this.logoutLongitude,
+      required this.logoutDeviceBrand,
+      required this.logoutDeviceId,
+      required this.logoutDeviceModel,
+      required this.logoutModel,
+       this.logoutimage,
+       this.logOutExcuse,
+       this.empEid});
+
   Map<String, dynamic> toJson() => {
         "userId": userId,
         "logoutAddress": logoutAddress,
@@ -27,14 +33,16 @@ class LogoutModel {
         "logoutDeviceId": logoutDeviceId,
         "logoutDeviceModel": logoutDeviceModel,
         "logoutModel": logoutDeviceModel,
-        "logoutImage": logoutimage.toJson()
+         "logoutImage": logoutimage!.toJson(),
+        "logOutExcuse": logOutExcuse,
+        "empEid": empEid
       };
 }
 
 class LogoutImage {
-  int imageId;
+  int? imageId;
 
-  LogoutImage({required this.imageId});
+  LogoutImage({this.imageId});
   Map<String, dynamic> toJson() => {
         "imageId": imageId,
       };

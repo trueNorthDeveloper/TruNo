@@ -57,7 +57,8 @@ static String baseUrl = url + "/auth/api";
  
 static String imageBaseUrl=url+"/api";
   
-  static  String login = "$baseUrl/login";
+  // static  String login = "$baseUrl/login";
+   
   static  String logout = "$baseUrl/logout";
   static  String register = "$baseUrl/register";
   static  String upload = "$imageBaseUrl/v1/image/driveUpload";
@@ -67,8 +68,9 @@ static String imageBaseUrl=url+"/api";
   static  String checkUserIdPass = "$baseUrl/checkAccountWithSession";
 
 //user-project api............................
-  static const projectbaseUrl =
-      "https://306011160ec5.ngrok-free.app/api/tnec-project";
+  // static const projectbaseUrl =
+  //     "https://306011160ec5.ngrok-free.app/api/tnec-project";
+  static String projectbaseUrl=url+"/api/tnec-project";
   static  String userProjectType = "$projectbaseUrl/getProType/";
   static  String userAllProject = "$projectbaseUrl/getProject/";
   static  String userProjectTeam = "$projectbaseUrl/getTeam/";
@@ -80,7 +82,7 @@ static String imageBaseUrl=url+"/api";
   //---------------------------task--------13-9-25-------------------------
   static  String submitTaskWithFiles = "$projectbaseUrl/submitTask";
   static  String reviewTask = "$projectbaseUrl/review";
-  static  String teamMember = "$projectbaseUrl/getTeamMember/";
+ // static  String teamMember = "$projectbaseUrl/getTeamMember/";
   static  String reviewTaskUpdate = "$projectbaseUrl/updateReview";
   static  String crtTask = "$projectbaseUrl/createTask";
   static  String viewCompleteTask = '$projectbaseUrl/completed-detail';
@@ -97,5 +99,11 @@ static String imageBaseUrl=url+"/api";
   //-----------------collection of user project api...........
   static  String userProjectById = "$adminBaseUrl/projects/";
 
-//date wise project
+//date wise projet 10-12-25
+
+//jwt
+static  String login = "$baseUrl/v2login";
+   static String me="$baseUrl/v2me";
+   static String refreshTokenAcess="$baseUrl/v2refreshToken";
+   static String userlogout="$baseUrl/automaticLogout";
 }

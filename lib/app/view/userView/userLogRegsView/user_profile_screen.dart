@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -7,9 +5,11 @@ import 'package:flutter/services.dart';
 
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:truenorthflutterfrontend/public/config/api_const.dart';
+
 import 'package:truenorthflutterfrontend/app/model/userModel/userLogRegModel/user_profile_model.dart';
+import 'package:truenorthflutterfrontend/public/utils/userUtil/app_image.dart';
 import 'package:truenorthflutterfrontend/public/utils/userUtil/size_config.dart';
+import 'package:truenorthflutterfrontend/service/token/tokenService.dart';
 
 class UserProfileUI extends StatefulWidget {
   const UserProfileUI({super.key});
@@ -31,45 +31,6 @@ class _MyUserProfile extends State<UserProfileUI> {
     super.dispose();
   }
 
-  // Future<UserProfileModel?> userProfile() async {
-  //   try {
-  //     SharedPreferences prefs = await SharedPreferences.getInstance();
-
-  //     String? storeProfile = prefs.getString("userProfile");
-
-  //     final profileResponse = jsonDecode(storeProfile!);
-  //     return UserProfileModel.fromJson(profileResponse);
-
-  //     int? uuid = prefs.getInt("uuid");
-  //     final url = Uri.parse('${Apiconstants.userProfile}$uuid');
-
-  //     final updateBody = await http.get(url);
-
-  //     if (updateBody.statusCode == 200 || updateBody.statusCode == 201) {
-  //       try {
-  //         final profileResponse = jsonDecode(updateBody.body);
-  //         await prefs.setString('userProfile', updateBody.body);
-  //         print(profileResponse);
-  //         return UserProfileModel.fromJson(profileResponse);
-  //       } catch (jsonError) {
-  //         print("Error parsing JSON: $jsonError");
-  //         return null;
-  //       }
-  //     } else {
-  //       print("Failed to load data. Status code: ${updateBody.statusCode}");
-  //       return null;
-  //     }
-  //   } on http.ClientException catch (e) {
-  //     print("HTTP error: $e");
-  //     return null;
-  //   } on PlatformException catch (e) {
-  //     print("Platform exception: $e");
-  //     return null;
-  //   } catch (e) {
-  //     print("General error: $e");
-  //     return null;
-  //   }
-  // }
   Future<UserProfileModel?> userProfile() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -83,15 +44,17 @@ class _MyUserProfile extends State<UserProfileUI> {
           print("Failed to parse cached profile: $e");
         }
       }
+      final auth = TokenService();
+      final response = await auth.authorizedGet("profile");
 
-      final uuid = prefs.getInt("uuid");
-      if (uuid == null) {
-        //print("UUID not found in SharedPreferences.");
-        return null;
-      }
+      // final uuid = prefs.getInt("uuid");
+      // if (uuid == null) {
+      //   //print("UUID not found in SharedPreferences.");
+      //   return null;
+      // }
 
-      final url = Uri.parse('${Apiconstants.userProfile}$uuid');
-      final response = await http.get(url);
+      // final url = Uri.parse('${Apiconstants.userProfile}$uuid');
+      // final response = await http.get(url);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         try {
@@ -140,16 +103,107 @@ class _MyUserProfile extends State<UserProfileUI> {
                             if (snapshot.hasData) {
                               return Column(
                                 children: [
-                                  DecoratedBox(
-                                      decoration: BoxDecoration(),
-                                      child: CircleAvatar(
-                                        backgroundColor: Color(0xfffb934d),
-                                        radius: 80,
-                                        child: Icon(
-                                          Icons.person,
-                                          size: 100,
-                                        ),
-                                      )),
+                                  Container(
+                                    padding: EdgeInsets.all(3),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                          color: const Color.fromARGB(
+                                              169, 106, 122, 44),
+                                          width: 2),
+                                    ),
+                                    child: ClipOval(
+                                      child: snapshot.data!.imageURL.isNotEmpty
+                                          ? Image.network(
+                                              snapshot.data!.imageURL,
+                                              height:
+                                                  SizeConFig.screenHeight * 0.1,
+                                              width:
+                                                  SizeConFig.screenWidth * 0.2,
+                                              fit: BoxFit.cover,
+                                              loadingBuilder: (context, child,
+                                                  loadingProgress) {
+                                                if (loadingProgress == null)
+                                                  return child;
+                                                return const Center(
+                                                    child:
+                                                        CircularProgressIndicator());
+                                              },
+                                              errorBuilder:
+                                                  (context, error, stackTrace) {
+                                                return Image.asset(
+                                                  Appimage.splash,
+                                                  height:
+                                                      SizeConFig.screenHeight *
+                                                          0.1,
+                                                  width:
+                                                      SizeConFig.screenWidth *
+                                                          0.2,
+                                                  fit: BoxFit.cover,
+                                                );
+                                              },
+                                            )
+                                          : Image.asset(
+                                              Appimage.splash,
+                                              height:
+                                                  SizeConFig.screenHeight * 0.1,
+                                              width:
+                                                  SizeConFig.screenWidth * 0.2,
+                                              fit: BoxFit.cover,
+                                            ),
+                                    ),
+                                  ),
+
+                                  // ClipOval(
+                                  //   child: snapshot.data!.imageURL != null &&
+                                  //           snapshot.data!.imageURL!.isNotEmpty
+                                  //       ? Image.network(
+                                  //           snapshot.data!.imageURL!,
+                                  //           height:
+                                  //               SizeConFig.screenHeight * 0.1,
+                                  //           width: SizeConFig.screenWidth * 0.2,
+                                  //           fit: BoxFit.cover,
+                                  //           loadingBuilder: (context, child,
+                                  //               loadingProgress) {
+                                  //             if (loadingProgress == null)
+                                  //               return child;
+                                  //             return const Center(
+                                  //                 child:
+                                  //                     CircularProgressIndicator());
+                                  //           },
+                                  //           errorBuilder:
+                                  //               (context, error, stackTrace) {
+                                  //             return Image.asset(
+                                  //               Appimage.splash,
+                                  //               height:
+                                  //                   SizeConFig.screenHeight *
+                                  //                       0.1,
+                                  //               width: SizeConFig.screenWidth *
+                                  //                   0.2,
+                                  //               fit: BoxFit.cover,
+                                  //             );
+                                  //           },
+                                  //         )
+                                  //       : Image.asset(
+                                  //           Appimage.splash,
+                                  //           height:
+                                  //               SizeConFig.screenHeight * 0.1,
+                                  //           width: SizeConFig.screenWidth * 0.2,
+                                  //           fit: BoxFit.cover,
+                                  //         ),
+                                  // ),
+                                  // DecoratedBox(
+                                  //     decoration: BoxDecoration(),
+                                  //     child: CircleAvatar(
+                                  //       backgroundColor: Color(0xfffb934d),
+                                  //       radius: 80,
+                                  //       child: Icon(
+                                  //         Icons.person,
+                                  //         size: 100,
+                                  //       ),
+                                  //     )
+
+                                  //     ),
                                   SizedBox(
                                       height:
                                           SizeConFig.screenHeight * 0.5 / 100),

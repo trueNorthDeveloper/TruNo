@@ -1,21 +1,15 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
+
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:truenorthflutterfrontend/app/view/userView/userHomeView/user_attendance_screen.dart';
 import 'package:truenorthflutterfrontend/app/view/userView/userLogRegsView/user_logout_screen.dart';
-import 'package:truenorthflutterfrontend/public/config/api_const.dart';
 
 import 'package:truenorthflutterfrontend/app/controller/userController/login_controller_provider.dart';
 
 import 'package:truenorthflutterfrontend/app/view/userView/userWorkModuleView/user_work_module_screen.dart';
 import 'package:truenorthflutterfrontend/app/view/userView/userWorkModuleView/user_team_module_screen.dart';
-import 'package:truenorthflutterfrontend/app/model/userModel/userLogRegModel/user_login_info_model.dart';
 
 import 'package:truenorthflutterfrontend/app/controller/userController/user_dashboard_provider.dart';
 import 'package:truenorthflutterfrontend/app/controller/userController/user_project_provider.dart';
@@ -33,13 +27,10 @@ class UserHomePage extends StatefulWidget {
 }
 
 class _MyUserhomePage extends State<UserHomePage> {
-  //late Future<UserLoginInfoModel?> userloginInfo;
-
   @override
   void initState() {
     super.initState();
 
-    // userloginInfo = getLoginDetails();
     Future.microtask(() =>
         Provider.of<LoginProvider>(context, listen: false).fetchSessionInfo());
 
@@ -48,50 +39,10 @@ class _MyUserhomePage extends State<UserHomePage> {
             .fatchUserTask());
   }
 
-  Future<UserLoginInfoModel?> getLoginDetails() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? sessionId = await prefs.getString("sessionId");
-
-    if (prefs.containsKey("loginInfo")) {
-      String? jsonString = prefs.getString("loginInfo");
-      if (jsonString != null) {
-        return UserLoginInfoModel.fromJson(jsonDecode(jsonString));
-      }
-    }
-
-    final url = Uri.parse('${Apiconstants.userLoginInfo}$sessionId');
-
-    try {
-      final response = await http.get(url);
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        try {
-          final data = jsonDecode(response.body);
-          prefs.setString("loginInfo", jsonEncode(data));
-          return UserLoginInfoModel.fromJson(data);
-        } catch (jsonError) {
-          print("Error parsing JSON: $jsonError");
-          return null;
-        }
-      } else {
-        //print("Failed to load data. Status code: ${response.statusCode}");
-        return null;
-      }
-    } on PlatformException {
-      return null;
-    } on SocketException {
-      return null;
-    } on FormatException {
-      return null;
-    } catch (e) {
-      print("Unexpected error: $e");
-      return null;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     Provider.of<UserDashboardProvider>(context, listen: false);
-    //final pro = Provider.of<LoginProvider>(context, listen: false);
+    // final user2 = context.watch<LoginControll>().user;
 
     SizeConFig.init(context);
     return Scaffold(
@@ -102,6 +53,35 @@ class _MyUserhomePage extends State<UserHomePage> {
           width: SizeConFig.screenWidth,
           child: Column(children: [
             SizedBox(height: SizeConFig.screenHeight * 2 / 100),
+
+            // Center(
+            //     child: AnimatedOpacity(
+            //       opacity: 12.22,
+
+            //       duration: const Duration(milliseconds: 500),
+            //       child: Container(
+            //         padding: const EdgeInsets.symmetric(
+            //             horizontal: 24, vertical: 16),
+            //         decoration: BoxDecoration(
+            //           color: Colors.white,
+            //           borderRadius: BorderRadius.circular(20),
+            //           boxShadow: const [
+            //             BoxShadow(
+            //               blurRadius: 15,
+            //               color: Colors.black26,
+            //             )
+            //           ],
+            //         ),
+            //         child: Text(
+            //           "Welcome, ${user2!.name} 👋",
+            //           style: const TextStyle(
+            //             fontSize: 22,
+            //             fontWeight: FontWeight.bold,
+            //           ),
+            //         ),
+            //       ),
+            //     )
+            // ),
             SizedBox(
               width: SizeConFig.screenWidth * 95 / 100,
               child: Column(
@@ -125,7 +105,7 @@ class _MyUserhomePage extends State<UserHomePage> {
                               bool status =
                                   await showLogoutConfirmationDialog(context);
 
-                              if (status) {
+                              if (!status) {
                                 Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -599,18 +579,27 @@ class _MyUserhomePage extends State<UserHomePage> {
           barrierDismissible: false,
           builder: (context) => AlertDialog(
             // title: const Text("Thanks for  your effective work have a good day"),
-            content: const Text("Do you want to logout  or Continue"),
+            content: Container(
+              height: MediaQuery.of(context).size.height * 5 / 100,
+              width: 30,
+              child: Center(
+                child: const Text(
+                  "Do you want to logout",
+                  style: TextStyle(fontWeight: FontWeight.w500),
+                ),
+              ),
+            ),
             actions: <Widget>[
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   TextButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    child: const Text("No"),
-                  ),
-                  TextButton(
                     onPressed: () => Navigator.of(context).pop(false),
                     child: const Text("Yes"),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: const Text("No"),
                   ),
                 ],
               )
@@ -662,8 +651,7 @@ class _MyUserhomePage extends State<UserHomePage> {
         return "Server error.";
       case ApiError.jsonFormat:
         return "Invalid response format.";
-      case ApiError.missingUUID:
-        return "User ID not found.";
+
       case ApiError.unknown:
       default:
         return "An unknown error occurred.";

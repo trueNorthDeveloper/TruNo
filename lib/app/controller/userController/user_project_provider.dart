@@ -1,6 +1,5 @@
 import 'dart:async';
 
-
 import 'package:flutter/widgets.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -91,18 +90,44 @@ class UserProjectProvider extends ChangeNotifier {
     isloadingTask = true;
     error = null;
     notifyListeners();
-    final task = await _service.getUserTask();
-    if (task.isSuccess) {
-      taskResponse = task.data;
-    } else {
-      error = task.error;
+
+    try {
+      final taskResult = await _service.getUserTask();
+
+      if (taskResult.isSuccess) {
+        taskResponse = taskResult.data;
+      } else {
+        error = taskResult.error;
+        taskResponse = null; // optional: clear previous data on failure
+      }
+    } catch (e) {
+      // Fallback in case the service throws an unexpected exception
+      error = getApiErrorType(e);
+      taskResponse = null;
+    } finally {
+      isloadingTask = false;
+      notifyListeners();
     }
-    isloadingTask = false;
-    notifyListeners();
   }
 
+  // Future<void> fatchUserTask() async {
+  //   isloadingTask = true;
+  //   error = null;
+  //   notifyListeners();
+  //   final task = await _service.getUserTask();
+  //   if (task.isSuccess) {
+  //     taskResponse = task.data;
+  //   } else {
+  //     error = task.error;
+  //   }
+  //   isloadingTask = false;
+  //   notifyListeners();
+  // }
+
   //FATCH ALL TASK FOR USER.................................
+
   bool isLoadingAllTak = false;
+
   Future<void> fatchAllTaskInTeam(int projectUid, int teamUid) async {
     isLoadingAllTak = true;
     error = null;
@@ -186,25 +211,29 @@ class UserProjectProvider extends ChangeNotifier {
   bool get isTeamMember => _isTeamMember;
   Future<void> fatchTeamMember(int projectId, int teamId) async {
     _isTeamMember = true;
-    error = error;
-    notifyListeners();
-    final respones = await _service.getAllTeamMember(projectId, teamId);
-    if (respones.isSuccess) {
-      teamResponse = respones.data;
-      teamMemberInfo.clear();
+    error = null;
+    notifyListeners(); // show loader
 
-      // Flatten and store all members
-      for (var team in teamResponse!.data) {
-        teamMemberInfo.addAll(team.members);
-      }
+    final response = await _service.getAllTeamMember(projectId, teamId);
+
+    if (response.isSuccess && response.data != null) {
+      teamResponse = response.data!;
+
+      teamMemberInfo =
+          teamResponse!.data.expand((team) => team.members).toList();
+
+      // CLEAR previous error here
+      error = null;
+      // print("TEAM MEMBERS LOADED: ${teamMemberInfo.length}");
     } else {
-      respones.error;
+      teamMemberInfo = [];
+      error = response.error ?? ApiError.server;
     }
+
     _isTeamMember = false;
-    notifyListeners();
+    notifyListeners(); // update UI
   }
 
-  ///FATCH REVIEW TASK.........................anyone can review task if submitted to him
   bool _isReviewTask = false;
   bool get isReviewTask => _isReviewTask;
   TaskReviewResponse? taskReviewResponse;
@@ -246,7 +275,7 @@ class UserProjectProvider extends ChangeNotifier {
 
     if (review.isSuccess) {
       // Optionally use review.data if needed
-       //final responseData = review.data;
+      //final responseData = review.data;
     } else {
       error = review.error;
     }
@@ -339,11 +368,11 @@ class UserProjectProvider extends ChangeNotifier {
   bool _isResubmitask = false;
   bool get isResubmitask => _isResubmitask;
   Future<void> toResubmitTask(
-      int task, Map<String, dynamic> toJson, List<String> files) async {
+      Map<String, dynamic> toJson, List<String> files) async {
     _isResubmitask = true;
     error = error;
     notifyListeners();
-    final resubmitTask = await _service.toResubmitUpdate(task, toJson, files);
+    final resubmitTask = await _service.toResubmitUpdate(toJson, files);
     if (resubmitTask.isSuccess) {
       resubmitTask.data;
     } else {
@@ -376,4 +405,17 @@ class UserProjectProvider extends ChangeNotifier {
   Future<void> setFiles(List<FileAttachment> newFiles) async {
     notifyListeners();
   }
+
+  int? _expandedIndex; // null means nothing expanded
+  int? get expandedIndex => _expandedIndex;
+
+  void toggleExpand(int index) {
+    if (_expandedIndex == index) {
+      _expandedIndex = null; //
+    } else {
+      _expandedIndex = index; // expand clicked card
+    }
+    notifyListeners();
+  }
+  //fatch user who is user...................
 }

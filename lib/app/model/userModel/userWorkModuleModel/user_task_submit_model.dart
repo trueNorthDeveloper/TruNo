@@ -1,6 +1,6 @@
 class TaskSubmit {
   int taskId;
-  int submittedById;
+  //int submittedById
   int submittedToId;
   String message;
   String parent;
@@ -10,7 +10,7 @@ class TaskSubmit {
 
   TaskSubmit(
       {required this.taskId,
-      required this.submittedById,
+    //  required this.submittedById,
       required this.submittedToId,
       required this.message,
       required this.parent,
@@ -19,7 +19,7 @@ class TaskSubmit {
       required this.userEid});
   Map<String, dynamic> toJson() => {
         "taskId": taskId,
-        "submittedById": submittedById,
+      //  "submittedById": submittedById,
         "submittedToId": submittedToId,
         "message": message,
         "parent": parent,

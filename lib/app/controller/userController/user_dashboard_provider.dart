@@ -8,8 +8,12 @@ import 'package:image_picker/image_picker.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:truenorthflutterfrontend/app/model/history/user_work_history_model.dart';
+import 'package:truenorthflutterfrontend/public/config/platform_type.dart';
+import 'package:truenorthflutterfrontend/service/userServices/user_work_module_service_api.dart';
 
 class UserDashboardProvider extends ChangeNotifier {
+  final UserProjectService _service = UserProjectService();
   bool _changeColor = false;
   bool get changeColor => _changeColor;
   void chnageColorOnOff() {
@@ -178,44 +182,6 @@ class UserDashboardProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  ///this provider function for download file
-
-  // double _progress = 0.0;
-  // bool _isDownloading = false;
-  // double get progress => _progress;
-
-  // bool get isDownloading => _isDownloading;
-
-  // String _downloadMessage = "Press the button to download";
-  // String get downloadMessage => _downloadMessage;
-
-  // Future<void> downloadApk(String url) async {
-  //   _isDownloading = true;
-  //   _progress = 0.0;
-  //   _downloadMessage = "Starting download...";
-  //   notifyListeners();
-
-  //   Directory appDocDir = await getApplicationDocumentsDirectory();
-  //   String path = "${appDocDir.path}/update.apk";
-
-  //   final file = File(path);
-
-  //   await Dio().download(url, path,
-  //       onReceiveProgress: ((receivedBytes, totalBytes) {
-  //     if (totalBytes != 1) {
-  //       _progress = receivedBytes / totalBytes;
-  //       _downloadMessage =
-  //           "DownLoading.....${receivedBytes / totalBytes * 100}.toStringAsFixed(0)}%";
-  //     }
-  //   }));
-
-  //   print("Downloaded size: ${await file.length()}");
-
-  //   await OpenFilex.open(path);
-  //   _isDownloading = false;
-  //   _downloadMessage = "Download completed!";
-  //   notifyListeners();
-  // }
   double _progress = 0.0;
   bool _isDownloading = false;
   String _downloadMessage = "Press the button to download";
@@ -244,7 +210,7 @@ class UserDashboardProvider extends ChangeNotifier {
             final percent = (_progress * 100).toStringAsFixed(0);
             _downloadMessage = "Downloading... $percent%";
 
-            notifyListeners(); // <- Required for UI updates!
+            notifyListeners();
           }
         },
       );
@@ -262,4 +228,69 @@ class UserDashboardProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  UserWorkHistoryResponse? userWorkHistoryResponse;
+  bool _isHistoryload = false;
+  bool get isHistoryload => _isHistoryload;
+  List<TaskDetails> _usWrkHistory = [];
+  List<TaskDetails> get usWrkHistory => _usWrkHistory;
+  ApiError? error;
+  int _currentPage = 0;
+  int _size = 10;
+  int get currentPage => _currentPage;
+  int get size => _size;
+
+  // Future<void> userWorkHistory() async {
+  //   _isHistoryload = true;
+  //   error = null;
+  //   notifyListeners();
+  //   try {
+  //     final historyResponse = await _service.getUserHistory(currentPage, size);
+  //     if (historyResponse.isSuccess && historyResponse.data != null) {
+  //       _usWrkHistory.addAll( historyResponse.data!.content);
+  //       print(historyResponse.data!.page);
+  //       print(historyResponse.data!.size);
+  //       print(historyResponse.data!.last);
+
+  //       print(historyResponse.data!.totalElements);
+  //       print(historyResponse.data!.totalPages);
+  //       if (historyResponse.data!.totalPages > _currentPage) {
+  //         //  _currentPage++;
+
+  //        // _usWrkHistory.addAll(historyResponse.data!.content);
+  //         _currentPage++;
+  //         notifyListeners();
+  //       }
+  //     }
+  //   } catch (e) {}
+  //   _isHistoryload = false;
+  //   notifyListeners();
+  // }
+  bool _isLastPage = false;
+  Future<void> userWorkHistory() async {
+  if (_isHistoryload || _isLastPage) return;
+
+  _isHistoryload = true;
+  error = null;
+  notifyListeners();
+
+  try {
+    final historyResponse =
+        await _service.getUserHistory(_currentPage, _size);
+
+    if (historyResponse.isSuccess && historyResponse.data != null) {
+      final pageData = historyResponse.data!;
+
+      _usWrkHistory.addAll(pageData.content);
+
+      _isLastPage = pageData.last;
+      _currentPage++;
+    }
+  } catch (e) {
+    error = ApiError.invalidData;
+  }
+
+  _isHistoryload = false;
+  notifyListeners();
+}
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:truenorthflutterfrontend/app/view/userView/userWorkModuleView/user_all_task_review_screen.dart';
 import 'package:truenorthflutterfrontend/app/view/userView/userWorkModuleView/user_create_task_by_team_leader.dart';
 import 'package:truenorthflutterfrontend/app/view/userView/userWorkModuleView/user_re_submit_screen.dart';
@@ -33,24 +34,20 @@ class _UserProjectTeamScreenState extends State<UserProjectTeamScreen> {
     super.initState();
 
     getUserBySharedPreferenceId();
-    Future.microtask(() =>
-        Provider.of<UserProjectProvider>(context, listen: false)
-            .fatchAllTaskInTeam(widget.projectUid, widget.teamUid));
 
-    //fatch team member here.................
-    Future.microtask(() =>
-        Provider.of<UserProjectProvider>(context, listen: false)
-            .fatchTeamMember(widget.projectUid, widget.teamUid));
-    //fatch review task here.................
-    Future.microtask(() =>
-        Provider.of<UserProjectProvider>(context, listen: false)
-            .fatchReviewTaskCon());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = Provider.of<UserProjectProvider>(context, listen: false);
+
+      provider.fatchAllTaskInTeam(widget.projectUid, widget.teamUid);
+      provider.fatchTeamMember(widget.projectUid, widget.teamUid);
+      provider.fatchReviewTaskCon();
+    });
   }
 
   int userUid = 0;
   Future<void> getUserBySharedPreferenceId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt('uuid');
+    final userId = prefs.getInt('user_id');
     if (userId != null) {
       userUid = userId;
     }
@@ -61,8 +58,7 @@ class _UserProjectTeamScreenState extends State<UserProjectTeamScreen> {
     final provider = Provider.of<UserProjectProvider>(context, listen: true);
 
     final teamProvider = Provider.of<UserProjectProvider>(context);
-// final d=provider.taskReviewResponse?.data.toList()??[];
-// print("length  ${d.length}");
+
     final Member? user = teamProvider.teamMemberInfo.isNotEmpty
         ? teamProvider.teamMemberInfo.firstWhere(
             (member) => member.userId == userUid,
@@ -73,12 +69,10 @@ class _UserProjectTeamScreenState extends State<UserProjectTeamScreen> {
     final isTeamLeader = user?.role == 'TEAMLEADER';
     final reviewTask = provider.taskReviewResponse?.data
             .where((submit) =>
-                    submit.submittedTo.submitToId == userUid &&
-                    submit.task.project.projectUid == widget.projectUid &&
-                    submit.task.team.teamUid == widget.teamUid
-
-                &&submit.task.taskStatus=="UNDER_REVIEW"
-                )
+                submit.submittedTo.submitToId == userUid &&
+                submit.task.project.projectUid == widget.projectUid &&
+                submit.task.team.teamUid == widget.teamUid &&
+                submit.task.taskStatus == "UNDER_REVIEW")
             .toList() ??
         [];
 
@@ -99,9 +93,6 @@ class _UserProjectTeamScreenState extends State<UserProjectTeamScreen> {
             .toList() ??
         [];
 
-    // final todayTask = provider.taskResponse2?.data
-    //     .where((t) => t.allotmentDate == "2025-08-28");
-
     return Scaffold(
         appBar: AppBar(
           title: Text(widget.teamName),
@@ -112,102 +103,90 @@ class _UserProjectTeamScreenState extends State<UserProjectTeamScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                //LIST OF TEAM MEMBER IN TEAM UNDER PROJECT TEAM AND TEAM ................
-
+                //show all team member......................
                 Consumer<UserProjectProvider>(
                   builder: (context, pro, child) {
                     if (pro.isTeamMember) {
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
+                      return const Center(child: CircularProgressIndicator());
                     }
 
                     if (pro.error != null) {
-                      return Center(
-                        child: Text(describeApiError(pro.error!)),
+                      return Center(child: Text(describeApiError(pro.error!)));
+                    }
+
+                    final members = pro.teamMemberInfo;
+
+                    if (members.isEmpty) {
+                      return const Center(
+                        child: Text("No members found",
+                            style: TextStyle(fontSize: 14)),
                       );
                     }
 
-                    final team = pro.teamResponse?.data.isNotEmpty == true
-                        ? pro.teamResponse!.data.first
-                        : null;
-
-                    final members = team?.members ?? [];
-
                     return SizedBox(
                       height: 120,
-                      child: members.isNotEmpty
-                          ? ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: members.length,
-                              itemBuilder: (context, index) {
-                                final mem = members[index];
-                                return Container(
-                                  width: 100,
-                                  margin:
-                                      const EdgeInsets.symmetric(horizontal: 8),
-                                  child: Card(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    elevation: 4,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(12.0),
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          CircleAvatar(
-                                            radius: 18,
-                                            backgroundColor: Colors
-                                                .blue[100 * ((index % 8) + 1)],
-                                            child: Text(
-                                              mem.memberName.isNotEmpty
-                                                  ? mem.memberName[0]
-                                                      .toUpperCase()
-                                                  : "?",
-                                              style: const TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(height: 6),
-                                          Text(
-                                            mem.memberName,
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                            textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          Text(
-                                            mem.role,
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                              fontSize: 9,
-                                              color: Colors.grey[600],
-                                            ),
-                                          ),
-                                        ],
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: members.length,
+                        itemBuilder: (context, index) {
+                          final mem = members[index];
+                          return Container(
+                            width: 100,
+                            margin: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Card(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16)),
+                              elevation: 4,
+                              child: Padding(
+                                padding: const EdgeInsets.all(12.0),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 18,
+                                      backgroundColor:
+                                          Colors.blue[100 * ((index % 8) + 1)],
+                                      child: Text(
+                                        mem.memberName.isNotEmpty
+                                            ? mem.memberName[0].toUpperCase()
+                                            : "?",
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                );
-                              },
-                            )
-                          : const Center(
-                              child: Text(
-                                "No members found",
-                                style: TextStyle(fontSize: 14),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      mem.memberName,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      mem.role,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
+                          );
+                        },
+                      ),
                     );
                   },
                 ),
+                //end team member----------------------------------------------
 
                 SizedBox(
                   height: MediaQuery.of(context).size.height * 1 / 100,
@@ -228,6 +207,8 @@ class _UserProjectTeamScreenState extends State<UserProjectTeamScreen> {
                         style: TextStyle(
                             fontSize: 16, fontWeight: FontWeight.w600),
                       ),
+
+                      ///task  Review.............................................................
                       ElevatedButton(
                         onPressed: () {
                           Navigator.pushReplacement(
@@ -401,8 +382,7 @@ class _UserProjectTeamScreenState extends State<UserProjectTeamScreen> {
         return "Server error.";
       case ApiError.jsonFormat:
         return "Invalid response format.";
-      case ApiError.missingUUID:
-        return "User ID not found.";
+      
       case ApiError.unknown:
       default:
         return "An unknown error occurred.";
@@ -485,7 +465,14 @@ class _UserProjectTeamScreenState extends State<UserProjectTeamScreen> {
 
                   return ListTile(
                     onTap: () {
-                      final teamMembers = Provider.of<UserProjectProvider>(
+                      // final teamMembers = Provider.of<UserProjectProvider>(
+                      //         context,
+                      //         listen: false)
+                      //     .teamResponse!
+                      //     .data
+                      //     .expand((team) => team.members)
+                      //     .toList();
+                      final teamMember = Provider.of<UserProjectProvider>(
                               context,
                               listen: false)
                           .teamResponse!
@@ -499,7 +486,7 @@ class _UserProjectTeamScreenState extends State<UserProjectTeamScreen> {
                               context,
                               MaterialPageRoute(
                                   builder: (context) => TaskDetailScreen(
-                                      task: tasks, members: teamMembers)));
+                                      task: tasks, members: teamMember)));
                           break;
                         case "resubmit":
                           Navigator.push(
@@ -509,12 +496,12 @@ class _UserProjectTeamScreenState extends State<UserProjectTeamScreen> {
                                       ResubmitScreen(taskId: tasks.taskId)));
                           break;
                         case "underReview":
-                          //  Navigator.push(
-                          //     context,
-                          //     MaterialPageRoute(
-                          //         builder: (context) => TaskCompletedScreen(
-                          //             taskId: tasks.taskId)));
-                        //  print("under review task");
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => TaskCompletedScreen(
+                                      taskId: tasks.taskId)));
+                          print("under review task");
                           break;
                         case "completed":
                           // final completed =

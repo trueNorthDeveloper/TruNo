@@ -116,13 +116,13 @@ class _TaskCompletedScreenState extends State<TaskCompletedScreen> {
                                         taskInfo.task!.createdBy!.userName),
                                     _infoRow("Assigned To",
                                         taskInfo.task!.assignedTo!.userName),
-                                    _infoRow(
-                                        "Review",
-                                        taskInfo.submit!.submitTo!.userName! +
-                                            " ( " +
-                                            taskInfo.submit!.taskReviewAt!
-                                                .substring(0, 10) +
-                                            " )"),
+                                    // _infoRow(
+                                    //     "Review",
+                                    //     taskInfo.submit!.submitTo!.userName! +
+                                    //         " ( " +
+                                    //         taskInfo.submit!.taskReviewAt!
+                                    //             .substring(0, 10) +
+                                    //         " )"),
                                     _infoRow(
                                         "Submit At",
                                         taskInfo.submit!.taskSubmittedAt!

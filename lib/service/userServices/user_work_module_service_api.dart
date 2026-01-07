@@ -4,9 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-
-import 'package:http_parser/http_parser.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:truenorthflutterfrontend/app/model/history/user_work_history_model.dart';
 import 'package:truenorthflutterfrontend/public/config/api_const.dart';
 import 'package:truenorthflutterfrontend/public/utils/userUtil/api_result.dart';
 import 'package:truenorthflutterfrontend/app/model/userModel/userWorkModuleModel/user_complete_task_api_response_model.dart';
@@ -18,21 +16,25 @@ import 'package:truenorthflutterfrontend/app/model/userModel/userWorkModuleModel
 import 'package:truenorthflutterfrontend/app/model/userModel/userWorkModuleModel/user_project_type_model.dart';
 import 'package:truenorthflutterfrontend/app/model/userModel/userWorkModuleModel/user_task_response_model.dart';
 import 'package:truenorthflutterfrontend/public/config/platform_type.dart';
+import 'package:truenorthflutterfrontend/service/token/tokenService.dart';
 
 class UserProjectService {
   //fatch all projectType........................
-
+  final auth = TokenService();
   Future<Result<ProjectTypeResponse>> fetchAllProjectType() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      String? endPoint = "tnec-project/getProType";
+      final response = await auth.authorizedGetForWork(endPoint);
 
-      final uuid = prefs.getInt("uuid");
-      if (uuid == null) {
-        return Result.failure(ApiError.missingUUID);
-      }
-      final url = Uri.parse('${Apiconstants.userProjectType}$uuid');
+      // final prefs = await SharedPreferences.getInstance();
 
-      final response = await http.get(url).timeout(const Duration(seconds: 20));
+      // final uuid = prefs.getInt("uuid");
+      // if (uuid == null) {
+      //   return Result.failure(ApiError.missingUUID);
+      // }
+      // final url = Uri.parse('${Apiconstants.userProjectType}$uuid');
+
+      // final response = await http.get(url).timeout(const Duration(seconds: 20));
 
       if (response.statusCode == 200) {
         try {
@@ -61,14 +63,17 @@ class UserProjectService {
 
   Future<Result<userProjectResponse>> getAllProject(int projectUid) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      String? endPoint = "tnec-project/getProject" + "/$projectUid";
+      final response = await auth.authorizedGetForWork(endPoint);
 
-      final uuid = prefs.getInt("uuid");
-      if (uuid == null) {
-        return Result.failure(ApiError.missingUUID);
-      }
-      final url = Uri.parse('${Apiconstants.userAllProject}$projectUid/$uuid');
-      final response = await http.get(url).timeout(const Duration(seconds: 10));
+      //final prefs = await SharedPreferences.getInstance();
+
+      // final uuid = prefs.getInt("uuid");
+      // if (uuid == null) {
+      //   return Result.failure(ApiError.missingUUID);
+      // }
+      // final url = Uri.parse('${Apiconstants.userAllProject}$projectUid/$uuid');
+      // final response = await http.get(url).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         try {
@@ -97,16 +102,18 @@ class UserProjectService {
   // get project team under project
   Future<Result<ProjectTeamResponse>> getProjectTeam(int projectUid) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final uuid = prefs.getInt("uuid");
+      // final prefs = await SharedPreferences.getInstance();
+      // final uuid = prefs.getInt("uuid");
 
-      if (uuid == null) {
-        return Result.failure(ApiError.missingUUID);
-      }
+      // if (uuid == null) {
+      //   return Result.failure(ApiError.missingUUID);
+      // }
 
-      final url = Uri.parse('${Apiconstants.userProjectTeam}$projectUid/$uuid');
+      // final url = Uri.parse('${Apiconstants.userProjectTeam}$projectUid/$uuid');
 
-      final response = await http.get(url).timeout(const Duration(seconds: 10));
+      // final response = await http.get(url).timeout(const Duration(seconds: 10));
+      String? endPoint = "tnec-project/getTeam" + "/$projectUid";
+      final response = await auth.authorizedGetForWork(endPoint);
 
       if (response.statusCode == 200) {
         try {
@@ -133,51 +140,109 @@ class UserProjectService {
   }
 
 // fatch user task.....................
+
   Future<Result<TaskResponse>> getUserTask() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final uuid = prefs.getInt("uuid");
-      final url = Uri.parse("${Apiconstants.userTaskById}$uuid");
-      final response = await http.get(url).timeout(const Duration(seconds: 20));
+      String endPoint = "tnec-project/getTask";
+      final response = await auth.authorizedGetForWork(endPoint);
+
+      // Handle HTTP status codes
       if (response.statusCode == 200) {
         try {
+          if (response.body.isEmpty) {
+            return Result.failure(ApiError.emptyResponse);
+          }
+
           final data = jsonDecode(response.body);
           final taskResponse = TaskResponse.fromJson(data);
 
           return Result.success(taskResponse);
-        } on FormatException catch (_) {
+        } on FormatException {
           return Result.failure(ApiError.jsonFormat);
+        } on NoSuchMethodError {
+          return Result.failure(ApiError.invalidData);
         }
-      } else {
+      } else if (response.statusCode == 401) {
+        return Result.failure(ApiError.unauthorized);
+      } else if (response.statusCode == 403) {
+        return Result.failure(ApiError.forbidden);
+      } else if (response.statusCode == 429) {
+        return Result.failure(ApiError.tooManyRequests);
+      } else if (response.statusCode >= 500) {
         return Result.failure(ApiError.server);
+      } else {
+        return Result.failure(ApiError.unknown);
       }
-    } on SocketException catch (_) {
+    } on SocketException {
       return Result.failure(ApiError.network);
-    } on TimeoutException catch (_) {
+    } on TimeoutException {
       return Result.failure(ApiError.timeout);
-    } on http.ClientException catch (_) {
+    } on HttpException {
+      return Result.failure(ApiError.unauthorized);
+    } on HandshakeException {
+      return Result.failure(ApiError.ssl);
+    } on http.ClientException {
       return Result.failure(ApiError.client);
-    } on PlatformException catch (_) {
+    } on PlatformException {
       return Result.failure(ApiError.platform);
     } catch (_) {
       return Result.failure(ApiError.unknown);
     }
   }
 
+  // Future<Result<TaskResponse>> getUserTask() async {
+  //   try {
+  //     // final prefs = await SharedPreferences.getInstance();
+  //     // final uuid = prefs.getInt("uuid");
+  //     //final url = Uri.parse("${Apiconstants.userTaskById}$uuid");
+
+  //     // final response = await http.get(url).timeout(const Duration(seconds: 20));
+  //     String? endPoint = "tnec-project/getTask";
+  //     final response = await auth.authorizedGetForWork(endPoint);
+  //     if (response.statusCode == 200) {
+  //       try {
+  //         final data = jsonDecode(response.body);
+  //         final taskResponse = TaskResponse.fromJson(data);
+
+  //         return Result.success(taskResponse);
+  //       } on FormatException catch (_) {
+  //         return Result.failure(ApiError.jsonFormat);
+  //       }
+  //     } else {
+  //       return Result.failure(ApiError.server);
+  //     }
+  //   } on SocketException catch (_) {
+  //     return Result.failure(ApiError.network);
+  //   } on TimeoutException catch (_) {
+  //     return Result.failure(ApiError.timeout);
+  //   } on http.ClientException catch (_) {
+  //     return Result.failure(ApiError.client);
+  //   } on PlatformException catch (_) {
+  //     return Result.failure(ApiError.platform);
+  //   } catch (_) {
+  //     return Result.failure(ApiError.unknown);
+  //   }
+  // }
+
 //Get all task based on
 
   Future<Result<TaskResponse>> getAllTaskInTeam(
       int projectId, int teamId) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final uuid = prefs.getInt("uuid");
-      final url = Uri.parse(
-          "${Apiconstants.userAllTaskInTeam}$projectId/$teamId/$uuid");
-      final response = await http.get(url).timeout(Duration(seconds: 10));
+      // final prefs = await SharedPreferences.getInstance();
+      // final uuid = prefs.getInt("uuid");
+      // final url = Uri.parse(
+      //     "${Apiconstants.userAllTaskInTeam}$projectId/$teamId/$uuid");
+      // final response = await http.get(url).timeout(Duration(seconds: 10));
+      String? endPoint = "tnec-project/allTask" + "/$projectId/$teamId";
+      final response = await auth.authorizedGetForWork(endPoint);
+
       if (response.statusCode == 200) {
         try {
           final data = jsonDecode(response.body);
+
           final allTaskResponse = TaskResponse.fromJson(data);
+
           return Result.success(allTaskResponse);
         } on FormatException catch (_) {
           return Result.failure(ApiError.jsonFormat);
@@ -334,33 +399,60 @@ class UserProjectService {
       return Result.failure(ApiError.unknown);
     }
   }
-//GET ALL TEAM MEMBER IN SPECIFIC PROJECT...................AND TEAM.
 
   Future<Result<TeamResponse>> getAllTeamMember(
       int projectId, int teamId) async {
     try {
-      final url = Uri.parse("${Apiconstants.teamMember}$projectId/$teamId");
-      final response = await http.get(url).timeout(const Duration(seconds: 20));
+      // Build endpoint
+      final String endPoint = "tnec-project/getTeamMember/$projectId/$teamId";
+
+      // Make authorized GET request
+      final response = await auth.authorizedGetForWork(endPoint);
+
       if (response.statusCode == 200) {
         try {
           final data = jsonDecode(response.body);
-          final teamResponse = TeamResponse.fromJson(data);
-          return Result.success(teamResponse);
-        } on FormatException catch (_) {
+          //print("JSON DECODED -------------------");
+          //  print(data);
+
+          final resJson = TeamResponse.fromJson(data);
+
+          // ✅ Check the API's success field
+          if (resJson.success) {
+            return Result.success(resJson);
+          } else {
+            //print("API returned success=false, message: ${resJson.message}");
+            return Result.failure(ApiError.server); // or custom error
+          }
+        } catch (e) {
+          //print("JSON parse error: $e");
+          //print(stackTrace);
           return Result.failure(ApiError.jsonFormat);
         }
-      } else {
+      } else if (response.statusCode == 400 ||
+          response.statusCode == 401 ||
+          response.statusCode == 403) {
+        return Result.failure(ApiError.unauthorized);
+      } else if (response.statusCode >= 500) {
         return Result.failure(ApiError.server);
+      } else {
+        return Result.failure(ApiError.unknown);
       }
-    } on SocketException catch (_) {
+    } on SocketException catch (e) {
+      print("Network error: $e");
       return Result.failure(ApiError.network);
-    } on TimeoutException catch (_) {
+    } on TimeoutException catch (e) {
+      print("Timeout error: $e");
       return Result.failure(ApiError.timeout);
-    } on http.ClientException catch (_) {
+    } on http.ClientException catch (e) {
+      print("HTTP client error: $e");
       return Result.failure(ApiError.client);
-    } on PlatformException catch (_) {
+    } on PlatformException catch (e) {
+      print("Platform error: $e");
       return Result.failure(ApiError.platform);
-    } catch (_) {
+    } catch (e, stackTrace) {
+      print("Unknown error: $e");
+      print(stackTrace);
       return Result.failure(ApiError.unknown);
     }
   }
@@ -460,41 +552,47 @@ class UserProjectService {
   Future<Result> submitTaskWithWithOutFiles(
       Map<String, dynamic> json, List<String> files) async {
     try {
-      final url = Uri.parse(Apiconstants.submitTaskWithFiles);
+      // final url = Uri.parse(Apiconstants.submitTaskWithFiles);
 
-      final request = http.MultipartRequest("POST", url);
+      // final request = http.MultipartRequest("POST", url);
 
-      request.headers.addAll({
-        'Authorization': 'Basic ${base64Encode(utf8.encode('admin:admin123'))}',
-      });
+      // request.headers.addAll({
+      //   'Authorization': 'Basic ${base64Encode(utf8.encode('admin:admin123'))}',
+      // });
 
-      // 🔹 Send dto as application/json
-      request.files.add(
-        http.MultipartFile.fromString(
-          'dto',
-          jsonEncode(json),
-          contentType: MediaType('application', 'json'),
-        ),
-      );
+      // // 🔹 Send dto as application/json
+      // request.files.add(
+      //   http.MultipartFile.fromString(
+      //     'dto',
+      //     jsonEncode(json),
+      //     contentType: MediaType('application', 'json'),
+      //   ),
+      // );
 
-      // 🔹 Send files if any
-      for (var filePath in files) {
-        request.files.add(
-          await http.MultipartFile.fromPath(
-            'files',
-            filePath,
-          ),
-        );
-      }
+      // // 🔹 Send files if any
+      // for (var filePath in files) {
+      //   request.files.add(
+      //     await http.MultipartFile.fromPath(
+      //       'files',
+      //       filePath,
+      //     ),
+      //   );
+      // }
 
-      final streamedResponse = await request.send();
-      final respStr = await streamedResponse.stream.bytesToString();
+      // final streamedResponse = await request.send();
+      // final respStr = await streamedResponse.stream.bytesToString();
+      // Build endpoint
+      final String endPoint = "tnec-project/submitTask";
 
+      http.StreamedResponse streamedResponse = await auth
+          .authorizedPostForTaskWithMultipleFile(json, files, endPoint);
       if (streamedResponse.statusCode == 200) {
-        final jsonResponse = jsonDecode(respStr);
+        // final jsonResponse = jsonDecode(respStr);
+        final responseBody = await streamedResponse.stream.bytesToString();
+        final jsonResponse = jsonDecode(responseBody);
         return Result.success(jsonResponse);
       } else {
-        print("Server error: $respStr");
+        //print("Server error: $respStr");
         return Result.failure(ApiError.server);
       }
     } catch (e, s) {
@@ -506,13 +604,16 @@ class UserProjectService {
 
   Future<Result<TaskReviewResponse>> fatchReviewTask() async {
     try {
-      final url = Uri.parse(Apiconstants.reviewTask);
+      // final url = Uri.parse(Apiconstants.reviewTask);
 
-      final responseReview = await http.get(url).timeout(Duration(seconds: 20));
+      // final responseReview = await http.get(url).timeout(Duration(seconds: 20));
+      final String endPoint = "tnec-project/review";
+      final responseReview = await auth.authorizedGetForWork(endPoint);
 
       if (responseReview.statusCode == 200) {
         try {
           final data = jsonDecode(responseReview.body);
+          // print(data);
           final reviewTask = TaskReviewResponse.fromJson(data);
           return Result.success(reviewTask);
         } on FormatException catch (_) {
@@ -537,18 +638,20 @@ class UserProjectService {
 
   Future<Result> updateReviewTask(Map<String, dynamic> json) async {
     try {
-      final url = Uri.parse(Apiconstants.reviewTaskUpdate);
+      // final url = Uri.parse(Apiconstants.reviewTaskUpdate);
 
-      final response = await http
-          .put(
-            url,
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: jsonEncode(json),
-          )
-          .timeout(const Duration(seconds: 10));
+      // final response = await http
+      //     .put(
+      //       url,
+      //       headers: {
+      //         'Content-Type': 'application/json',
+      //         'Accept': 'application/json',
+      //       },
+      //       body: jsonEncode(json),
+      //     )
+      //     .timeout(const Duration(seconds: 10));
+      final String endPoint = "tnec-project/updateReview";
+      final response = await auth.authorizedPutForWork(endPoint, json);
 
       if (response.statusCode == 200) {
         // API returns a plain string, so just return it directly
@@ -572,18 +675,20 @@ class UserProjectService {
 
   Future<Result> createTask(Map<String, dynamic> json) async {
     try {
-      final url = Uri.parse(Apiconstants.crtTask);
+      // final url = Uri.parse(Apiconstants.crtTask);
 
-      final response = await http
-          .post(
-            url,
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: jsonEncode(json),
-          )
-          .timeout(const Duration(seconds: 10));
+      // final response = await http
+      //     .post(
+      //       url,
+      //       headers: {
+      //         'Content-Type': 'application/json',
+      //         'Accept': 'application/json',
+      //       },
+      //       body: jsonEncode(json),
+      //     )
+      //     .timeout(const Duration(seconds: 10));
+      String? endPoint = "tnec-project/createTask";
+      final response = await auth.authorizedPostForWork(endPoint, json);
 
       if (response.statusCode == 200) {
         // API returns a plain string, so just return it directly
@@ -607,8 +712,10 @@ class UserProjectService {
 
   Future<Result<CompleteTaskApiResponse>> toviewCompleteTask(int taskId) async {
     try {
-      final url = Uri.parse("${Apiconstants.viewCompleteTask}/$taskId");
-      final apiResponse = await http.get(url).timeout(Duration(seconds: 20));
+      // final url = Uri.parse("${Apiconstants.viewCompleteTask}/$taskId");
+      // final apiResponse = await http.get(url).timeout(Duration(seconds: 20));
+      String? endPoint = "tnec-project/completed-detail" + "/$taskId";
+      final apiResponse = await auth.authorizedGetForWork(endPoint);
 
       if (apiResponse.statusCode == 200) {
         try {
@@ -636,37 +743,41 @@ class UserProjectService {
 
 //resubmit means user can update the task...................
   Future<Result> toResubmitUpdate(
-      int taskId, Map<String, dynamic> json, List<String> files) async {
+      Map<String, dynamic> json, List<String> files) async {
     try {
-      final url = Uri.parse("${Apiconstants.resubmitupdate}$taskId");
-      final updateRequest = http.MultipartRequest("PUT", url);
+      // final url = Uri.parse("${Apiconstants.resubmitupdate}$taskId");
+      // final updateRequest = http.MultipartRequest("PUT", url);
 
-      // updateRequest.fields['dto'] = jsonEncode(json);
-      updateRequest.files.add(
-        http.MultipartFile.fromString(
-          'dto',
-          jsonEncode(json),
-          contentType: MediaType('application', 'json'),
-        ),
-      );
+      // updateRequest.files.add(
+      //   http.MultipartFile.fromString(
+      //     'dto',
+      //     jsonEncode(json),
+      //     contentType: MediaType('application', 'json'),
+      //   ),
+      // );
 
-      if (files.isNotEmpty) {
-        for (var filePath in files) {
-          updateRequest.files.add(
-            await http.MultipartFile.fromPath('files', filePath),
-          );
-        }
-      }
+      // if (files.isNotEmpty) {
+      //   for (var filePath in files) {
+      //     updateRequest.files.add(
+      //       await http.MultipartFile.fromPath('files', filePath),
+      //     );
+      //   }
+      // }
 
-      // Send the request
-      final streamedResponse = await updateRequest.send();
-      final responseStr = await streamedResponse.stream.bytesToString();
+      // // Send the request
+      // final streamedResponse = await updateRequest.send();
+      // final responseStr = await streamedResponse.stream.bytesToString();
+      String? endPoint = "tnec-project/resubmitupdate";
+      http.StreamedResponse streamedResponse =
+          await auth.authorizedPutWithFileForWork(endPoint, json, files);
 
       if (streamedResponse.statusCode == 200) {
-        final jsonResponse = jsonDecode(responseStr);
+        final responseBody = await streamedResponse.stream.bytesToString();
+        // final jsonResponse = jsonDecode(responseBody);
+        final jsonResponse = jsonDecode(responseBody);
         return Result.success(jsonResponse);
       } else {
-        print("Server error: $responseStr");
+        //print("Server error: $responseStr");
         return Result.failure(ApiError.server);
       }
     } on SocketException {
@@ -686,9 +797,11 @@ class UserProjectService {
 //THIS FUNCTION REFRACTOR:-TO-DELETE THE FILE FROM DRIVE AS WELL AS DATABASE.................
   Future<Result> todeleteFile(int id) async {
     try {
-      final url = Uri.parse("${Apiconstants.deleteFile}$id");
-      final response =
-          await http.delete(url).timeout(const Duration(minutes: 2));
+      //  final url = Uri.parse("${Apiconstants.deleteFile}$id");
+      // final response =
+      //     await http.delete(url).timeout(const Duration(minutes: 2));
+      String? endPoint = "tnec-project/deletefile/$id";
+      final response = await auth.authDeleteForWork(endPoint);
 
       if (response.statusCode == 200) {
         if (response.body.isNotEmpty) {
@@ -715,6 +828,60 @@ class UserProjectService {
       return Result.failure(ApiError.platform);
     } catch (e) {
       print("Unexpected error during delete: $e");
+      return Result.failure(ApiError.unknown);
+    }
+  }
+
+//USER WORK HISTORY......................................................
+  Future<Result<UserWorkHistoryResponse>> getUserHistory(
+      int currentPage, int size) async {
+    try {
+    //  String endPoint = "tnec-project/my-task-history?$currentPage&$size";
+    String endPoint =
+    "tnec-project/my-task-history?page=$currentPage&size=$size";
+
+      final response = await auth.authorizedGetForWork(endPoint);
+
+      // Handle HTTP status codes
+      if (response.statusCode == 200) {
+        try {
+          if (response.body.isEmpty) {
+            return Result.failure(ApiError.emptyResponse);
+          }
+
+          final data = jsonDecode(response.body);
+          final taskResponse = UserWorkHistoryResponse.fromJson(data);
+
+          return Result.success(taskResponse);
+        } on FormatException {
+          return Result.failure(ApiError.jsonFormat);
+        } on NoSuchMethodError {
+          return Result.failure(ApiError.invalidData);
+        }
+      } else if (response.statusCode == 401) {
+        return Result.failure(ApiError.unauthorized);
+      } else if (response.statusCode == 403) {
+        return Result.failure(ApiError.forbidden);
+      } else if (response.statusCode == 429) {
+        return Result.failure(ApiError.tooManyRequests);
+      } else if (response.statusCode >= 500) {
+        return Result.failure(ApiError.server);
+      } else {
+        return Result.failure(ApiError.unknown);
+      }
+    } on SocketException {
+      return Result.failure(ApiError.network);
+    } on TimeoutException {
+      return Result.failure(ApiError.timeout);
+    } on HttpException {
+      return Result.failure(ApiError.unauthorized);
+    } on HandshakeException {
+      return Result.failure(ApiError.ssl);
+    } on http.ClientException {
+      return Result.failure(ApiError.client);
+    } on PlatformException {
+      return Result.failure(ApiError.platform);
+    } catch (_) {
       return Result.failure(ApiError.unknown);
     }
   }

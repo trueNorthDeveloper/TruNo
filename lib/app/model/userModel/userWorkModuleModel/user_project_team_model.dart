@@ -42,12 +42,14 @@ class ProjectTeam {
 class TeamMember {
   String memberName;
   String role;
-  TeamMember({required this.memberName, required this.role});
+  int userUid;
+  TeamMember({required this.memberName, required this.role,required this.userUid});
 
   factory TeamMember.fromJson(Map<String, dynamic> json) {
     return TeamMember(
       memberName: json['memberName'],
-      role: json['role'],
+      role: json['role'] as String? ?? "",
+      userUid: json['userId'] as int? ?? 0,
     );
   }
 }
