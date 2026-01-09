@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:provider/provider.dart';
+import 'package:truenorthflutterfrontend/app/view/userView/userHomeView/leaveScreen.dart';
 
 import 'package:truenorthflutterfrontend/app/view/userView/userHomeView/user_attendance_screen.dart';
 import 'package:truenorthflutterfrontend/app/view/userView/userLogRegsView/user_logout_screen.dart';
@@ -248,7 +249,16 @@ class _MyUserhomePage extends State<UserHomePage> {
                                     ));
                                   },
                                 ),
-                                customBox("Leave", context),
+                                customBox(
+                                  "Leave",
+                                  context,
+                                  onTapCallback: () async {
+                                    Navigator.of(context)
+                                        .push(MaterialPageRoute(
+                                      builder: (_) => LeavescreenUi(),
+                                    ));
+                                  },
+                                ),
                               ],
                             );
                     },

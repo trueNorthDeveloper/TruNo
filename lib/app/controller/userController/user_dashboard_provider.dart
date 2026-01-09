@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -163,15 +164,10 @@ class UserDashboardProvider extends ChangeNotifier {
     }
   }
 
-  //Date 24-10-25 user attendance for date picker
-  //
-  //
   DateTime focusedDay = DateTime.now();
   Map<DateTime, List<dynamic>> events = {};
 
   Future<void> attendanceEvent(BuildContext context) async {
-    print("🔁 attendanceDatePicker called");
-
     events = {
       DateTime.utc(2025, 10, 1): ['Present'],
       DateTime.utc(2025, 10, 5): ['Absent'],
@@ -268,29 +264,89 @@ class UserDashboardProvider extends ChangeNotifier {
   // }
   bool _isLastPage = false;
   Future<void> userWorkHistory() async {
-  if (_isHistoryload || _isLastPage) return;
+    if (_isHistoryload || _isLastPage) return;
 
-  _isHistoryload = true;
-  error = null;
-  notifyListeners();
+    _isHistoryload = true;
+    error = null;
+    notifyListeners();
 
-  try {
-    final historyResponse =
-        await _service.getUserHistory(_currentPage, _size);
+    try {
+      final historyResponse =
+          await _service.getUserHistory(_currentPage, _size);
 
-    if (historyResponse.isSuccess && historyResponse.data != null) {
-      final pageData = historyResponse.data!;
+      if (historyResponse.isSuccess && historyResponse.data != null) {
+        final pageData = historyResponse.data!;
 
-      _usWrkHistory.addAll(pageData.content);
+        _usWrkHistory.addAll(pageData.content);
 
-      _isLastPage = pageData.last;
-      _currentPage++;
+        _isLastPage = pageData.last;
+        _currentPage++;
+      }
+    } catch (e) {
+      error = ApiError.invalidData;
     }
-  } catch (e) {
-    error = ApiError.invalidData;
+
+    _isHistoryload = false;
+    notifyListeners();
   }
 
-  _isHistoryload = false;
-  notifyListeners();
-}
+  final TextEditingController _fromDateController = TextEditingController();
+  final TextEditingController _toDateController = TextEditingController();
+
+  DateTime? _fromDate;
+  DateTime? _toDate;
+
+  TextEditingController get fromDateController => _fromDateController;
+  TextEditingController get toDateController => _toDateController;
+
+  DateTime? get fromDate => _fromDate;
+  DateTime? get toDate => _toDate;
+
+  Future<void> selectDate({
+    required BuildContext context,
+    required bool isFromDate,
+  }) async {
+    final DateTime initialDate = isFromDate
+        ? (_fromDate ?? DateTime.now())
+        : (_toDate ?? DateTime.now());
+
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+
+    if (picked == null) return;
+
+    if (isFromDate) {
+      _fromDate = picked;
+      _fromDateController.text = DateFormat('yyyy-MM-dd').format(picked);
+    } else {
+      _toDate = picked;
+      _toDateController.text = DateFormat('yyyy-MM-dd').format(picked);
+    }
+
+    notifyListeners();
+  }
+
+  void clearDates() {
+    _fromDate = null;
+    _toDate = null;
+    _fromDateController.clear();
+    _toDateController.clear();
+    notifyListeners();
+  }
+
+  int _leaveDays = 0;
+  int get leaveDays => _leaveDays;
+  void countLeaveDays() {
+    String fromm = fromDateController.text;
+    String too = toDateController.text;
+    if (fromm.isNotEmpty && too.isNotEmpty) {
+      int f = int.parse(fromm.substring(8, 10));
+      int t = int.parse(too.substring(8, 10));
+      _leaveDays = t - f;
+    }
+  }
 }

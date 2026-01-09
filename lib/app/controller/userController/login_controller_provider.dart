@@ -997,15 +997,15 @@ class LoginProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  //here we will use fatch background location  every dynamic timer interval..
-  Timer? _periodicTimer;
-  Future<void> getBackgroundLocationFetch(int duration) async {
-    _periodicTimer = Timer.periodic(Duration(seconds: 5), (timer) {
-      print("Background location fetch triggered in provider");
-    });
-    //notifyListeners();
-  }
-  //Automatic logout when user session has been expire............................
+  // //here we will use fatch background location  every dynamic timer interval..
+  // Timer? _periodicTimer;
+  // Future<void> getBackgroundLocationFetch(int duration) async {
+  //   _periodicTimer = Timer.periodic(Duration(seconds: 5), (timer) {
+  //     print("Background location fetch triggered in provider");
+  //   });
+  //   //notifyListeners();
+  // }
+  // //Automatic logout when user session has been expire............................
 
   Future<void> AutomaticLogout(BuildContext context, bool image) async {
     _isLoggingOut = true;

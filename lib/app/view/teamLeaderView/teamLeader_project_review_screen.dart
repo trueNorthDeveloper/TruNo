@@ -6,7 +6,8 @@ import 'package:truenorthflutterfrontend/public/utils/userUtil/buildCustomText.d
 import 'package:truenorthflutterfrontend/public/utils/userUtil/size_config.dart';
 
 class TeamleaderProjectReviewScreen extends StatefulWidget {
-  const TeamleaderProjectReviewScreen({super.key});
+  final String projectName;
+  TeamleaderProjectReviewScreen({super.key, required this.projectName});
 
   @override
   State<TeamleaderProjectReviewScreen> createState() =>
@@ -250,137 +251,194 @@ class _TeamleaderProjectReviewScreenState
     int filter = Provider.of<TeamleaderControllerPro>(context, listen: true)
         .selectedFilterIndex;
     return Scaffold(
-      backgroundColor: const Color(0xffF4F6F8),
-      appBar: AppBar(title: const Text("Team Leader Dashboard")),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        backgroundColor: const Color(0xffF4F6F8),
+        appBar: AppBar(
+          centerTitle: true,
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.blue, Colors.indigo],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+          ),
+          title: const Text(
+            "DASHBOARD",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.3,
+            ),
+          ),
+        ),
+        body: Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-//------------------------------Task summary total -------------------------------------
-                SizedBox(
-                  width: SizeConFig.proportionalWidth * 4.5,
-                  height: SizeConFig.proportionalHeight * 2,
-                  child: _summaryCards(),
-                ),
-//------------------------------- task status peichart garaph project Completion-------------------------
-                SizedBox(
-                  width: SizeConFig.proportionalWidth * 4.5,
-                  height: SizeConFig.proportionalHeight * 2,
-                  child: Column(
-                    children: [_taskStatusChart(), _projectProgress()],
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 14),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Colors.blue, Colors.purple],
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: BuildCustomText(
+                      data: widget.projectName,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
                   ),
-                )
-              ],
-            ),
-//-----------------------Size box--------------------------------------
-            SizeConFig.verticalBox(0.01),
-            _buildBreakLine(),
-            SizeConFig.verticalBox(0.01),
-//----------------------TEAM PROGRESSS CHILP
-            Row(
-              children: [
-                _buildChip("Team Progress", Colors.blueGrey),
-                SizeConFig.horizontalBox(0.10),
-                Consumer<TeamleaderControllerPro>(
-                  builder: (context, value, child) {
-                    return value.changeIcn
-                        ? Icon(Icons.arrow_downward)
-                        : Icon(Icons.arrow_upward);
-                  },
                 ),
-                InkWell(
-                    onTap: () {
-                      context.read<TeamleaderControllerPro>().changeIcons();
-                    },
-                    child: _buildChip(
-                        "click-here", const Color.fromARGB(255, 17, 13, 16))),
-              ],
-            ),
-            SizeConFig.verticalBox(0.01),
 
-            Consumer<TeamleaderControllerPro>(
-              builder: (context, value, child) {
-                //--------------------------TEAM PROGRESS----------------------------------------------------------------
-                if (value.changeIcn == true) return _teamPerformance();
-                return SizeConFig.verticalBox(0.01);
-              },
-            ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+//------------------------------Task summary total -------------------------------------
+                    SizedBox(
+                      width: SizeConFig.proportionalWidth * 4.5,
+                      height: SizeConFig.proportionalHeight * 2,
+                      child: _summaryCards(),
+                    ),
+//------------------------------- task status peichart garaph project Completion-------------------------
+                    SizedBox(
+                      width: SizeConFig.proportionalWidth * 4.5,
+                      height: SizeConFig.proportionalHeight * 2,
+                      child: Column(
+                        children: [_taskStatusChart(), _projectProgress()],
+                      ),
+                    )
+                  ],
+                ),
+//-----------------------Size box--------------------------------------
+                SizeConFig.verticalBox(0.01),
+                _buildBreakLine(),
+                SizeConFig.verticalBox(0.01),
+//----------------------TEAM PROGRESSS CHILP
+                Expanded(
+                    child: SingleChildScrollView(
+                        child: Column(children: [
+                  Column(
+                    children: <Widget>[
+                      Row(
+                        children: [
+                          _buildChip("Team Progress", Colors.blueGrey),
+                          SizeConFig.horizontalBox(0.10),
+                          Consumer<TeamleaderControllerPro>(
+                            builder: (context, value, child) {
+                              return value.changeIcn
+                                  ? Icon(Icons.arrow_downward)
+                                  : Icon(Icons.arrow_upward);
+                            },
+                          ),
+                          InkWell(
+                              onTap: () {
+                                context
+                                    .read<TeamleaderControllerPro>()
+                                    .changeIcons();
+                              },
+                              child: _buildChip("click-here",
+                                  const Color.fromARGB(255, 17, 13, 16))),
+                        ],
+                      ),
+                      SizeConFig.verticalBox(0.01),
+
+                      Consumer<TeamleaderControllerPro>(
+                        builder: (context, value, child) {
+                          //--------------------------TEAM PROGRESS----------------------------------------------------------------
+                          if (value.changeIcn == true)
+                            return _teamPerformance();
+                          return SizeConFig.verticalBox(0.01);
+                        },
+                      ),
 
 //--------------------------------BREAK LINE USING BLACK LINE----------------------------------------------
-            _buildBreakLine(),
-            SizeConFig.verticalBox(0.01),
-//-----------------------CHANGE TEAM AND OFFICE TEAM TASK WISE---------------------------------------------
-            SizedBox(
-              child: Row(
-                //mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: List.generate(2, (index) {
-                  final titles = ["[Survey-Team]", "[Office-Team]"];
-                  final lineColors = [Colors.green, Colors.black];
+                      _buildBreakLine(),
+                      SizeConFig.verticalBox(0.01),
+// //-----------------------CHANGE TEAM AND OFFICE TEAM TASK WISE---------------------------------------------
+                      SizedBox(
+                        child: Row(
+                          //mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: List.generate(2, (index) {
+                            final titles = ["[Survey-Team]", "[Office-Team]"];
+                            final lineColors = [Colors.green, Colors.black];
 
-                  return Column(
-                    children: [
-                      InkWell(
-                        onTap: () {
-                          Provider.of<TeamleaderControllerPro>(
-                            context,
-                            listen: false,
-                          ).increaseCounterForTeam(index);
-                        },
-                        child:
-                            _buildCounter(titles[index], index, Colors.black),
+                            return Column(
+                              children: [
+                                InkWell(
+                                  onTap: () {
+                                    Provider.of<TeamleaderControllerPro>(
+                                      context,
+                                      listen: false,
+                                    ).increaseCounterForTeam(index);
+                                  },
+                                  child: _buildCounter(
+                                      titles[index], index, Colors.black),
+                                ),
+                                if (counter == index)
+                                  buildLine(lineColors[index]),
+                              ],
+                            );
+                          }),
+                        ),
                       ),
-                      if (counter == index) buildLine(lineColors[index]),
-                    ],
-                  );
-                }),
-              ),
-            ),
-            SizeConFig.verticalBox(0.01),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  InkWell(
-                      onTap: () {
-                        context.read<TeamleaderControllerPro>().selectFilter(0);
-                      },
-                      child: _buildTaskFilter("[All]", 10, 0)),
-                  SizeConFig.horizontalBox(0.02),
-                  InkWell(
-                      onTap: () {
-                        print("2");
-                        context.read<TeamleaderControllerPro>().selectFilter(1);
-                      },
-                      child: _buildTaskFilter("[Pending]", 10, 1)),
-                  SizeConFig.horizontalBox(0.02),
-                  InkWell(
-                      onTap: () {
-                        print("3");
-                        context.read<TeamleaderControllerPro>().selectFilter(2);
-                      },
-                      child: _buildTaskFilter("[Completed]", 10, 2)),
-                  SizeConFig.horizontalBox(0.02),
-                  InkWell(
-                      onTap: () {
-                        print("4");
-                        context.read<TeamleaderControllerPro>().selectFilter(3);
-                      },
-                      child: _buildTaskFilter("[Review]", 10, 3)),
-                ],
-              ),
-            ),
-            SizeConFig.verticalBox(0.01),
+                      SizeConFig.verticalBox(0.01),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          children: [
+                            InkWell(
+                                onTap: () {
+                                  context
+                                      .read<TeamleaderControllerPro>()
+                                      .selectFilter(0);
+                                },
+                                child: _buildTaskFilter("[All]", 10, 0)),
+                            SizeConFig.horizontalBox(0.02),
+                            InkWell(
+                                onTap: () {
+                                  print("2");
+                                  context
+                                      .read<TeamleaderControllerPro>()
+                                      .selectFilter(1);
+                                },
+                                child: _buildTaskFilter("[Pending]", 10, 1)),
+                            SizeConFig.horizontalBox(0.02),
+                            InkWell(
+                                onTap: () {
+                                  print("3");
+                                  context
+                                      .read<TeamleaderControllerPro>()
+                                      .selectFilter(2);
+                                },
+                                child: _buildTaskFilter("[Completed]", 10, 2)),
+                            SizeConFig.horizontalBox(0.02),
+                            InkWell(
+                                onTap: () {
+                                  print("4");
+                                  context
+                                      .read<TeamleaderControllerPro>()
+                                      .selectFilter(3);
+                                },
+                                child: _buildTaskFilter("[Review]", 10, 3)),
+                          ],
+                        ),
+                      ),
+                      SizeConFig.verticalBox(0.01),
+
 //---------------------------all task show using build taskList----------------------------------------
-            if (counter == 0) _buildTaskList(surveyTeam, filter),
-            if (counter == 1) _buildTaskList(officeTeam, filter),
-          ],
-        ),
-      ),
-    );
+                      if (counter == 0) _buildTaskList(surveyTeam, filter),
+                      if (counter == 1) _buildTaskList(officeTeam, filter),
+                    ],
+                  ),
+                ])))
+              ],
+            )));
   }
 
   Widget _buildTaskFilter(String data, double textSize, int index) {
@@ -930,3 +988,103 @@ class _TeamleaderProjectReviewScreenState
         ));
   }
 }
+// Column(
+//                 children:<Widget> [
+//                         Row(
+//               children: [
+//                 _buildChip("Team Progress", Colors.blueGrey),
+//                 SizeConFig.horizontalBox(0.10),
+//                 Consumer<TeamleaderControllerPro>(
+//                   builder: (context, value, child) {
+//                     return value.changeIcn
+//                         ? Icon(Icons.arrow_downward)
+//                         : Icon(Icons.arrow_upward);
+//                   },
+//                 ),
+//                 InkWell(
+//                     onTap: () {
+//                       context.read<TeamleaderControllerPro>().changeIcons();
+//                     },
+//                     child: _buildChip(
+//                         "click-here", const Color.fromARGB(255, 17, 13, 16))),
+//               ],
+//             ),
+//             SizeConFig.verticalBox(0.01),
+
+//             Consumer<TeamleaderControllerPro>(
+//               builder: (context, value, child) {
+//                 //--------------------------TEAM PROGRESS----------------------------------------------------------------
+//                 if (value.changeIcn == true) return _teamPerformance();
+//                 return SizeConFig.verticalBox(0.01);
+//               },
+//             ),
+
+// //--------------------------------BREAK LINE USING BLACK LINE----------------------------------------------
+//             _buildBreakLine(),
+//             SizeConFig.verticalBox(0.01),
+// //-----------------------CHANGE TEAM AND OFFICE TEAM TASK WISE---------------------------------------------
+//             SizedBox(
+//               child: Row(
+//                 //mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                 children: List.generate(2, (index) {
+//                   final titles = ["[Survey-Team]", "[Office-Team]"];
+//                   final lineColors = [Colors.green, Colors.black];
+
+//                   return Column(
+//                     children: [
+//                       InkWell(
+//                         onTap: () {
+//                           Provider.of<TeamleaderControllerPro>(
+//                             context,
+//                             listen: false,
+//                           ).increaseCounterForTeam(index);
+//                         },
+//                         child:
+//                             _buildCounter(titles[index], index, Colors.black),
+//                       ),
+//                       if (counter == index) buildLine(lineColors[index]),
+//                     ],
+//                   );
+//                 }),
+//               ),
+//             ),
+//             SizeConFig.verticalBox(0.01),
+//             Padding(
+//               padding: const EdgeInsets.all(8.0),
+//               child: Row(
+//                 children: [
+//                   InkWell(
+//                       onTap: () {
+//                         context.read<TeamleaderControllerPro>().selectFilter(0);
+//                       },
+//                       child: _buildTaskFilter("[All]", 10, 0)),
+//                   SizeConFig.horizontalBox(0.02),
+//                   InkWell(
+//                       onTap: () {
+//                         print("2");
+//                         context.read<TeamleaderControllerPro>().selectFilter(1);
+//                       },
+//                       child: _buildTaskFilter("[Pending]", 10, 1)),
+//                   SizeConFig.horizontalBox(0.02),
+//                   InkWell(
+//                       onTap: () {
+//                         print("3");
+//                         context.read<TeamleaderControllerPro>().selectFilter(2);
+//                       },
+//                       child: _buildTaskFilter("[Completed]", 10, 2)),
+//                   SizeConFig.horizontalBox(0.02),
+//                   InkWell(
+//                       onTap: () {
+//                         print("4");
+//                         context.read<TeamleaderControllerPro>().selectFilter(3);
+//                       },
+//                       child: _buildTaskFilter("[Review]", 10, 3)),
+//                 ],
+//               ),
+//             ),
+//             SizeConFig.verticalBox(0.01),
+// //---------------------------all task show using build taskList----------------------------------------
+//             if (counter == 0) _buildTaskList(surveyTeam, filter),
+//             if (counter == 1) _buildTaskList(officeTeam, filter),
+//                 ],
+//               ),

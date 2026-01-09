@@ -9,7 +9,7 @@ import 'package:truenorthflutterfrontend/app/view/teamLeaderView/teamLeader_proj
 import 'package:truenorthflutterfrontend/app/view/userView/userWorkModuleView/user_team_module_screen.dart';
 import 'package:truenorthflutterfrontend/public/config/platform_type.dart';
 import 'package:truenorthflutterfrontend/public/utils/userUtil/size_config.dart';
-import 'package:truenorthflutterfrontend/service/token/tokenService.dart';
+
 
 class UserWorkModuleScreen extends StatefulWidget {
   const UserWorkModuleScreen({super.key});
@@ -225,6 +225,7 @@ class _UserWorkModuleScreenState extends State<UserWorkModuleScreen> {
                                           final userProject = entry.value;
                                           final projectUid =
                                               userProject.tnecProjectUid;
+                                              String projectName=userProject.tnecProjectName;
                                           //  final bool isTeamLeader = true;
                                           bool isTeamLeader = context
                                               .read<LoginControll>()
@@ -268,7 +269,7 @@ class _UserWorkModuleScreenState extends State<UserWorkModuleScreen> {
                                                 // TEAM LEADER BUTTON
                                                 if (isTeamLeader)
                                                   //TEAM LEADER PROJECT OVERVIEW AND TASK REVIEW..........................
-                                                  teamLeaderView(projectUid),
+                                                  teamLeaderView(projectUid,projectName),
 
                                                 //PENDINF TASK CONTAINER BASED ON USER AND TEAMlEADER..............
                                                 pendingContainerBuild(
@@ -407,7 +408,7 @@ class _UserWorkModuleScreenState extends State<UserWorkModuleScreen> {
   }
 
 //TEAM LEADER VIEW FOR PROJECT OVERVIEW...........
-  Widget teamLeaderView(int projectUid) {
+  Widget teamLeaderView(int projectUid, String projectName) {
     return Stack(children: [
       InkWell(
         onTap: () {
@@ -415,11 +416,11 @@ class _UserWorkModuleScreenState extends State<UserWorkModuleScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => TeamleaderProjectReviewScreen(),
+              builder: (context) => TeamleaderProjectReviewScreen(projectName:projectName),
             ),
           );
 
-          print("project overview${projectUid}");
+         // print("project overview${projectUid}");
         },
         child: Container(
           height: SizeConFig.screenHeight * 3 / 100,
