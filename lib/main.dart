@@ -42,10 +42,10 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  @override
-  void initState() {
-    super.initState();
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -62,18 +62,3 @@ class _MyAppState extends State<MyApp> {
     // :UserPermissionHandlerState());
   }
 }
-  // Future<String?> apiUrlFun() async {
-  //   final url =
-  //       'https://gist.githubusercontent.com/trueNorthDeveloper/c9d91e97283633a0cf102ad349f771ce/raw/api-config.json';
-  //   final response = await http.get(Uri.parse(url));
-  //   if (response.statusCode == 200) {
-  //     final json = jsonDecode(response.body);
-  //    var baseUrl =json['base_url'];
-  //    print(baseUrl);                                                                                 
-  //    Apiconstants.url=baseUrl;
-
-  //     return json['base_url'];
-  //   } else {
-  //     return null;
-  //   }
-  // }

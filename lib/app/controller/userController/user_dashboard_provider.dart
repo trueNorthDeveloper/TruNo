@@ -349,4 +349,50 @@ class UserDashboardProvider extends ChangeNotifier {
       _leaveDays = t - f;
     }
   }
+
+  ///-------------------------------------------------------------to do list item............
+  List<Map<String, dynamic>> todo = [
+    {
+      "name": "ABC",
+      "date": "01-2026",
+      "done": false,
+    },
+    {
+      "name": "Buy Milk",
+      "date": "02-2026",
+      "done": true,
+    },
+  ];
+  final List<Map<String, dynamic>> personal = [
+    {
+      "name": "ABC",
+      "date": "01-2026",
+      "done": false,
+    },
+    {
+      "name": "Buy Milk",
+      "date": "02-2026",
+      "done": true,
+    },
+  ];
+  final List<Map<String, dynamic>> work = [
+    {
+      "name": "ABC",
+      "date": "01-2026",
+      "done": false,
+    },
+    {
+      "name": "Buy Milk",
+      "date": "02-2026",
+      "done": true,
+    },
+  ];
+  int currentTool = 0;
+  String  _currentName="Office-Tools";
+  String get currentName=>_currentName;
+  void increaseToolCounter(int counter,String updateName) {
+    currentTool = counter;
+    _currentName=updateName;
+    notifyListeners();
+  }
 }

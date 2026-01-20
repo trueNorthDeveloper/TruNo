@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:provider/provider.dart';
+import 'package:truenorthflutterfrontend/app/view/userView/userHomeView/instrumentLibarary.dart';
 import 'package:truenorthflutterfrontend/app/view/userView/userHomeView/leaveScreen.dart';
+import 'package:truenorthflutterfrontend/app/view/userView/userHomeView/todoScreen.dart';
 
 import 'package:truenorthflutterfrontend/app/view/userView/userHomeView/user_attendance_screen.dart';
 import 'package:truenorthflutterfrontend/app/view/userView/userLogRegsView/user_logout_screen.dart';
@@ -271,12 +273,25 @@ class _MyUserhomePage extends State<UserHomePage> {
                           : Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
-                                customBox("Report", context),
-                                customBox("To Do", context),
+                                customBox(
+                                  "Report",
+                                  context,
+                                ),
+                                customBox(
+                                  "To Do",
+                                  context,
+                                  onTapCallback: () {
+                                    Navigator.of(context)
+                                        .push(MaterialPageRoute(
+                                      builder: (_) => Todoscreen(),
+                                    ));
+                                  },
+                                ),
                                 customBox("My chart", context),
                               ],
                             );
                     },
+                    //Todoscreen
                   ),
                   SizedBox(height: SizeConFig.screenHeight * 1 / 100),
                   Consumer<UserDashboardProvider>(
@@ -286,7 +301,16 @@ class _MyUserhomePage extends State<UserHomePage> {
                           : Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
-                                customBox("Instrument Libary", context),
+                                customBox(
+                                  "Instrument Libary",
+                                  context,
+                                  onTapCallback: () {
+                                    Navigator.of(context)
+                                        .push(MaterialPageRoute(
+                                      builder: (_) => Instrumentlibarary(),
+                                    ));
+                                  },
+                                ),
                                 customBox("Expenses", context),
                                 customBox("High Priority", context),
                               ],
