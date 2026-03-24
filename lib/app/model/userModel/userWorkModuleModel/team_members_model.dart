@@ -1,7 +1,8 @@
 class TeamResponse {
   final bool success;
   final String message;
-  final List<Team> data;
+  // final List<Team> data;
+    final Team? data;
 
   TeamResponse({
     required this.success,
@@ -13,18 +14,17 @@ class TeamResponse {
     return TeamResponse(
       success: json['success'] ?? false,
       message: json['message'] ?? '',
-      data: (json['data'] as List<dynamic>?)
-              ?.map((e) => Team.fromJson(e))
-              .toList() ??
-          [],
+      data:json['data'] != null ? Team.fromJson(json['data']): null,
+      
     );
   }
-
+  
   Map<String, dynamic> toJson() {
     return {
       'success': success,
       'message': message,
-      'data': data.map((e) => e.toJson()).toList(),
+      "data":data?.toJson()
+     // 'data': data.map((e) => e.toJson()).toList(),
     };
   }
 }

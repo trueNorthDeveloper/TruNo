@@ -12,11 +12,12 @@ class TokenService {
   static String url = "";
   static String baseUrl = url + "/auth/api/";
   static String projectBaseUrl = url + "/api/";
+  static String attendance = url = "/api/attendance/";
 //saved user token
   static Future<void> saveToken(String accessToken, String refreshToken) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString("access-token", accessToken);
-    prefs.setString("refresh-token", refreshToken);
+    prefs.setString("access_token", accessToken);
+    prefs.setString("refresh_token", refreshToken);
   }
 
 //it will clear shareed prffrence...........................................
@@ -27,13 +28,17 @@ class TokenService {
 
   static Future<String?> getAccessToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? accessToken = await prefs.getString("access-token");
+    String? accessToken = await prefs.getString("access_token");
     return accessToken;
   }
 
   static Future<String?> getRefreshToken() async {
+    print("refresh token funcation working============");
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? refreshToken = await prefs.getString("refresh-token");
+    String? refreshToken = await prefs.getString("refresh_token");
+    // String? access =await  prefs.getString("access_token");
+    //    String? role =await  prefs.getString("user_role");
+    print("refresh toke function ${refreshToken}");
     return refreshToken;
   }
 
@@ -55,28 +60,45 @@ class TokenService {
   }
 
 //GET REFRESH TOKEN----------------------------------------------------------------------------------
+
   static Future<bool> getRefreshAccessToken() async {
     try {
       final refreshToken = await getRefreshToken();
       if (refreshToken == null) return false;
-      bool hasInternet = await Deviceconfig.checkInternetConnection();
+
+      final hasInternet = await Deviceconfig.checkInternetConnection();
       if (!hasInternet) return false;
 
       final url = Uri.parse(Apiconstants.refreshTokenAcess);
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"refreshToken": refreshToken}),
-      );
+
+      final response = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type':
+                  'application/json', // CRITICAL: Tell the server it's JSON
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({"refreshToken": refreshToken}),
+          )
+          .timeout(
+              const Duration(seconds: 15)); // Good practice to add a timeout
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
-        await saveToken(json['accessToken'], json['refreshToken']);
+
+        // Safety check: only update refresh token if the API actually sent a new one
+        final newAccessToken = json['access_token'];
+        final newRefreshToken = json['refresh_token'] ?? refreshToken;
+
+        await saveToken(newAccessToken, newRefreshToken);
         return true;
       }
 
+      // If status is 401 or 403, the refresh token itself might be expired
       return false;
     } catch (e) {
+      print("Refresh Token Error: $e");
       return false;
     }
   }

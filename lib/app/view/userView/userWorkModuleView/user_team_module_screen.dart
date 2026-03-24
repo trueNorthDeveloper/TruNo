@@ -6,7 +6,6 @@ import 'package:truenorthflutterfrontend/app/view/userView/userWorkModuleView/us
 import 'package:truenorthflutterfrontend/app/view/userView/userWorkModuleView/user_create_task_by_team_leader.dart';
 import 'package:truenorthflutterfrontend/app/view/userView/userWorkModuleView/user_re_submit_screen.dart';
 import 'package:truenorthflutterfrontend/app/view/userView/userWorkModuleView/user_task_completed_screen.dart';
-import 'package:truenorthflutterfrontend/app/view/userView/userWorkModuleView/user_task_detail_screen.dart';
 
 import 'package:truenorthflutterfrontend/app/model/userModel/userWorkModuleModel/team_members_model.dart';
 import 'package:truenorthflutterfrontend/app/model/userModel/userWorkModuleModel/user_task_response_model.dart';
@@ -38,9 +37,9 @@ class _UserProjectTeamScreenState extends State<UserProjectTeamScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = Provider.of<UserProjectProvider>(context, listen: false);
 
-      provider.fatchAllTaskInTeam(widget.projectUid, widget.teamUid);
+      // provider.fatchAllTaskInTeam(widget.projectUid, widget.teamUid);
       provider.fatchTeamMember(widget.projectUid, widget.teamUid);
-      provider.fatchReviewTaskCon();
+      // provider.fatchReviewTaskCon();
     });
   }
 
@@ -103,89 +102,10 @@ class _UserProjectTeamScreenState extends State<UserProjectTeamScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                //show all team member......................
-                Consumer<UserProjectProvider>(
-                  builder: (context, pro, child) {
-                    if (pro.isTeamMember) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
+//SHOW ALL TEAM MEMBER TOP OF THE SCREEN
+//STEP:1
+                buildProjectTeam(),
 
-                    if (pro.error != null) {
-                      return Center(child: Text(describeApiError(pro.error!)));
-                    }
-
-                    final members = pro.teamMemberInfo;
-
-                    if (members.isEmpty) {
-                      return const Center(
-                        child: Text("No members found",
-                            style: TextStyle(fontSize: 14)),
-                      );
-                    }
-
-                    return SizedBox(
-                      height: 120,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: members.length,
-                        itemBuilder: (context, index) {
-                          final mem = members[index];
-                          return Container(
-                            width: 100,
-                            margin: const EdgeInsets.symmetric(horizontal: 8),
-                            child: Card(
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16)),
-                              elevation: 4,
-                              child: Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 18,
-                                      backgroundColor:
-                                          Colors.blue[100 * ((index % 8) + 1)],
-                                      child: Text(
-                                        mem.memberName.isNotEmpty
-                                            ? mem.memberName[0].toUpperCase()
-                                            : "?",
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      mem.memberName,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    Text(
-                                      mem.role,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 9,
-                                        color: Colors.grey[600],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  },
-                ),
                 //end team member----------------------------------------------
 
                 SizedBox(
@@ -321,12 +241,6 @@ class _UserProjectTeamScreenState extends State<UserProjectTeamScreen> {
         floatingActionButton: isTeamLeader
             ? FloatingActionButton(
                 onPressed: () {
-                  // final teamMembers =
-                  //     Provider.of<UserProjectProvider>(context, listen: false)
-                  //         .teamResponse!
-                  //         .data
-                  //         .expand((team) => team.members)
-                  //         .toList();
                   if (user != null) {
                     final teamMembers =
                         Provider.of<UserProjectProvider>(context, listen: false)
@@ -382,7 +296,7 @@ class _UserProjectTeamScreenState extends State<UserProjectTeamScreen> {
         return "Server error.";
       case ApiError.jsonFormat:
         return "Invalid response format.";
-      
+
       case ApiError.unknown:
       default:
         return "An unknown error occurred.";
@@ -465,28 +379,21 @@ class _UserProjectTeamScreenState extends State<UserProjectTeamScreen> {
 
                   return ListTile(
                     onTap: () {
-                      // final teamMembers = Provider.of<UserProjectProvider>(
+                      // final teamMember = Provider.of<UserProjectProvider>(
                       //         context,
                       //         listen: false)
                       //     .teamResponse!
                       //     .data
                       //     .expand((team) => team.members)
                       //     .toList();
-                      final teamMember = Provider.of<UserProjectProvider>(
-                              context,
-                              listen: false)
-                          .teamResponse!
-                          .data
-                          .expand((team) => team.members)
-                          .toList();
 
                       switch (name) {
                         case "pending":
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => TaskDetailScreen(
-                                      task: tasks, members: teamMember)));
+                          // Navigator.push(
+                          //     context,
+                          //     MaterialPageRoute(
+                          //         builder: (context) => TaskDetailScreen(
+                          //             task: tasks, members: teamMember)));
                           break;
                         case "resubmit":
                           Navigator.push(
@@ -634,6 +541,89 @@ class _UserProjectTeamScreenState extends State<UserProjectTeamScreen> {
           },
         ),
       ],
+    );
+  }
+//show team member 
+  Widget buildProjectTeam() {
+    return Consumer<UserProjectProvider>(
+      builder: (context, pro, child) {
+        if (pro.isTeamMember) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (pro.error != null) {
+          return Center(child: Text(describeApiError(pro.error!)));
+        }
+
+        final members = pro.teamMemberInfo;
+
+        if (members.isEmpty) {
+          return const Center(
+            child: Text("No members found", style: TextStyle(fontSize: 14)),
+          );
+        }
+
+        return SizedBox(
+          height: 120,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: members.length,
+            itemBuilder: (context, index) {
+              final mem = members[index];
+              return Container(
+                width: 100,
+                margin: const EdgeInsets.symmetric(horizontal: 8),
+                child: Card(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                  elevation: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircleAvatar(
+                          radius: 18,
+                          backgroundColor: Colors.blue[100 * ((index % 8) + 1)],
+                          child: Text(
+                            mem.memberName.isNotEmpty
+                                ? mem.memberName[0].toUpperCase()
+                                : "?",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          mem.memberName,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          mem.role,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 9,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

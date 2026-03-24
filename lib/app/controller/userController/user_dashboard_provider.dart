@@ -388,11 +388,255 @@ class UserDashboardProvider extends ChangeNotifier {
     },
   ];
   int currentTool = 0;
-  String  _currentName="Office-Tools";
-  String get currentName=>_currentName;
-  void increaseToolCounter(int counter,String updateName) {
+  String _currentName = "Office-Tools";
+  String get currentName => _currentName;
+  void increaseToolCounter(int counter, String updateName) {
     currentTool = counter;
-    _currentName=updateName;
+    _currentName = updateName;
+    notifyListeners();
+  }
+
+  bool _show = false;
+  bool get show => _show;
+  void showHideToolsList() {
+    _show = !_show;
+    print(_show);
+    notifyListeners();
+  }
+
+  List<String> libaryTools = [
+    "office-tools",
+    'site-tools',
+    "vehical",
+    "Miscellaneous"
+  ];
+  final Map<String, List<String>> toolItemsMap = {
+    // "office-tools": ["Desktop", "Laptop", "Printer"],
+    "office-tools": [],
+    "site-tools": ["DGPS", "Survey Machine", "Total Station"],
+    "vehical": ["DGPS Vehicle", "Transport Vehicle"],
+    "Miscellaneous": [],
+  };
+
+  String? selectedToolType;
+  List<String> currentItemList = [];
+  String? errorMessage;
+
+  // void selectToolType(String type) {
+  //   selectedToolType = type;
+  //   currentItemList = toolItemsMap[type] ?? [];
+
+  //   if (currentItemList.isEmpty) {
+  //     errorMessage = "No items available for $type";
+  //   } else {
+  //     errorMessage = null;
+  //   }
+
+  //   notifyListeners();
+  // }
+
+  // void clearr() {
+  //   selectedToolType = null;
+  //   currentItemList = [];
+  //   errorMessage = null;
+  //   notifyListeners();
+  // }
+
+  //SELECT TOOLS WITH CERTAIN CONDITION........
+  List<String> category = [
+    "office-tools",
+    'site-tools',
+    "vehical",
+    "Miscellaneous"
+  ];
+  final Map<String, List<String>> categoryType = {
+    "office-tools": [
+      "laptop",
+      "destop",
+      "printer",
+    ],
+    "site-tools": ["DGPS", "totalStation", "rower", "tripodStand"],
+    "vehical": [
+      "bike",
+      "car",
+      "van",
+    ],
+    "Miscellaneous": [
+      "power bank",
+      "mobile device",
+      "charger",
+      "earphones",
+      "sim",
+      "sd card",
+    ],
+  };
+  final Map<String, List<String>> miscelleneousCategory = {
+    "power bank": ["power 1", "power 2", "power 3", "power 4", "power 5"],
+    "mobile device": ["redmi 9A", "realme c2", "motorola m1", "samsung s21"],
+    "charger": ["del charger m1", "charger c2"],
+    "earphones": ["earphone e1", "earphone e2", "earphone e3", "earphone e4"],
+    "sim": ["idea", "airtel", "vodaphone", " jio"],
+    "sd card": ["sandisk s1", "sd card s2", "sd card s3"]
+  };
+  final Map<String, List<String>> officeCategory = {
+    "laptop": [
+      "laptop l1",
+      "laptop l2",
+      "laptop l3",
+      "laptop l4",
+      "laptop l5",
+    ],
+    "destop": [
+      "desktop d1",
+      "desktop d2",
+      "desktop d3",
+      "desktop d4",
+    ],
+    "printer": [
+      "printer p1",
+      "printer p2",
+    ],
+  };
+  final Map<String, List<String>> siteCategory = {
+    "DGPS": ["DGPS-1", "DGPS-2", "DGPS-3", "DGPS-4", "DGPS-5"],
+    "totalStation": [
+      "totalStation-1",
+      "totalStation-2",
+      "totalStation-3",
+      "totalStation-4",
+    ],
+    "rower": ["rower-1", "rower-2", "rower-3", "rower-4"],
+    "tripodStand": ["tripod-1", "tripod-2", "tripod-3", "tripod-4"]
+  };
+  final Map<String, List<String>> vehicalCategory = {
+    "bike": ["honda shine 1230", "delux 0123", "active 9107"],
+    "car": ["alto 7898", "swift 1222", "punch 4564"],
+    "van": ["maruti van 0093", "omne van 1222"],
+  };
+
+  String? currentSelectCategory;
+  List<String> currentAvailableCategory = [];
+  List<String> chooseAvaibleTools = [];
+
+  ///
+  List<String> itemWiseCategory = [];
+  void availableTools(String selectCategory) {
+    currentSelectCategory = selectCategory;
+    // print(currentSelectCategory);
+    currentAvailableCategory = category;
+    if (currentSelectCategory!.isNotEmpty && currentSelectCategory != null) {
+      chooseAvaibleTools = categoryType[currentSelectCategory] ?? [];
+    }
+
+    notifyListeners();
+  }
+
+  //next after choose avaible tools select specifc tools
+  String? selectChooseItem;
+  List<String> selectChooseItemList = [];
+  String? selectedTools;
+  void selectChooseCategory(String item) {
+    selectChooseItem = item;
+    if (selectChooseItem != null && selectChooseItem!.isNotEmpty) {
+      if (currentSelectCategory == "office-tools") {
+        selectChooseItemList = officeCategory[item] ?? [];
+      }
+      if (currentSelectCategory == "site-tools") {
+        selectChooseItemList = siteCategory[item] ?? [];
+      }
+      if (currentSelectCategory == "vehical") {
+        selectChooseItemList = vehicalCategory[item] ?? [];
+      }
+      if (currentSelectCategory == "Miscellaneous") {
+        selectChooseItemList = miscelleneousCategory[item] ?? [];
+      }
+    }
+    notifyListeners();
+  }
+
+  final List<String> existingTools = [
+    "laptop l1",
+    "laptop l2",
+    "desktop d3",
+    "printer p1",
+    "DGPS-2",
+    "totalStation-3",
+    "rower-4",
+    "tripod-2",
+    "honda shine 1230",
+    "swift 1222",
+    "mobile device",
+    "earphone e2",
+    "jio",
+    "sd card s3"
+  ];
+  bool isItemAvailable(String item) {
+    return existingTools.contains(item);
+  }
+
+  bool _toolsAvaibles = false;
+  bool get toolsAvaibles => _toolsAvaibles;
+
+  bool _showRequestBox = false;
+  bool get showRequestBox => _showRequestBox;
+  bool _showRequestField = false;
+  bool get showRequestField => _showRequestField;
+
+  TextEditingController requestToolController = TextEditingController();
+  void findAvaibliltiy(String selectItem) {
+    bool available = isItemAvailable(selectItem);
+
+    if (available) {
+      _toolsAvaibles = true;
+      _showRequestField = false;
+      errorMessage = null;
+      print("✅ $selectItem is available");
+    } else {
+      _toolsAvaibles = false;
+      _showRequestField = true;
+      errorMessage = "$selectItem is not available. You can request this tool.";
+      print("❌ $selectItem is not available");
+    }
+
+    notifyListeners();
+  }
+
+  void clearToolsAndSelected() {
+    currentSelectCategory = null;
+    currentAvailableCategory = [];
+    chooseAvaibleTools = [];
+    selectChooseItem = null;
+    selectChooseItemList = [];
+    errorMessage = null;
+    _toolsAvaibles = false;
+    //   notifyListeners();
+  }
+
+  void resetRequestState() {
+    _showRequestField = false;
+    _toolsAvaibles = false;
+    errorMessage = null;
+    requestToolController.clear();
+    notifyListeners();
+  }
+
+  //select date
+  ///this code for date picker for tool select end date of intrument means last
+  TextEditingController dueDateController = TextEditingController();
+
+  Future<void> datePickForTools({
+    required BuildContext context,
+  }) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+
+    if (picked == null) return;
+
+    dueDateController.text = DateFormat('yyyy-MM-dd').format(picked);
+
     notifyListeners();
   }
 }

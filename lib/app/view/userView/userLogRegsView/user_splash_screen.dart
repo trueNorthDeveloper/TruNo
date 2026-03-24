@@ -30,11 +30,13 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-
+    //BOTH COMMENTED
+   
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkAutoLogin();
     });
   }
+  
 
   void _goToLogin() {
     Future.delayed(const Duration(seconds: 2), () {
@@ -95,9 +97,13 @@ class _SplashScreenState extends State<SplashScreen> {
 //end 23-12-25...........
 // 1️⃣ Get refresh token
       String? refreshToken = await TokenService.getRefreshToken();
+      print("refresn token get-----------------");
+      print(refreshToken);
 
       // 2️⃣ Check internet
       bool hasInternet = await Deviceconfig.checkInternetConnection();
+      print("internet ok==========================");
+      print(hasInternet);
 
       // 3️⃣ OFFLINE FLOW (User logged in)
       if (!hasInternet && refreshToken != null && refreshToken.isNotEmpty) {
@@ -121,7 +127,8 @@ class _SplashScreenState extends State<SplashScreen> {
       }
 
       // 6️⃣ Refresh token if exists
-      if (refreshToken != null && refreshToken.isNotEmpty) {
+      if (refreshToken != null &&
+          refreshToken.isNotEmpty) {
         bool refreshed = await TokenService.getRefreshAccessToken();
 
         if (refreshed) {

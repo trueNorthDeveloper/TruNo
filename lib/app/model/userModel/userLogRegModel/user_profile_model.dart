@@ -22,8 +22,8 @@ class UserProfileModel {
         empDesignation: json["empDesignation"] ?? " ",
         empId: json["empId"] ?? " ",
         empName: json["empName"] ?? " ",
-        empPhone: json["empPhone"] ?? " ",
-        empRole: json["empRole"],
-        imageURL: json["imageURL"]);
+        empPhone: json["empMobile"] ?? " ",
+        empRole: json["role"],
+        imageURL: json["url"]);
   }
 }

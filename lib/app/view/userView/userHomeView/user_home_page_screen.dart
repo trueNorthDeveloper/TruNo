@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:truenorthflutterfrontend/app/view/userView/userHomeView/instrumentLibarary.dart';
-import 'package:truenorthflutterfrontend/app/view/userView/userHomeView/leaveScreen.dart';
+import 'package:truenorthflutterfrontend/app/userAttendanceModuleAndLeave/view/leaveScreen.dart';
 import 'package:truenorthflutterfrontend/app/view/userView/userHomeView/todoScreen.dart';
 
-import 'package:truenorthflutterfrontend/app/view/userView/userHomeView/user_attendance_screen.dart';
+import 'package:truenorthflutterfrontend/app/userAttendanceModuleAndLeave/view/user_attendance_screen.dart';
 import 'package:truenorthflutterfrontend/app/view/userView/userLogRegsView/user_logout_screen.dart';
 
 import 'package:truenorthflutterfrontend/app/controller/userController/login_controller_provider.dart';
@@ -34,8 +34,11 @@ class _MyUserhomePage extends State<UserHomePage> {
   void initState() {
     super.initState();
 
-    Future.microtask(() =>
-        Provider.of<LoginProvider>(context, listen: false).fetchSessionInfo());
+    // Future.microtask(() =>
+    //     Provider.of<LoginProvider>(context, listen: false).fetchSessionInfo());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<LoginProvider>(context, listen: false).loadUserSession();
+    });
 
     Future.microtask(() =>
         Provider.of<UserProjectProvider>(context, listen: false)
@@ -44,11 +47,49 @@ class _MyUserhomePage extends State<UserHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    Provider.of<UserDashboardProvider>(context, listen: false);
-    // final user2 = context.watch<LoginControll>().user;
-
     SizeConFig.init(context);
     return Scaffold(
+      appBar: AppBar(
+          elevation: 0,
+          backgroundColor: Colors.white,
+          title: Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: Colors.blue,
+                child: Image.asset(Appimage.splash, fit: BoxFit.fill),
+              ),
+              SizedBox(width: 10),
+              Text(
+                "TruNo",
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.search, color: Colors.black),
+              onPressed: () {},
+            ),
+            IconButton(
+              icon: Icon(Icons.notifications_none, color: Colors.black),
+              onPressed: () {},
+            ),
+            TextButton.icon(
+              onPressed: () {
+                // Your action here
+                print('Button pressed!');
+              },
+              icon: const Icon(Icons.logout), // The icon widget
+              label: const Text('Logout'), // The text label
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.blue,
+              ),
+            )
+          ]),
       body: SingleChildScrollView(
         child: SafeArea(
             child: SizedBox(
@@ -56,35 +97,6 @@ class _MyUserhomePage extends State<UserHomePage> {
           width: SizeConFig.screenWidth,
           child: Column(children: [
             SizedBox(height: SizeConFig.screenHeight * 2 / 100),
-
-            // Center(
-            //     child: AnimatedOpacity(
-            //       opacity: 12.22,
-
-            //       duration: const Duration(milliseconds: 500),
-            //       child: Container(
-            //         padding: const EdgeInsets.symmetric(
-            //             horizontal: 24, vertical: 16),
-            //         decoration: BoxDecoration(
-            //           color: Colors.white,
-            //           borderRadius: BorderRadius.circular(20),
-            //           boxShadow: const [
-            //             BoxShadow(
-            //               blurRadius: 15,
-            //               color: Colors.black26,
-            //             )
-            //           ],
-            //         ),
-            //         child: Text(
-            //           "Welcome, ${user2!.name} 👋",
-            //           style: const TextStyle(
-            //             fontSize: 22,
-            //             fontWeight: FontWeight.bold,
-            //           ),
-            //         ),
-            //       ),
-            //     )
-            // ),
             SizedBox(
               width: SizeConFig.screenWidth * 95 / 100,
               child: Column(
@@ -121,11 +133,10 @@ class _MyUserhomePage extends State<UserHomePage> {
                     ],
                   ),
                   SizedBox(height: SizeConFig.screenHeight * 1 / 100),
-
-                  ///login info image login time and date
+                  //new login session..................
                   Consumer<LoginProvider>(
                     builder: (context, provider, _) {
-                      if (provider.isSessionLog) {
+                      if (provider.isLoadingSession) {
                         return Center(
                           child: LoadingAnimationWidget.inkDrop(
                             color: const Color(0xfffb934d),
@@ -133,12 +144,7 @@ class _MyUserhomePage extends State<UserHomePage> {
                           ),
                         );
                       }
-
-                      if (provider.error != null) {
-                        return Center(child: Text("Error: ${provider.error}"));
-                      }
-
-                      final user = provider.userLoginInfoModel;
+                      final user = provider.userLoginInfoModel2;
                       if (user == null) {
                         return const Center(child: Text("No user data found."));
                       }
@@ -185,6 +191,71 @@ class _MyUserhomePage extends State<UserHomePage> {
                       );
                     },
                   ),
+                  //new login session..............
+
+                  ///login info image login time and date
+                  // Consumer<LoginProvider>(
+                  //   builder: (context, provider, _) {
+                  //     if (provider.isSessionLog) {
+                  //       return Center(
+                  //         child: LoadingAnimationWidget.inkDrop(
+                  //           color: const Color(0xfffb934d),
+                  //           size: 50,
+                  //         ),
+                  //       );
+                  //     }
+
+                  //     if (provider.error != null) {
+                  //       return Center(child: Text("Error: ${provider.error}"));
+                  //     }
+
+                  //     final user = provider.userLoginInfoModel;
+                  //     if (user == null) {
+                  //       return const Center(child: Text("No user data found."));
+                  //     }
+
+                  //     return Column(
+                  //       mainAxisAlignment: MainAxisAlignment.center,
+                  //       children: [
+                  //         ClipOval(
+                  //           child: user.imageURL.isNotEmpty
+                  //               ? Image.network(
+                  //                   user.imageURL,
+                  //                   height: SizeConFig.screenHeight * 0.1,
+                  //                   width: SizeConFig.screenWidth * 0.2,
+                  //                   fit: BoxFit.cover,
+                  //                   loadingBuilder:
+                  //                       (context, child, loadingProgress) {
+                  //                     if (loadingProgress == null) return child;
+                  //                     return const Center(
+                  //                         child: CircularProgressIndicator());
+                  //                   },
+                  //                   errorBuilder: (context, error, stackTrace) {
+                  //                     return Image.asset(
+                  //                       Appimage.splash,
+                  //                       height: SizeConFig.screenHeight * 0.1,
+                  //                       width: SizeConFig.screenWidth * 0.2,
+                  //                       fit: BoxFit.cover,
+                  //                     );
+                  //                   },
+                  //                 )
+                  //               : Image.asset(
+                  //                   Appimage.splash,
+                  //                   height: SizeConFig.screenHeight * 0.1,
+                  //                   width: SizeConFig.screenWidth * 0.2,
+                  //                   fit: BoxFit.cover,
+                  //                 ),
+                  //         ),
+                  //         const SizedBox(height: 10),
+                  //         customUIandText("Hey,", user.empName, Colors.black),
+                  //         customUIandText("Your Login Time Is: ",
+                  //             user.formattedLoginTime!, Colors.green),
+                  //         customUIandText("Ideal Logout Time: ",
+                  //             user.formattedLogoutTime!, Colors.red),
+                  //       ],
+                  //     );
+                  //   },
+                  // ),
                   Consumer<UserDashboardProvider>(
                     builder: (context, useFun, child) {
                       return Row(

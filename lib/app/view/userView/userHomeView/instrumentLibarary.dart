@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:truenorthflutterfrontend/app/controller/userController/user_dashboard_provider.dart';
+import 'package:truenorthflutterfrontend/app/view/userView/userHomeView/selectLibaryTools.dart';
 import 'package:truenorthflutterfrontend/public/utils/userUtil/buildCustomText.dart';
 import 'package:truenorthflutterfrontend/public/utils/userUtil/size_config.dart';
 
@@ -323,9 +324,141 @@ List<String> submitInstrument = [
   "himesh",
   "pramod"
 ];
+final List<Map<String, dynamic>> instrumentHandoverList = [
+  {
+    // Instrument Details
+    "instrument": {
+      "instrumentId": "TNI-1",
+      "instrumentType": "DGPS",
+      "model": "I93",
+      "serialNo": "3657456",
+    },
+
+    // Handover Details (Submitted by Sender)
+    "handover": {
+      "condition": "Repair",
+      "location": "Bhopal",
+      "handoverDate": "01-01-2026",
+      "handoverById": "TNE01",
+      "handoverByName": "Jeb Kotlin",
+      "remarks": "Instrument not powering on",
+      "submittedAt": "2026-01-01 10:30 AM",
+    },
+
+    // Receive Details (Confirmed by Receiver)
+    "receive": {
+      "receivedById": "TNE02",
+      "receivedByName": "Mr Goldy",
+      "receivedDate": "01-01-2026",
+      "receivedCondition": "Repair",
+      "isReceived": true,
+      "remarks": "Received with charger",
+      "receivedAt": "2026-01-01 11:15 AM",
+    },
+
+    // Status Tracking
+    "status": "Completed", // Pending | Received | Completed
+  },
+];
+final List<Map<String, dynamic>> receivedHandoverList = [
+  {
+    "instrumentId": "TNI-1",
+    "instrumentType": "DGPS",
+    "model": "I93",
+    "serialNo": "3657456",
+    "handoverBy": "Jeb Kotlin",
+    "receivedDate": "01-01-2026",
+    "condition": "Repair",
+    "location": "Bhopal",
+    "status": "Received",
+  },
+  {
+    "instrumentId": "TNI-2",
+    "instrumentType": "Total Station",
+    "model": "S7",
+    "serialNo": "7845123",
+    "handoverBy": "Amit Kumar",
+    "receivedDate": "03-01-2026",
+    "condition": "Good",
+    "location": "Indore",
+    "status": "Received",
+  },
+];
+List<Map<String, dynamic>> instrumentHistoryList = [
+  {
+    "event": "Instrument Collected",
+    "instrumentId": "TNI-1",
+    "type": "DGPS",
+    "model": "I93",
+    "serialNo": "3657456",
+    "from": "Store",
+    "to": "Survey Team",
+    "condition": "Repair",
+    "location": "Bhopal",
+    "status": "Collected",
+    "date": "01-01-2026",
+  },
+  {
+    "event": "Instrument Handed Over",
+    "instrumentId": "TNI-1",
+    "type": "DGPS",
+    "model": "I93",
+    "serialNo": "3657456",
+    "from": "Survey Team",
+    "to": "Jeb Kotlin",
+    "condition": "Repair",
+    "location": "Bhopal",
+    "status": "Handover",
+    "date": "01-01-2026",
+  },
+  {
+    "event": "Instrument Received",
+    "instrumentId": "TNI-1",
+    "type": "DGPS",
+    "model": "I93",
+    "serialNo": "3657456",
+    "from": "Jeb Kotlin",
+    "to": "Office Store",
+    "condition": "Repair",
+    "location": "Bhopal",
+    "status": "Received",
+    "date": "01-01-2026",
+  },
+  {
+    "event": "Vehicle Assigned",
+    "instrumentId": "VH-101",
+    "type": "DGPS Vehicle",
+    "model": "I93",
+    "serialNo": "SN-3657456",
+    "from": "Transport Dept",
+    "to": "Survey Team",
+    "condition": "Good",
+    "location": "Indore",
+    "status": "Assigned",
+    "date": "01-01-2026",
+  },
+  {
+    "event": "Office Tool Issued",
+    "instrumentId": "OT-201",
+    "type": "Desktop System",
+    "model": "Dell OptiPlex 7090",
+    "serialNo": "SYS-908123",
+    "from": "IT Store",
+    "to": "Admin Office",
+    "condition": "Good",
+    "location": "Head Office",
+    "status": "Issued",
+    "date": "01-01-2026",
+  },
+];
+
 TextEditingController instrumentSubmitcontroller = TextEditingController();
 
 class InstrumentLibaryState extends State<Instrumentlibarary> {
+  int totalOfficeTools = officeToolList.length;
+  int totalSiteTools = sitelist.length;
+  int totalvehicalTools = vehicalList.length;
+  int totalMiscelleneous = miscToolList.length;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -352,143 +485,634 @@ class InstrumentLibaryState extends State<Instrumentlibarary> {
           ),
         ),
       ),
-      body: Container(
-          child: Column(children: [
-//CONTAINER FOR FOUR TOOLS LIKE OFFICER TOOLS AND SITE TOOLS AND VEHICAL AND MISCELLENEOUS...........................
-        Container(
-            height: SizeConFig.proportionalHeight * 1.5,
-            width: double.infinity,
-            padding: const EdgeInsets.all(8),
+      body: Scrollbar(
+        radius: Radius.circular(20),
+        thumbVisibility: false,
+        child: SingleChildScrollView(
+            child: Column(children: [
+          //HERE ITS MAXIMUM LENGTH OF LIST MEANS WHERE IS THE END POINT OF LIST.....
+          Container(
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [
-                  Color.fromARGB(255, 251, 251, 251),
-                  Color.fromARGB(255, 250, 249, 245),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(14),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.12),
-                  blurRadius: 6,
-                  offset: const Offset(0, 3),
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
                 ),
               ],
             ),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                GridView.count(
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                 
+                  // childAspectRatio: 3.2,
+                  // // makes it button-like
+                   childAspectRatio: 3.5,
                   children: [
-                    _buildgridBox("Office-Tools", 0),
-                    _buildgridBox("Site-Tools", 1),
+                    _smallGridButton("Office Tools", 0, totalOfficeTools),
+                    _smallGridButton("Site Tools", 1, totalSiteTools),
+                    _smallGridButton("Vehicle", 2, totalvehicalTools),
+                    _smallGridButton("Misc", 3, totalMiscelleneous),
                   ],
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildgridBox("Vehical", 2),
-                    _buildgridBox("Miscellaneous", 3),
-                  ],
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  height: 45,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      backgroundColor: const Color.fromARGB(255, 226, 230, 230),
+                    ),
+                    icon: const Icon(Icons.add),
+                    label: const Text("Issue-New-Instrument"),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => Selectlibarytools(),
+                        ),
+                      );
+                    },
+                  ),
                 )
               ],
-            )),
-//HERE ITS MAXIMUM LENGTH OF LIST MEANS WHERE IS THE END POINT OF LIST.....
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Container(
-              width: double.infinity,
-              height: SizeConFig.proportionalHeight * 5.8,
-              decoration: BoxDecoration(
-                // color: const Color.fromARGB(255, 71, 143, 215),
-                border: Border.all(width: 0.5, color: Colors.transparent),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color.fromARGB(255, 143, 141, 141),
-                    offset: const Offset(
-                      5.0,
-                      5.0,
-                    ), //Offset
-                    blurRadius: 10.0,
-                    spreadRadius: 2.0,
-                  ), //BoxShadow
-                  BoxShadow(
-                    color: const Color.fromARGB(255, 241, 236, 236),
-                    offset: const Offset(0.0, 0.0),
-                    blurRadius: 0.0,
-                    spreadRadius: 0.0,
-                  ), //BoxShadow
-                ],
-              ),
-              child: Column(children: [
-                SizedBox(
-                  height: SizeConFig.proportionalHeight * 0.1,
-                ),
-//CHANNGE NAME ACCORING SELECT TOOL LIKE OFFICE AND SITE TOOLS ETC......
-                Consumer<UserDashboardProvider>(
-                  builder: (context, value, child) {
-                    return Center(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [
-                              Color.fromARGB(255, 188, 129, 174),
-                              Color.fromARGB(255, 195, 195, 186)
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          value.currentName,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.teal.shade900,
-                          ),
-                        ),
-                      ),
-                    );
+            ),
+          ),
+
+          Row(
+            children: [
+              Consumer<UserDashboardProvider>(builder: (context, prov, child) {
+                return ElevatedButton.icon(
+                  onPressed: () {
+                    prov.showHideToolsList();
                   },
-                ),
+                  icon: prov.show
+                      ? Icon(Icons.visibility_off)
+                      : Icon(Icons.visibility),
+                  label: prov.show
+                      ? Text("Hide-Assign-Tools")
+                      : Text("Show-Assign-Tools"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(255, 154, 173, 189),
+                    foregroundColor: Colors.white,
+                  ),
+                );
+              })
+            ],
+          ),
+          Consumer<UserDashboardProvider>(
+            builder: (context, pro, child) {
+              if (pro.show == true) {
+                return Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Container(
+                      width: double.infinity,
+                      // height: SizeConFig.proportionalHeight * 4.5,
+                      child: Column(children: [
+                        // SizedBox(
+                        //   height: SizeConFig.proportionalHeight * 0.1,
+                        // ),
+                        //CHANNGE NAME ACCORING SELECT TOOL LIKE OFFICE AND SITE TOOLS ETC......
+                        Consumer<UserDashboardProvider>(
+                          builder: (context, value, child) {
+                            return Center(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color.fromARGB(255, 188, 129, 174),
+                                      Color.fromARGB(255, 195, 195, 186)
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  value.currentName,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.teal.shade900,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+//list view tool consumer..........................................................................
+                        Consumer<UserDashboardProvider>(
+                            builder: (context, count, child) {
+                          if (count.currentTool == 0) {
+                            return _buildReusableToolList2(
+                                officeToolList, officeToolConfig);
+                          }
+                          if (count.currentTool == 1) {
+                            // Vehicle list
+                            return _buildReusableToolList2(
+                              sitelist,
+                              siteToolConfig,
+                            );
+                          }
+                          if (count.currentTool == 2) {
+                            return _buildReusableToolList2(
+                              vehicalList,
+                              vehicalToolsConfig,
+                            );
+                          }
+                          if (count.currentTool == 3) {
+                            return _buildReusableToolList2(
+                              miscToolList,
+                              miscToolConfig,
+                            );
+                          }
 
-//USING CONSUMER FOR INCRESE COUNTER FOR RESUABLE LIST OF ITEM OFFICEA ND SITE TOOOLS VEHICAL AND MISCELLENOUS
-                Consumer<UserDashboardProvider>(
-                    builder: (context, count, child) {
-                  if (count.currentTool == 0) {
-                    return _buildReusableToolList(
-                        officeToolList, officeToolConfig);
-                  }
-                  if (count.currentTool == 1) {
-                    // Vehicle list
-                    return _buildReusableToolList(
-                      sitelist,
-                      siteToolConfig,
-                    );
-                  }
-                  if (count.currentTool == 2) {
-                    return _buildReusableToolList(
-                      vehicalList,
-                      vehicalToolsConfig,
-                    );
-                  }
-                  if (count.currentTool == 3) {
-                    return _buildReusableToolList(
-                      miscToolList,
-                      miscToolConfig,
-                    );
-                  }
+                          return SizedBox();
+                        }),
+                      ])),
+                );
+              }
+              return SizedBox();
+            },
+          ),
 
-                  return SizedBox();
-                })
-              ])),
-        ),
-      ])),
+          //ending of tools lits..........................................
+          Divider(),
+          Row(
+            children: [
+              BuildCustomText(
+                data: "Recived Tools ",
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
+              Icon(Icons.arrow_forward)
+            ],
+          ),
+
+          Container(
+            height: SizeConFig.proportionalHeight * 2.3,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: receivedHandoverList.length,
+              itemBuilder: (context, index) {
+                final item = receivedHandoverList[index];
+
+                return Container(
+                  width: 340,
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        /// 🔹 Header Row
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundColor: Colors.green.shade100,
+                              child: const Icon(Icons.handshake,
+                                  color: Colors.green, size: 20),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                "${item['instrumentType']} • ${item['model']}",
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            _statusBadge(item['status']),
+                          ],
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        /// 🔹 Info Rows
+                        _infoRow("Instrument ID", item['instrumentId'],
+                            "Serial No", item['serialNo']),
+                        _infoRow("Handover By", item['handoverBy'], "Received",
+                            item['receivedDate']),
+                        _infoRow("Condition", item['condition'], "Location",
+                            item['location']),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          Divider(),
+          //start user instrument recived and all record history...........................
+          Row(
+            children: [
+              BuildCustomText(
+                data: "Track History :",
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
+              Icon(Icons.arrow_downward)
+            ],
+          ),
+          Container(
+              height: SizeConFig.proportionalHeight * 4,
+              child: ListView.separated(
+                itemCount: instrumentHistoryList.length,
+                separatorBuilder: (_, __) => Divider(height: 1),
+                itemBuilder: (context, index) {
+                  final item = instrumentHistoryList[index];
+
+                  return ListTile(
+                    dense: true,
+                    visualDensity: const VisualDensity(vertical: -3),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                    leading: Icon(
+                      Icons.sync_alt,
+                      size: 18,
+                      color: Colors.blue,
+                    ),
+                    title: Text(
+                      "${item["event"]} • ${item["type"]}",
+                      style: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            "From: ${item["from"]}",
+                            style: const TextStyle(fontSize: 11),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        const Icon(Icons.arrow_right_alt, size: 14),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            "To: ${item["to"]}",
+                            style: const TextStyle(fontSize: 11),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    trailing: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          item["date"],
+                          style: const TextStyle(fontSize: 10),
+                        ),
+                        Text(
+                          item["status"],
+                          style: const TextStyle(
+                              fontSize: 10, color: Colors.green),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ))
+        ])),
+      ),
     );
   }
+
+  Widget _smallGridButton(String label, int index, int totalItem) {
+    return Consumer<UserDashboardProvider>(
+      builder: (context, provider, _) {
+        final bool isActive = provider.currentTool == index;
+
+        return InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            provider.increaseToolCounter(index, label);
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: isActive ? Colors.cyan.shade600 : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isActive ? Colors.cyan.shade700 : Colors.cyan.shade200,
+                width: isActive ? 1.4 : 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: isActive
+                      ? Colors.cyan.withOpacity(0.35)
+                      : Colors.black.withOpacity(0.06),
+                  blurRadius: isActive ? 8 : 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: isActive ? Colors.white : Colors.cyan.shade900,
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: isActive ? Colors.white : Colors.cyan.shade600,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    "$totalItem",
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: isActive ? Colors.cyan.shade800 : Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _toolCard(String label, IconData icon, int index, int totalItem) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: () {
+        Provider.of<UserDashboardProvider>(context, listen: false)
+            .increaseToolCounter(index, label);
+      },
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          gradient: LinearGradient(
+            colors: [
+              Colors.cyan.shade50,
+              Colors.cyan.shade100,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Align(
+              alignment: Alignment.topRight,
+              child: CircleAvatar(
+                radius: 14,
+                backgroundColor: Colors.cyan.shade700,
+                child: Text(
+                  "$totalItem",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            Icon(
+              icon,
+              size: 34,
+              color: Colors.cyan.shade900,
+            ),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Colors.cyan.shade900,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future buildButtomsheet(String label1) {
+    return showModalBottomSheet(
+        context: context,
+        builder: (context) {
+          //Scrolling given for content in Container()
+          return SingleChildScrollView(
+            child: Container(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Container(
+                //Create a Column to display it's content
+                padding: const EdgeInsets.all(20),
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(20),
+                    topLeft: Radius.circular(20),
+                  ),
+                ),
+                //Create a Column to display it's content
+                child: Column(
+                  children: [
+                    Text(
+                      label1,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.green,
+                        fontSize: 20,
+                      ),
+                    ),
+                    const SizedBox(height: 10.0),
+                    // TextField for giving some Input
+                    TextField(
+                      //  controller: _controller,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.green),
+                        ),
+                        hintText: "Add Item",
+                        hintStyle: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    //Button for adding items
+                    // ElevatedButton(
+                    //   onPressed: () {
+                    //     setState(() {
+                    //       middleText = _controller.text;
+                    //     });
+                    //   },
+                    //   style: ElevatedButton.styleFrom(
+                    //     backgroundColor: Colors.green,
+                    //     foregroundColor: Colors.white,
+                    //   ),
+                    //   child: const Text("Add"),
+                    // ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        });
+  }
+
+  void showEditTaskDialog(BuildContext context) {
+    // final TextEditingController taskNameController =
+    //     TextEditingController(text: item['taskName']);
+    // final TextEditingController priorityController =
+    //     TextEditingController(text: item['priority']);
+    // final TextEditingController assignedController =
+    //     TextEditingController(text: item['assinedTask']);
+    // final TextEditingController teamController =
+    //     TextEditingController(text: item['team']);
+    // final TextEditingController allotmentDateController =
+    //     TextEditingController(text: item['allotmentDate']);
+    // final TextEditingController completionDateController =
+    //     TextEditingController(text: item['completionDate']);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Transfer-Tools"),
+          content: SingleChildScrollView(
+            child: SizedBox(
+              width: SizeConFig.proportionalWidth * 30.0,
+              height: SizeConFig.proportionalHeight * 5.01,
+              child: Column(
+                children: [
+                  // _buildTextField("Task Name", taskNameController),
+                  // _buildTextField("Priority", priorityController),
+                  // _buildTextField("Assigned To", assignedController),
+                  // _buildTextField("Team", teamController),
+                  // _buildTextField("Allotment Date", allotmentDateController),
+                  // _buildTextField("Completion Date", completionDateController),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Updated JSON
+                // Map<String, dynamic> updatedItem = {
+                //   ...item,
+                //   'taskName': taskNameController.text,
+                //   'priority': priorityController.text,
+                //   'assinedTask': assignedController.text,
+                //   'team': teamController.text,
+                //   'allotmentDate': allotmentDateController.text,
+                //   'completionDate': completionDateController.text,
+                // };
+
+                //   print("Updated Item: $updatedItem");
+
+                Navigator.pop(context);
+
+                // TODO: call API or setState to update list
+              },
+              child: const Text("Save"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _infoRow(
+    String label1,
+    String value1,
+    String label2,
+    String value2,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Expanded(child: _infoText(label1, value1)),
+          Expanded(child: _infoText(label2, value2)),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoText(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+        Text(value,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+      ],
+    );
+  }
+
+  Widget _statusBadge(String status) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.green,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        status,
+        style: const TextStyle(
+            color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+
+  // Widget _buildSingleText(String label1, String lable2) {
+  //   return BuildCustomText(
+  //     data: "${label1}: ${lable2}",
+  //     fontSize: 10,
+  //     fontWeight: FontWeight.w500,
+  //   );
+  // }
 
 //TOOL CONFIG FOR NAME.............................................
   final siteToolConfig = ToolFieldConfig(
@@ -537,6 +1161,138 @@ class InstrumentLibaryState extends State<Instrumentlibarary> {
     dueDate: "officeToolDueDate",
     allotmentStatus: "officeToolAllotmentStatus",
   );
+  Widget _buildReusableToolList2(
+    List<Map<String, dynamic>> list,
+    ToolFieldConfig config,
+  ) {
+    return SizedBox(
+      height: SizeConFig.proportionalHeight * 4,
+      child: ListView.separated(
+        itemCount: list.length,
+        separatorBuilder: (_, __) => const Divider(height: 1),
+        itemBuilder: (context, index) {
+          final item = list[index];
+          bool status = item[config.allotmentStatus] == "true";
+
+          return SizedBox(
+            height: 60, // compact row height
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  /// Status Icon
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: CircleAvatar(
+                      radius: 16,
+                      backgroundColor:
+                          status ? Colors.green.shade100 : Colors.red.shade100,
+                      child: Icon(
+                        Icons.build,
+                        size: 16,
+                        color: status ? Colors.green : Colors.red,
+                      ),
+                    ),
+                  ),
+
+                  /// Type
+                  // _chip(item[config.type]),
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color.fromARGB(255, 200, 233, 231),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: Text(
+                      item[config.type],
+                      style: const TextStyle(fontSize: 11),
+                    ),
+                  ),
+
+                  /// ID
+                  _chip("ID: ${item[config.id]}"),
+
+                  /// Model
+                  _chip("Model: ${item[config.model]}"),
+
+                  /// Serial
+                  _chip("SN: ${item[config.serialNo]}"),
+
+                  /// Location
+                  _chip("Loc: ${item[config.location]}"),
+
+                  /// Due Date
+                  _chip("Due: ${item[config.dueDate]}"),
+
+                  /// Action Buttons
+                  Row(
+                    children: [
+                      _miniActionBtn("Transfer", Colors.blue, () {
+                        // showEditTaskDialog(context);
+                        buildButtomsheet("Transfer_Tools");
+                      }),
+                      _miniActionBtn("Return", Colors.orange, () {
+                        buildButtomsheet("Handover_Tools");
+                      }),
+                      _miniActionBtn("Renew", Colors.green, () {
+                        buildButtomsheet("Renew_Tools");
+                      }),
+                    ],
+                  ),
+
+                  const SizedBox(width: 10),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _chip(String text) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(fontSize: 11),
+      ),
+    );
+  }
+
+  Widget _miniActionBtn(String text, Color color, VoidCallback onTap) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   ///RESUABLE LIST OF FOR TOOLS............................................
   Widget _buildReusableToolList(
@@ -544,7 +1300,7 @@ class InstrumentLibaryState extends State<Instrumentlibarary> {
     ToolFieldConfig config,
   ) {
     return Container(
-      height: SizeConFig.proportionalHeight * 5.2,
+      height: SizeConFig.proportionalHeight * 4,
       child: ListView.builder(
         itemCount: list.length,
         itemBuilder: (context, index) {
@@ -633,145 +1389,9 @@ class InstrumentLibaryState extends State<Instrumentlibarary> {
     );
   }
 
-  Widget _buildShowTooloflist(
-      List<Map<String, dynamic>> listofItem, ToolFieldConfig config) {
-    return Container(
-      height: SizeConFig.proportionalHeight * 5.2,
-      // color: Colors.amber,
-      child: ListView.builder(
-        itemCount: listofItem.length,
-        itemBuilder: (context, index) {
-          final instu = listofItem[index];
-          bool status = instu["allomentStatus"] == "true";
-          // print(status);
-          return Card(
-              elevation: 50.0,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadiusGeometry.circular(15)),
-              borderOnForeground: true,
-              margin: EdgeInsets.all(8),
-              child: Column(
-                children: [
-                  SizedBox(
-                    child: Card(
-                      elevation: 50,
-                      shadowColor: Colors.black,
-                      color: const Color.fromARGB(255, 206, 235, 232),
-                      child: BuildCustomText(
-                          data: instu["instrumentType"],
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.cyan),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          height: SizeConFig.proportionalHeight * 0.8,
-                          // color: Colors.red,
-                          width: SizeConFig.proportionalHeight * 2,
-                          child: Column(
-                            children: [
-                              _buidRowAndColumn(
-                                  "Instrument Id:", instu["instrumentId"]),
-                              _buidRowAndColumn(
-                                  "Instrument Model:", instu["model"]),
-                              _buidRowAndColumn("SerialNo:", instu["serialNo"]),
-                              _buidRowAndColumn("instrument Condition:",
-                                  instu["instrumentCondition"]),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          height: SizeConFig.proportionalHeight * 0.8,
-                          width: SizeConFig.proportionalHeight * 2,
-                          child: Column(
-                            children: [
-                              _buidRowAndColumn("Allotment-Status:",
-                                  instu["allomentStatus"], status),
-                              _buidRowAndColumn(
-                                  "Site Location:", instu["siteLocation"]),
-                              _buidRowAndColumn(
-                                  "Collection Date:", instu["collectionDate"]),
-                              _buidRowAndColumn("Due Date:", instu["dueDate"]),
-                            ],
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      SizedBox(
-                          height: SizeConFig.proportionalHeight * 0.4,
-                          width: SizeConFig.proportionalWidth * 3.3,
-                          child: _buildDropDownSelectMember()),
-                      Container(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            ElevatedButton.icon(
-                              onPressed: () {
-                                // Perform an action
-                                print('Button pressed!');
-                              },
-                              icon: Icon(Icons.edit), // The icon widget
-                              label: Text('Edit'), // The text label widget
-                            ),
-                            SizedBox(
-                              width: SizeConFig.proportionalWidth * 0.5,
-                            ),
-                            SizedBox(
-                              height: SizeConFig.proportionalHeight * 0.3,
-                              width: SizeConFig.proportionalWidth * 2.3,
-                              child: ElevatedButton.icon(
-                                onPressed: () {
-                                  // Perform an action
-                                  print('Button pressed!');
-                                },
-                                icon: Icon(Icons.delete), // The icon widget
-                                label: Text('Delete'), // The text label widget
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(
-                    height: SizeConFig.proportionalHeight * 0.1,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Container(
-                          child: ElevatedButton(
-                              onPressed: () {}, child: Text("Transfer"))),
-                      Container(
-                          child: ElevatedButton(
-                              onPressed: () {}, child: Text("Return"))),
-                      Container(
-                          child: ElevatedButton(
-                              onPressed: () {}, child: Text("Renew"))),
-                    ],
-                  ),
-                  SizedBox(
-                    height: SizeConFig.proportionalHeight * 0.1,
-                  ),
-                ],
-              ));
-        },
-      ),
-    );
-  }
-
   //build grid box...................
 
-  Widget _buildgridBox(String label, int index) {
+  Widget _buildgridBox(String label, int index, int totalItem) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -783,8 +1403,8 @@ class InstrumentLibaryState extends State<Instrumentlibarary> {
               .increaseToolCounter(index, label);
         },
         child: Container(
-          height: SizeConFig.proportionalHeight * 0.5,
-          width: SizeConFig.proportionalWidth * 2,
+          height: SizeConFig.proportionalHeight * 0.3,
+          width: SizeConFig.proportionalWidth * 2.7,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [
@@ -808,14 +1428,29 @@ class InstrumentLibaryState extends State<Instrumentlibarary> {
             ],
           ),
           child: Center(
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Colors.cyan.shade900,
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Text(
+                  "$label",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.cyan.shade900,
+                  ),
+                ),
+                Text(
+                  "${"($totalItem)"}",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    overflow: TextOverflow.ellipsis,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: const Color.fromARGB(255, 100, 30, 0),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

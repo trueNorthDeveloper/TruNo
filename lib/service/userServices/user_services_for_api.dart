@@ -43,13 +43,18 @@ class UserServicesForApi {
             const Duration(seconds: 30),
           );
 
-      final body = await response.stream.bytesToString();
+      // final body = await response.stream.bytesToString();
+      final responseBody = await http.Response.fromStream(response);
 
-      if (response.statusCode == 200) {
-        return Resultt.success(jsonDecode(body));
+      if (responseBody.statusCode == 200) {
+        return Resultt.success(jsonDecode(responseBody.body));
+      } else {
+        try {
+          return Resultt.apiError(jsonDecode(responseBody.body));
+        } catch (e) {
+          return Resultt.systemError(ApiError.server);
+        }
       }
-
-      return Resultt.apiError(jsonDecode(body));
     } on SocketException {
       return Resultt.systemError(ApiError.network);
     } on TimeoutException {
@@ -157,6 +162,33 @@ class UserServicesForApi {
       return Result.failure(ApiError.unknown);
     }
   }
+Future<Result<UserLoginInfoModel>> loadSessionOnecs() async {
+    try {
+     // SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? endPoint = "v2loginsessionInfo";
+      final respone = await auth.authorizedGet(endPoint);
+
+      if (respone.statusCode == 200) {
+        final jsonMap = jsonDecode(respone.body) as Map<String, dynamic>;
+        final userInfo = UserLoginInfoModel.fromJson(jsonMap);
+        //prefs.setString("loginInfo", jsonEncode(jsonMap));
+        return Result.success(userInfo);
+      } else {
+        return Result.failure(ApiError.jsonFormat);
+      }
+    } on SocketException {
+      return Result.failure(ApiError.network);
+    } on TimeoutException {
+      return Result.failure(ApiError.timeout);
+    } on http.ClientException {
+      return Result.failure(ApiError.client);
+    } on PlatformException {
+      return Result.failure(ApiError.platform);
+    } catch (_) {
+      return Result.failure(ApiError.unknown);
+    }
+  }
+ 
 
   Future<Result<UserLoginInfoModel>> getSessionInfo2() async {
     try {

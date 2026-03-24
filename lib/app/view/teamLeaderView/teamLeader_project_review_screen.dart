@@ -1,4 +1,4 @@
-import 'package:fl_chart/fl_chart.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:truenorthflutterfrontend/app/controller/teamLeaderController/teamLeaderCon.dart';
@@ -310,7 +310,12 @@ class _TeamleaderProjectReviewScreenState
                       width: SizeConFig.proportionalWidth * 4.5,
                       height: SizeConFig.proportionalHeight * 2,
                       child: Column(
-                        children: [_taskStatusChart(), _projectProgress()],
+                        children: [
+                          
+                          
+                        //  _taskStatusChart(), 
+                          
+                          _projectProgress()],
                       ),
                     )
                   ],
@@ -805,38 +810,38 @@ class _TeamleaderProjectReviewScreenState
     );
   }
 
-  // ---------------- PIE CHART ----------------
-  Widget _taskStatusChart() {
-    return SizedBox(
-      height: MediaQuery.of(context).size.height * 12 / 100,
-      width: MediaQuery.of(context).size.width * 40 / 100,
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        child: Padding(
-          padding: const EdgeInsets.all(1),
-          child: Column(
-            children: [
-              const Text("Status",
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-              SizedBox(
-                height: MediaQuery.of(context).size.height * 8 / 100,
-                child: PieChart(
-                  PieChartData(sections: [
-                    PieChartSectionData(
-                      value: 16,
-                      color: Colors.orange,
-                    ),
-                    PieChartSectionData(value: 2, color: Colors.green),
-                    PieChartSectionData(value: 1, color: Colors.red),
-                  ]),
-                ),
-              )
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  // ---------------- PIE CHART ---------------- comment whiee for short time
+  // Widget _taskStatusChart() {
+  //   return SizedBox(
+  //     height: MediaQuery.of(context).size.height * 12 / 100,
+  //     width: MediaQuery.of(context).size.width * 40 / 100,
+  //     child: Card(
+  //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+  //       child: Padding(
+  //         padding: const EdgeInsets.all(1),
+  //         child: Column(
+  //           children: [
+  //             const Text("Status",
+  //                 style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+  //             SizedBox(
+  //               height: MediaQuery.of(context).size.height * 8 / 100,
+  //               child: PieChart(
+  //                 PieChartData(sections: [
+  //                   PieChartSectionData(
+  //                     value: 16,
+  //                     color: Colors.orange,
+  //                   ),
+  //                   PieChartSectionData(value: 2, color: Colors.green),
+  //                   PieChartSectionData(value: 1, color: Colors.red),
+  //                 ]),
+  //               ),
+  //             )
+  //           ],
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   ///THIS WILL BUILD THE CARD.........................................
   Widget _card(String title, int value, Color color) {

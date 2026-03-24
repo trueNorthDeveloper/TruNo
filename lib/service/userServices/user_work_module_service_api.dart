@@ -229,11 +229,6 @@ class UserProjectService {
   Future<Result<TaskResponse>> getAllTaskInTeam(
       int projectId, int teamId) async {
     try {
-      // final prefs = await SharedPreferences.getInstance();
-      // final uuid = prefs.getInt("uuid");
-      // final url = Uri.parse(
-      //     "${Apiconstants.userAllTaskInTeam}$projectId/$teamId/$uuid");
-      // final response = await http.get(url).timeout(Duration(seconds: 10));
       String? endPoint = "tnec-project/allTask" + "/$projectId/$teamId";
       final response = await auth.authorizedGetForWork(endPoint);
 
@@ -410,25 +405,12 @@ class UserProjectService {
       final response = await auth.authorizedGetForWork(endPoint);
 
       if (response.statusCode == 200) {
-        try {
-          final data = jsonDecode(response.body);
-          //print("JSON DECODED -------------------");
-          //  print(data);
-
-          final resJson = TeamResponse.fromJson(data);
-
-          // ✅ Check the API's success field
-          if (resJson.success) {
-            return Result.success(resJson);
-          } else {
-            //print("API returned success=false, message: ${resJson.message}");
-            return Result.failure(ApiError.server); // or custom error
-          }
-        } catch (e) {
-          //print("JSON parse error: $e");
-          //print(stackTrace);
-          return Result.failure(ApiError.jsonFormat);
-        }
+        final data = jsonDecode(response.body);
+       // print("direct json$data");
+        final Jspnresponse = TeamResponse.fromJson(data);
+       // print("team response from api${data}");
+        return Result.success(Jspnresponse);
+      
       } else if (response.statusCode == 400 ||
           response.statusCode == 401 ||
           response.statusCode == 403) {
@@ -836,9 +818,9 @@ class UserProjectService {
   Future<Result<UserWorkHistoryResponse>> getUserHistory(
       int currentPage, int size) async {
     try {
-    //  String endPoint = "tnec-project/my-task-history?$currentPage&$size";
-    String endPoint =
-    "tnec-project/my-task-history?page=$currentPage&size=$size";
+      //  String endPoint = "tnec-project/my-task-history?$currentPage&$size";
+      String endPoint =
+          "tnec-project/my-task-history?page=$currentPage&size=$size";
 
       final response = await auth.authorizedGetForWork(endPoint);
 

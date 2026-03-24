@@ -6,8 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:truenorthflutterfrontend/app/model/userModel/userLogRegModel/uesr_logout_request_model.dart';
 import 'package:truenorthflutterfrontend/app/model/userModel/userLogRegModel/user_login_model.dart';
 import 'package:truenorthflutterfrontend/app/model/userModel/userLogRegModel/user_me_model.dart';
-import 'package:truenorthflutterfrontend/app/view/userView/userHomeView/user_list_of_screen.dart';
 import 'package:truenorthflutterfrontend/app/view/userView/userLogRegsView/select_screen.dart';
+import 'package:truenorthflutterfrontend/app/controller/user_home_layout_controller/footer_screen.dart';
 import 'package:truenorthflutterfrontend/public/config/deviceConfig.dart';
 
 import 'package:truenorthflutterfrontend/public/utils/userUtil/mesage_snack_bar.dart';
@@ -96,9 +96,13 @@ class LoginControll extends ChangeNotifier {
       if (!context.mounted) return;
 
       if (result.isSuccess && result.data != null) {
+        //BEFORE SET LOGIN RESPONSE IN SHARRED PREFFRENCE INSURE THAT LOGIN RESPONSE OK NO NOT FOR THAT WE NEED PRINT JSON RESPONSE
+        // print(
+        //     "comnplete json respone after login===============================");
+        // print(result.data);
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString("access-token", result.data["Access-Token"]);
-        await prefs.setString("refresh-token", result.data["Refresh-Token"]);
+        await prefs.setString("access_token", result.data["Access-Token"]);
+        await prefs.setString("refresh_token", result.data["Refresh-Token"]);
 
         ShowTaostMessage.toastMessage(context, "Login Successfull");
         final user = await iamUser();
@@ -130,7 +134,7 @@ class LoginControll extends ChangeNotifier {
         // }
 
         Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (_) => ListOfUiScreen()));
+            context, MaterialPageRoute(builder: (_) => FooterScreen()));
       }
 
       if (result.message == "User already logged in on another device") {
@@ -243,7 +247,6 @@ class LoginControll extends ChangeNotifier {
       if (loginResult.isSuccess && loginResult.data != null) {
         final prefs = await SharedPreferences.getInstance();
 
-
         await prefs.setString("access-token", loginResult.data["Access-Token"]);
         await prefs.setString(
             "refresh-token", loginResult.data["Refresh-Token"]);
@@ -258,7 +261,7 @@ class LoginControll extends ChangeNotifier {
         _setLoading(false);
 
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => ListOfUiScreen()),
+          MaterialPageRoute(builder: (_) => FooterScreen()),
           (route) => false,
         );
       }

@@ -997,6 +997,9 @@ class LoginProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  //fatch login session only onecs when apppp login
+  //Map<String, dynamic>? _userData;
+
   // //here we will use fatch background location  every dynamic timer interval..
   // Timer? _periodicTimer;
   // Future<void> getBackgroundLocationFetch(int duration) async {
@@ -1105,5 +1108,34 @@ class LoginProvider extends ChangeNotifier {
     } catch (_) {
       return Resultt.systemError(ApiError.server);
     }
+  }
+
+  //user login session with image..............................................
+  UserLoginInfoModel? _userLoginInfoModel2;
+  bool _isLoadingSession = false;
+  bool _dataLoaded = false; // The flag to track if data is fetched
+
+  //Map<String, dynamic>? get userData => _userData;
+  UserLoginInfoModel? get userLoginInfoModel2 => _userLoginInfoModel2;
+  bool get isLoadingSession => _isLoadingSession;
+  bool get dataLoaded => _dataLoaded;
+  Future<void> loadUserSession() async {
+    if (_dataLoaded) {
+      return;
+      //data alread load
+    }
+    _isLoadingSession = true;
+    notifyListeners();
+    try {
+      final result = await _userServicesForApi.loadSessionOnecs();
+      if (result.isSuccess) {
+        _userLoginInfoModel2 = result.data;
+        _dataLoaded = true;
+        _isLoadingSession = false;
+      }
+    } catch (error) {
+      _isLoadingSession = false;
+    }
+    notifyListeners();
   }
 }

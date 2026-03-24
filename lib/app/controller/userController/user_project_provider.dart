@@ -215,12 +215,14 @@ class UserProjectProvider extends ChangeNotifier {
     notifyListeners(); // show loader
 
     final response = await _service.getAllTeamMember(projectId, teamId);
+    //print("only-response${response.data}");
 
     if (response.isSuccess && response.data != null) {
-      teamResponse = response.data!;
+      final teamResponse = response.data!.data;
 
-      teamMemberInfo =
-          teamResponse!.data.expand((team) => team.members).toList();
+      // teamMemberInfo =
+      //     teamResponse!.data.expand((team) => team.members).toList();
+      teamMemberInfo = teamResponse!.members;
 
       // CLEAR previous error here
       error = null;
@@ -287,13 +289,13 @@ class UserProjectProvider extends ChangeNotifier {
   Member? getUserInfo(int userId) {
     if (teamResponse == null) return null;
 
-    for (var team in teamResponse!.data) {
-      for (var member in team.members) {
-        if (member.userId == userId) {
-          return member;
-        }
-      }
-    }
+    // for (var team in teamResponse!.data) {
+    //   for (var member in team.members) {
+    //     if (member.userId == userId) {
+    //       return member;
+    //     }
+    //   }
+    // }
     return null;
   }
 
