@@ -173,7 +173,8 @@ class UserDashboardProvider extends ChangeNotifier {
       DateTime.utc(2025, 10, 5): ['Absent'],
       DateTime.utc(2025, 10, 10): ['Present'],
       DateTime.utc(2025, 10, 14): ['Absent'],
-      DateTime.utc(2025, 10, 15): ['Present'],
+      DateTime.utc(2026, 3, 23): ['Present'],
+       // DateTime.utc(2026, 03, 25): ['Present'],
     };
     notifyListeners();
   }

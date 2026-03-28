@@ -15,9 +15,9 @@ class Attendanceservice {
   Future<Result<UserDailyAttendance>> getUserDailyAttenadance(
       year, month) async {
     try {
-      //https://3808-106-222-212-68.ngrok-free.app/api/attendance/attendance_logs?year=2026&month=3
-      String? endPoint = "attendance_logs?year=${year}${"&"}month=${month}";
-      final respones = await auth.authorizedGet(endPoint);
+      //  String? endPoint = "attendance/attendance_logs?year=${year}${"&"}month=${month}";
+      String endPoint = "attendance/attendance_logs?year=$year&month=$month";
+      final respones = await auth.authorizedGetForWork(endPoint);
       if (respones.statusCode == 200) {
         try {
           final data = jsonDecode(respones.body);

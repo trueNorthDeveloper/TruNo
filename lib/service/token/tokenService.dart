@@ -12,7 +12,7 @@ class TokenService {
   static String url = "";
   static String baseUrl = url + "/auth/api/";
   static String projectBaseUrl = url + "/api/";
-  static String attendance = url = "/api/attendance/";
+ // static String attendance = url+"/api/attendance/";
 //saved user token
   static Future<void> saveToken(String accessToken, String refreshToken) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -108,38 +108,6 @@ class TokenService {
     return code == 400 || code == 401 || code == 403 || code == 419;
   }
 
-//GET METHOD FOR WORK --------------------------------------(1)----------------------------------------------------------------START
-  // Future<http.Response> authorizedGetForWork(String endPoint) async {
-  //   String? token = await getAccessToken();
-  //   if (token == null) {
-  //     throw Exception("Access token not found");
-  //   }
-
-  //   http.Response res = await _sendGetRequestForWork(endPoint, token);
-
-  //   if (_isAuthError(res.statusCode)) {
-  //     final refreshed = await getRefreshAccessToken();
-
-  //     if (refreshed) {
-  //       final newToken = await getAccessToken();
-
-  //       res = await _sendGetRequestForWork(endPoint, newToken);
-  //     }
-  //   }
-
-  //   return res;
-  // }
-
-  // Future<http.Response> _sendGetRequestForWork(
-  //     String endPoint, String? token) async {
-  //   return await http.get(
-  //     Uri.parse("$projectBaseUrl$endPoint"),
-  //     headers: {
-  //       "Authorization": "Bearer $token",
-  //       "Content-Type": "application/json",
-  //     },
-  //   );
-  // }
   Future<http.Response> authorizedGetForWork(String endPoint) async {
     try {
       final String? token = await getAccessToken();
@@ -544,4 +512,5 @@ class TokenService {
       },
     );
   }
+
 }

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-
 import 'package:table_calendar/table_calendar.dart';
 import 'package:truenorthflutterfrontend/app/controller/userController/user_dashboard_provider.dart';
+import 'package:truenorthflutterfrontend/app/userAttendanceModuleAndLeave/controller/attendanceController.dart';
 import 'package:truenorthflutterfrontend/public/utils/userUtil/buildCustomText.dart';
 import 'package:truenorthflutterfrontend/public/utils/userUtil/size_config.dart';
 
@@ -16,20 +17,56 @@ class UserAttendanceScreen extends StatefulWidget {
 class _UserAttendanceScreenState extends State<UserAttendanceScreen> {
   final TextEditingController applyLeaveController = TextEditingController();
   final TextEditingController leaveReasonController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
-    // Future.microtask(() =>
-    //     Provider.of<UserDashboardProvider>(context, listen: false)
-    //         .attendanceEvent(context));
-    // print("many time");
+
+    // Use the current date to fetch this month's data
+    // final DateTime now = DateTime.now();
+    // final String year = now.year.toString();
+    // final String month = now.month.toString().padLeft(2, '0');
+    Future.microtask(() {
+      final controller =
+          Provider.of<Attendancecontroller>(context, listen: false);
+
+      final now = DateTime.now();
+
+      controller.resetToToday();
+      controller.fatchUserDailyAttendance(
+        now.year.toString(),
+        now.month.toString().padLeft(2, '0'),
+      );
+    });
+
+    // Future.microtask(() {
+    //   final controller =
+    //       Provider.of<Attendancecontroller>(context, listen: false);
+
+    //   // Only call the fetch. The fetch method itself should handle
+    //   // calling prepareDataWithmodelClass once it gets a '200 OK'
+    //   Future.delayed(
+    //     Duration(seconds: 2),
+    //     () {
+    //       controller.fatchUserDailyAttendance(year, month);
+    //     },
+    //   );
+
+    //   //controller.updateFocusedDay(now);
+    //   controller.resetToToday();
+    // });
   }
 
   final List<String> leave = ["ML", "CL", "LWP"];
   final List<String> typeList = ["Type", "CL", "ML", "LWP"];
   final List<String> usedList = ["Used", "10", "5", "2"];
   final List<String> balancedList = ["Balance", "20", "15", "8"];
-  @override
+  //new attendance
+
+  DateTime? _selectedDate;
+  CalendarFormat _calendarFormat = CalendarFormat.month;
+  DateTime? _focusedDay = DateTime.now();
+
   Widget build(BuildContext context) {
     return WillPopScope(
         onWillPop: () async {
@@ -50,9 +87,232 @@ class _UserAttendanceScreenState extends State<UserAttendanceScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                           //show caleinder.........................................................................
-//TODO  after sometime uncomment  buildcalendar   
-                        //  _buildCalender(),
+                          // _buildCalender(),//comment bcz we are using new calendar with event
+                          //---------------------------------------------------------------------
+
+                          Consumer<Attendancecontroller>(
+                            builder: (context, pro, child) {
+                              return Stack(children: [
+                                if (pro.isLoadAttendace)
+                                  const Positioned.fill(
+                                    child: Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  ),
+                                TableCalendar(
+                                  holidayPredicate: (day) {
+                                    return day.weekday == DateTime.sunday;
+                                  },
+                                  calendarBuilders: CalendarBuilders(
+                                    holidayBuilder: (context, day, focusedDay) {
+                                      return Container(
+                                        margin: const EdgeInsets.all(4.0),
+                                        alignment: Alignment.center,
+                                        decoration: const BoxDecoration(
+                                          color: Colors
+                                              .transparent, // Or a light red if you prefer
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Text(
+                                          '${day.day}',
+                                          style: const TextStyle(
+                                            color: Color.fromARGB(255, 165, 207,
+                                                220), // Makes the text red
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    defaultBuilder: (context, day, focusedDay) {
+                                      final dateKey =
+                                          DateFormat('yyyy-MM-dd').format(day);
+                                      final status =
+                                          pro.attendanceListMap[dateKey];
+                                      // 3. Define styling based on attendance status
+                                      Color? bgColor;
+                                      Color textColor = Colors.black;
+                                      BoxBorder? border;
+                                      if (status == "Present") {
+                                        bgColor = Colors.green.shade100;
+                                        textColor = Colors.green.shade900;
+                                        border = Border.all(
+                                            color: Colors.green, width: 1);
+                                      } else if (status == "Absent") {
+                                        bgColor = Colors.red.shade50;
+                                        textColor = Colors.red.shade900;
+                                      } else if (status == "Upcoming") {
+                                        bgColor = const Color.fromARGB(
+                                            255, 227, 223, 224);
+                                        textColor = const Color.fromARGB(
+                                            255, 159, 166, 165);
+                                      }
+                                      return Container(
+                                        margin: const EdgeInsets.all(4.0),
+                                        alignment: Alignment.center,
+                                        decoration: BoxDecoration(
+                                          color: bgColor,
+                                          shape: BoxShape.circle,
+                                          border: border,
+                                        ),
+                                        child: Text(
+                                          '${day.day}',
+                                          style: TextStyle(
+                                            color: textColor,
+                                            fontWeight: status == "Present"
+                                                ? FontWeight.bold
+                                                : FontWeight.normal,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    todayBuilder: (context, day, focusedDay) {
+                                      return Container(
+                                        margin: const EdgeInsets.all(4.0),
+                                        alignment: Alignment.center,
+                                        decoration: const BoxDecoration(
+                                          color: Colors.blueAccent,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Text(
+                                          '${day.day}',
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  headerStyle: HeaderStyle(
+                                    // Title styling
+                                    titleTextStyle: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 20.0,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    // Header background decoration
+                                    decoration: BoxDecoration(
+                                      color: const Color.fromARGB(182, 167, 166,
+                                          169), // Example background color
+                                      borderRadius: BorderRadius.circular(
+                                          10.0), // Rounded corners
+                                    ),
+                                    // Center the title
+                                    titleCentered: true,
+                                    // Hide the format button
+                                    formatButtonVisible: false,
+                                    // Custom chevron icons
+                                    leftChevronIcon: const Icon(
+                                      Icons.chevron_left,
+                                      color: Colors.white,
+                                      size: 28,
+                                    ),
+                                    rightChevronIcon: const Icon(
+                                      Icons.chevron_right,
+                                      color: Colors.white,
+                                      size: 28,
+                                    ),
+                                    // Custom title format (e.g., "Month\nYear")
+                                    titleTextFormatter: (date, locale) {
+                                      final month =
+                                          DateFormat.MMMM(locale).format(date);
+                                      final years =
+                                          DateFormat.y(locale).format(date);
+                                      return '$month\n$years';
+                                    },
+                                  ),
+                                  // Other
+                                  pageAnimationDuration:
+                                      Duration(milliseconds: 500),
+                                  weekNumbersVisible: false,
+
+                                  daysOfWeekHeight: 27.0,
+                                  availableGestures: AvailableGestures.none,
+                                  pageAnimationCurve: Curves.easeInCubic,
+                                  daysOfWeekStyle: DaysOfWeekStyle(
+                                      weekdayStyle: TextStyle(
+                                          color: const Color.fromARGB(
+                                              255, 54, 79, 244))),
+                                  startingDayOfWeek: StartingDayOfWeek.sunday,
+                                  sixWeekMonthsEnforced: false,
+                                  focusedDay: pro.focusedDay!,
+                                  firstDay: pro.firstDay,
+                                  lastDay: pro.lastDay,
+                                  calendarFormat: CalendarFormat.month,
+                                  dayHitTestBehavior: HitTestBehavior.opaque,
+                                  selectedDayPredicate: (day) {
+                                    return isSameDay(_selectedDate, day);
+                                  },
+                                  onDaySelected: (selectedDay, focusDay) {
+                                    final selectedKey = DateFormat('yyyy-MM-dd')
+                                        .format(selectedDay);
+
+                                    final sessions =
+                                        pro.attendanceEvent[selectedKey] ?? [];
+                                    pro.updateFocusedDay(focusDay);
+                                    pro.updateSelectedSessions(selectedKey);
+                                    setState(() {
+                                      _selectedDate = selectedDay;
+                                    });
+
+                                    // showModalBottomSheet(
+                                    //   context: context,
+                                    //   builder: (_) {
+                                    //     return sessions.isEmpty
+                                    //         ? const Center(
+                                    //             child: Text("No sessions"))
+                                    //         : ListView.builder(
+                                    //             itemCount: sessions.length,
+                                    //             itemBuilder: (context, index) {
+                                    //               final session =
+                                    //                   sessions[index];
+
+                                    //               return ListTile(
+                                    //                 title: Text(
+                                    //                     "Login: ${session.loginTime ?? '--'}"),
+                                    //                 subtitle: Text(
+                                    //                     "Logout: ${session.logOutTime ?? '--'} | Working: ${session.workingHour ?? '--'}"),
+                                    //               );
+                                    //             },
+                                    //           );
+                                    //   },
+                                    // );
+                                  },
+
+                                  onPageChanged: (focusedDay) {
+                                    pro.updateFocusedDay(focusedDay);
+                                    pro.fatchUserDailyAttendance(
+                                        focusedDay.year.toString(),
+                                        focusedDay.month
+                                            .toString()
+                                            .padLeft(2, '0'));
+                                  },
+                                )
+                              ]);
+                            },
+                          ),
                           SizeConFig.verticalBox(0.01),
+                          Consumer<Attendancecontroller>(
+                            builder: (context, p, child) {
+                              // Check the filtered list, not the whole Map
+                              if (p.selectedDaySessions.isEmpty) {
+                                return const Center(
+                                    child: Text("No sessions for this day"));
+                              }
+
+                              return ListView.builder(
+                                shrinkWrap: true, // Use this if inside a Column
+                                // physics:
+                                //     NeverScrollableScrollPhysics(), // Use this if inside a ScrollView
+                                itemCount: p.selectedDaySessions.length,
+                                itemBuilder: (context, index) {
+                                  final session = p.selectedDaySessions[index];
+                                  return sessionLogCard(session);
+
+                                  
+                                },
+                              );
+                            },
+                          ),
                           _buildBreakLine(),
                           SizeConFig.verticalBox(0.01),
                           Row(
@@ -74,7 +334,8 @@ class _UserAttendanceScreenState extends State<UserAttendanceScreen> {
                                 //  / color: Colors.amber,
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: Colors.grey.shade300,
+                                  color:
+                                      const Color.fromARGB(255, 220, 215, 215),
                                 ),
                               ),
                               child: Column(children: [
@@ -186,7 +447,8 @@ class _UserAttendanceScreenState extends State<UserAttendanceScreen> {
                                                               .proportionalHeight *
                                                           0.3,
                                                       child: Row(children: [
-                                                        _buildTextSection("To:"),
+                                                        _buildTextSection(
+                                                            "To:"),
                                                         Consumer<
                                                             UserDashboardProvider>(
                                                           builder: (context,
@@ -784,9 +1046,10 @@ class _UserAttendanceScreenState extends State<UserAttendanceScreen> {
   Widget _buildCalender() {
     return Consumer<UserDashboardProvider>(builder: (context, provider, child) {
       return TableCalendar(
-        // onPageChanged: (focusedDay) {
-
-        // },
+        onPageChanged: (focusedDay) {
+          print(focusedDay);
+          provider.events;
+        },
         calendarBuilders: CalendarBuilders(
           markerBuilder: (context, date, events) {
             if (events.isEmpty) return const SizedBox();
@@ -836,5 +1099,101 @@ class _UserAttendanceScreenState extends State<UserAttendanceScreen> {
         },
       );
     });
+  }
+
+  Widget sessionLogCard(dynamic item) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue.shade50),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+         
+         // 1. Login Time Column
+          _buildMetricColumn(
+            icon: Icons.login_rounded,
+            label: "Login",
+            value: item.loginTime.toString().substring(11,19)?? "--:--",
+            color: Colors.green,
+          ),
+
+          _buildVerticalDivider(),
+
+          // 2. Logout Time Column
+          _buildMetricColumn(
+            icon: Icons.logout_rounded,
+            label: "Logout",
+            value: item.logOutTime.substring(11,19) ?? "Active",
+            color: Colors.orangeAccent,
+          ),
+
+          _buildVerticalDivider(),
+
+          // 3. Working Hour Column
+          _buildMetricColumn(
+            icon: Icons.timelapse_rounded,
+            label: "Working",
+            value: item.workingHour ?? "0h 0m",
+            color: Colors.blueAccent,
+          ),
+        ],
+      ),
+    );
+  }
+
+// Helper for the columns to keep code DRY (Don't Repeat Yourself)
+  Widget _buildMetricColumn({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              letterSpacing: 0.5,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade500,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+// Simple vertical line to separate sections
+  Widget _buildVerticalDivider() {
+    return Container(
+      height: 30,
+      width: 1,
+      color: Colors.grey.shade200,
+    );
   }
 }

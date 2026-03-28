@@ -30,7 +30,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => LoginControll()),
         ChangeNotifierProvider(create: (_) => TeamleaderControllerPro()),
         ChangeNotifierProvider(create: (_) => Homelayoutcontroller()),
-        ChangeNotifierProvider(create: (_) => Attendancecontroller()),
+        ChangeNotifierProvider(create: (_) => Attendancecontroller())
       ],
       child: const MyApp(),
     ),
