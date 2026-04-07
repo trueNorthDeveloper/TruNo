@@ -96,10 +96,7 @@ class LoginControll extends ChangeNotifier {
       if (!context.mounted) return;
 
       if (result.isSuccess && result.data != null) {
-        //BEFORE SET LOGIN RESPONSE IN SHARRED PREFFRENCE INSURE THAT LOGIN RESPONSE OK NO NOT FOR THAT WE NEED PRINT JSON RESPONSE
-        // print(
-        //     "comnplete json respone after login===============================");
-        // print(result.data);
+      
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString("access_token", result.data["Access-Token"]);
         await prefs.setString("refresh_token", result.data["Refresh-Token"]);
@@ -117,21 +114,7 @@ class LoginControll extends ChangeNotifier {
         await prefs.setInt("user_id", user.id);
         await prefs.setString("eid", user.email);
 
-        // 🔹 Navigate based on role
-        // Widget nextScreen;
-
-        // switch (user.role) {
-        //   case "TEAM_LEADER":
-        //     nextScreen = TeamLeaderHomeScreen();
-        //     break;
-
-        //   case "MEMBER":
-        //     nextScreen = MemberHomeScreen();
-        //     break;
-
-        //   default:
-        //     nextScreen = ListOfUiScreen();
-        // }
+       
 
         Navigator.pushReplacement(
             context, MaterialPageRoute(builder: (_) => FooterScreen()));
@@ -233,6 +216,8 @@ class LoginControll extends ChangeNotifier {
         );
         return;
       }
+      final prefs = await SharedPreferences.getInstance();
+      prefs.clear();
 
       ShowTaostMessage.toastMessage(
         context,

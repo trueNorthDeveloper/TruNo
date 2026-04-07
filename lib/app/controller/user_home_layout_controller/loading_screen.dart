@@ -65,6 +65,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
 
 //step2: Check internet
       bool hasInternet = await Deviceconfig.checkInternetConnection();
+      if (!mounted) return;
 
 //step3:OFFLINE FLOW (User logged in) if user login but internet close in case user push home page
       if (!hasInternet && refreshToken != null && refreshToken.isNotEmpty) {
@@ -83,6 +84,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
 
       // 5️⃣ Load API URL
       String? rokurl = await getApiUrl();
+      if (!mounted) return;
       if (rokurl != null) {
         Apiconstants.url = rokurl;
         TokenService.url = rokurl;
@@ -91,7 +93,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
       // 6️⃣ Refresh token if exists
       if (refreshToken != null && refreshToken.isNotEmpty) {
         bool refreshed = await TokenService.getRefreshAccessToken();
-
+        if (!mounted) return;
         if (refreshed) {
           final controller =
               Provider.of<Homelayoutcontroller>(context, listen: false);

@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:truenorthflutterfrontend/app/model/teamLeaderModels/leaveRequestResponse.dart';
+import 'package:truenorthflutterfrontend/app/userAttendanceModuleAndLeave/services/attendanceService.dart';
+import 'package:truenorthflutterfrontend/service/token/tokenService.dart';
 
 class TeamleaderControllerPro extends ChangeNotifier {
+  ///call user serive class for implement middle layer of api call
+  Attendanceservice _attendanceservice = Attendanceservice();
   int counter = 0;
   void increaseCounterForTeam(int value) {
     counter = value;
@@ -86,6 +91,61 @@ class TeamleaderControllerPro extends ChangeNotifier {
         return "REVIEW";
       default:
         return "All";
+    }
+  }
+
+  ///TEAM LEADER LEAVE REQUST SHOW FOR APPROVAL.....................................................
+  LeaveRequestResponse? _leaveRequestResponse;
+  LeaveRequestResponse? get leaveRequestResponse => _leaveRequestResponse;
+  List<LeaveData> leaveList = [];
+  bool _isShowRequest = false;
+  bool get isShowRequest => _isShowRequest;
+
+  Future<void> fetchLeaveApprovalRequests() async {
+    _leaveRequestResponse = null;
+    _isShowRequest = true;
+    notifyListeners();
+
+    try {
+      // bool? role = await userRoleFind();
+      bool isLeader = await TokenService.getLeaderRole();
+      //if user not team leader so not move further
+      if (!isLeader) {
+        _isShowRequest = false;
+        notifyListeners();
+        return;
+      }
+
+      final apiResponse =
+          await _attendanceservice.showLeaveRequestToTeamLeader();
+
+      if (apiResponse.isSuccess && apiResponse.data != null) {
+        _leaveRequestResponse = apiResponse.data;
+      }
+
+      // Use if-let or null check properly
+    } catch (e) {
+      // Never leave catch empty!
+      debugPrint("Logic Error: $e");
+    } finally {
+      // finally ensures loading stops even if the code crashes
+      _isShowRequest = false;
+      notifyListeners();
+    }
+  }
+
+  bool _isTeamLeader = false;
+  bool get isTeamLeader => _isTeamLeader;
+
+  // Initialize the role and fetch data if they are a leader
+  Future<void> initializeUserDashboard() async {
+    // 1. Get the role from SharedPreferences
+    _isTeamLeader = await TokenService.getLeaderRole();
+    notifyListeners();
+
+    // 2. If they are a leader, automatically trigger the request fetch
+    if (_isTeamLeader) {
+      await fetchLeaveApprovalRequests();
     }
   }
 }

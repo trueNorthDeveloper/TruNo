@@ -12,7 +12,7 @@ class TokenService {
   static String url = "";
   static String baseUrl = url + "/auth/api/";
   static String projectBaseUrl = url + "/api/";
- // static String attendance = url+"/api/attendance/";
+  // static String attendance = url+"/api/attendance/";
 //saved user token
   static Future<void> saveToken(String accessToken, String refreshToken) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -46,6 +46,15 @@ class TokenService {
   static Future<String?> getUserRole() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('user_role');
+  }
+//get team leader role
+
+  static Future<bool> getLeaderRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? role = prefs.getString('user_role');
+
+    // Return true ONLY if the string matches exactly
+    return role == "TEAMLEADER";
   }
 
 //get user id..............
@@ -512,5 +521,4 @@ class TokenService {
       },
     );
   }
-
 }

@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:truenorthflutterfrontend/app/controller/teamLeaderController/teamLeaderCon.dart';
+import 'package:truenorthflutterfrontend/app/model/teamLeaderModels/leaveRequestResponse.dart';
+import 'package:truenorthflutterfrontend/app/userAttendanceModuleAndLeave/controller/attendanceController.dart';
+import 'package:truenorthflutterfrontend/app/userAttendanceModuleAndLeave/model/leave_history.dart';
 import 'package:truenorthflutterfrontend/public/utils/userUtil/size_config.dart';
 
 class LeavescreenUi extends StatefulWidget {
@@ -9,6 +14,50 @@ class LeavescreenUi extends StatefulWidget {
 }
 
 class LeavescreenUiState extends State<LeavescreenUi> {
+  late ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final leaderProvider =
+          Provider.of<TeamleaderControllerPro>(context, listen: false);
+
+      leaderProvider.initializeUserDashboard();
+      // leaderProvider.fetchLeaveApprovalRequests();
+    });
+
+    // Initial fetch
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<Attendancecontroller>(context, listen: false)
+          .showUserLeaveApplyHistory(
+              isRefresh: true); // Use refresh to start clean
+    });
+
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    final provider = Provider.of<Attendancecontroller>(context, listen: false);
+
+    // Trigger when user is 200 pixels from the bottom
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      // The provider already has checks for !_hasNextPage and _isLoadingMore
+      // so it is safe to call here.
+      provider.showUserLeaveApplyHistory();
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll); // Clean up listener
+    _scrollController.dispose(); // Dispose controller
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,7 +73,7 @@ class LeavescreenUiState extends State<LeavescreenUi> {
             ),
           ),
           title: const Text(
-            "Leave",
+            "Leave History",
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -33,100 +82,166 @@ class LeavescreenUiState extends State<LeavescreenUi> {
           ),
         ),
         body: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Leave History",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: SizedBox(
-                  width: SizeConFig.proportionalWidth * 9,
-                  //  height: SizeConFig.proportionalHeight * 3.0,
-                  child: ListView(
-                    children: [
-                      userLeaveStatusCard(
-                        leaveType: "Casual Leave",
-                        dateRange: "12 Jan - 14 Jan 2026",
-                        status: "Approved",
-                        message: "Approved by TL MR Jonh",
-                      ),
-                      userLeaveStatusCard(
-                        leaveType: "Medical Leave",
-                        dateRange: "20 Jan - 22 Jan 2026",
-                        status: "Pending",
-                      ),
-                      userLeaveStatusCard(
-                        leaveType: "Paid Leave",
-                        dateRange: "05 Jan - 06 Jan 2026",
-                        status: "Rejected",
-                        message: "Insufficient leave balance",
-                      ),
-                      userLeaveStatusCard(
-                        leaveType: "Paid Leave",
-                        dateRange: "05 Jan - 06 Jan 2026",
-                        status: "Rejected",
-                        message: "Insufficient leave balance",
-                      ),
-                      userLeaveStatusCard(
-                        leaveType: "Paid Leave",
-                        dateRange: "05 Jan - 06 Jan 2026",
-                        status: "Rejected",
-                        message: "Insufficient leave balance",
-                      ),
-                      userLeaveStatusCard(
-                        leaveType: "Casual Leave",
-                        dateRange: "12 Jan - 14 Jan 2026",
-                        status: "Approved",
-                        message: "Approved by TL MR Jonh",
-                      ),
-                      userLeaveStatusCard(
-                        leaveType: "Casual Leave",
-                        dateRange: "12 Jan - 14 Jan 2026",
-                        status: "Approved",
-                        message: "Approved by TL MR Jonh",
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              buildLine(Colors.black),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Pending Leave Requests (3)",
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 12),
-                      Expanded(
-                        child: ListView.builder(
-                          itemCount: 3,
-                          itemBuilder: (context, index) => leaveRequestCard(),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            ],
+          padding: EdgeInsets.all(16),
+          child: Consumer<TeamleaderControllerPro>(
+            builder: (context, provider, child) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  //this for all comman user............
+                  _buildEmpui(provider),
+                  if (provider.isTeamLeader) ...[
+                    const SizedBox(height: 20),
+                    const Divider(thickness: 2),
+                    const SizedBox(height: 10),
+                    //show team leader dashboard for teamleadr
+                    // Expanded(child: _buildTeamLeader(provider)),
+                    _buildTeamLeader(provider)
+                  ]
+                ],
+              );
+            },
           ),
         ));
+  }
+
+//build normal empyloy normal user
+  Widget _buildEmpui(TeamleaderControllerPro provider) {
+    return Expanded(
+      child: Consumer<Attendancecontroller>(
+        builder: (context, provider, child) {
+          if (provider.leaveList.isEmpty && provider.isLoadingMore) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (provider.leaveList.isEmpty) {
+            return const Center(child: Text("No leave history found."));
+          }
+
+          return RefreshIndicator(
+            onRefresh: () =>
+                provider.showUserLeaveApplyHistory(isRefresh: true),
+            child: ListView.builder(
+              controller: _scrollController,
+              physics:
+                  const AlwaysScrollableScrollPhysics(), // Important for RefreshIndicator
+              itemCount: provider.leaveList.length + 1,
+              itemBuilder: (context, index) {
+                if (index == provider.leaveList.length) {
+                  return provider.isLoadingMore
+                      ? const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      : const SizedBox(height: 80); // Extra space at bottom
+                }
+
+                final leave = provider.leaveList[index];
+                //BUILD LEAVE CARD FOR UI
+                return _buildLeaveCard(leave);
+              },
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildTeamLeader(TeamleaderControllerPro provider) {
+    return Expanded(child:
+        Consumer<TeamleaderControllerPro>(builder: (context, provider, child) {
+      if (provider.isShowRequest) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      final list = provider.leaveRequestResponse?.data ?? [];
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(
+            "Pending Leave Requests (${list.length})",
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: ListView.builder(
+                itemCount: list.length,
+                itemBuilder: (context, index) {
+                  final leave = list[index];
+                  //BUILD LEAVE CARD FOR  TEAM LEADER..
+                  return leaveRequestCard(leave);
+                }),
+          ),
+        ]),
+      );
+    }));
+  }
+
+  Widget _buildLeaveCard(LeaveRequest leave) {
+    return Card(
+      margin: const EdgeInsets.all(10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: ExpansionTile(
+        title: Text("${leave.leaveType} - ${leave.numberOfDays} Days",
+            style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text("From: ${leave.fromDate} To: ${leave.toDate}",
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+        trailing: _buildStatusChip(leave.finalStatus ?? "PENDING"),
+        children: [
+          const Divider(),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text("Approval Timeline",
+                style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          ...leave.leaderStatus!.map((leader) => ListTile(
+                dense: true,
+                leading: const Icon(Icons.person_outline),
+                title: Text(leader.name ?? "Unknown"),
+                subtitle: Text(leader.eid ?? ""),
+                trailing: _buildStatusChip(leader.approverStatus ?? "PENDING",
+                    isSmall: true),
+              )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusChip(String status, {bool isSmall = false}) {
+    Color color;
+    switch (status) {
+      case 'APPROVED':
+        color = Colors.green;
+        break;
+      case 'REJECTED':
+        color = Colors.red;
+        break;
+      default:
+        color = Colors.orange;
+    }
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: isSmall ? 4 : 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color),
+      ),
+      child: Text(
+        status,
+        style: TextStyle(
+            color: color,
+            fontSize: isSmall ? 10 : 12,
+            fontWeight: FontWeight.bold),
+      ),
+    );
   }
 
   Widget buildLine(Color color) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Container(
-          height: MediaQuery.of(context).size.height * 0.1 / 100,
-          width: MediaQuery.of(context).size.width * 17 / 100,
+          // height: MediaQuery.of(context).size.height * 0.1 / 100,
+          //width: MediaQuery.of(context).size.width * 17 / 100,
           color: color),
     );
   }
@@ -207,94 +322,109 @@ class LeavescreenUiState extends State<LeavescreenUi> {
     );
   }
 
-  Widget leaveRequestCard() {
-    return SizedBox(
-      //width: SizeConFig.proportionalWidth * 9,
-      height: SizeConFig.proportionalHeight * 1.7,
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 3,
-        margin: EdgeInsets.symmetric(vertical: 8),
-        child: Padding(
-          padding: EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Employee Name + Status
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "John Doe",
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+  Widget leaveRequestCard(LeaveData leave) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header: Name and Status Chip
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      leave.userName ?? "Unknown",
+                      style: const TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      "ID: ${leave.userEid ?? 'N/A'}",
+                      style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+                _buildStatusChip(leave.leaveStatus ?? "PENDING"),
+              ],
+            ),
+            const Divider(height: 16),
+
+            // Leave Details
+            Row(
+              children: [
+                _infoTile(Icons.category_outlined, leave.leaveType ?? "N/A"),
+                const SizedBox(width: 16),
+                _infoTile(Icons.calendar_month_outlined,
+                    "${leave.numberOfDays} Days"),
+              ],
+            ),
+            const SizedBox(height: 6),
+            _infoTile(Icons.date_range, "${leave.fromDate} to ${leave.toDate}"),
+            const SizedBox(height: 6),
+            _infoTile(Icons.notes, "Reason: ${leave.leaveReason}",
+                isLongText: true),
+
+            const SizedBox(height: 12),
+
+            // Action Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red,
+                      side: const BorderSide(color: Colors.red),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                    ),
+                    onPressed: () {
+                      print("reject");
+                    },
+                    child: const Text("Reject", style: TextStyle(fontSize: 12)),
                   ),
-                  //Text("pending")
-                  _buildChip("pending", Colors.orange)
-                  // Chip(
-
-                  //   label: Text("Pending",style: TextStyle(fontSize: 12),),
-                  //   backgroundColor: Colors.orangeAccent,
-                  // ),
-                ],
-              ),
-
-              const SizedBox(height: 1),
-
-              Text("Casual Leave",
-                  style: TextStyle(
-                      fontWeight: FontWeight.w400,
-                      fontSize: 12,
-                      color: Colors.grey)),
-
-              const SizedBox(height: 1),
-              Text("12 Jan 2026 - 14 Jan 2026",
-                  style: TextStyle(color: Colors.grey, fontSize: 12)),
-
-              const SizedBox(height: 1),
-              Text("Reason: Family function",
-                  style: TextStyle(color: Colors.grey, fontSize: 12)),
-
-              const SizedBox(height: 1),
-
-              // Action Buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  OutlinedButton(
-                    onPressed: () {},
-                    child: const Text("Reject",
-                        style: TextStyle(color: Colors.blue, fontSize: 12)),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[700],
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                    ),
+                    onPressed: () {
+                      print("Approved");
+                    },
+                    child:
+                        const Text("Approve", style: TextStyle(fontSize: 12)),
                   ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () {},
-                    child: const Text("Approve",
-                        style: TextStyle(color: Colors.blue, fontSize: 12)),
-                  ),
-                ],
-              )
-            ],
-          ),
+                ),
+              ],
+            )
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildChip(String text, Color color) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 1, vertical: 1),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 12,
-          color: color,
-          fontWeight: FontWeight.w600,
+// Helper for smaller icons/text rows
+  Widget _infoTile(IconData icon, String text, {bool isLongText = false}) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: Colors.blueGrey),
+        const SizedBox(width: 4),
+        Text(
+          text,
+          style: const TextStyle(fontSize: 12, color: Colors.black87),
+          overflow: isLongText ? TextOverflow.ellipsis : null,
         ),
-      ),
+      ],
     );
   }
 }

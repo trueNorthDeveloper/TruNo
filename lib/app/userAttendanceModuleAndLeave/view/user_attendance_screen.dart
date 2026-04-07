@@ -4,7 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:truenorthflutterfrontend/app/controller/userController/user_dashboard_provider.dart';
 import 'package:truenorthflutterfrontend/app/userAttendanceModuleAndLeave/controller/attendanceController.dart';
+import 'package:truenorthflutterfrontend/app/userAttendanceModuleAndLeave/model/apply_leave.dart';
+import 'package:truenorthflutterfrontend/app/userAttendanceModuleAndLeave/model/user_leave_logs.dart';
 import 'package:truenorthflutterfrontend/public/utils/userUtil/buildCustomText.dart';
+
 import 'package:truenorthflutterfrontend/public/utils/userUtil/size_config.dart';
 
 class UserAttendanceScreen extends StatefulWidget {
@@ -15,20 +18,19 @@ class UserAttendanceScreen extends StatefulWidget {
 }
 
 class _UserAttendanceScreenState extends State<UserAttendanceScreen> {
-  final TextEditingController applyLeaveController = TextEditingController();
+  final TextEditingController leaveTypeController = TextEditingController();
   final TextEditingController leaveReasonController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
 
-    // Use the current date to fetch this month's data
-    // final DateTime now = DateTime.now();
-    // final String year = now.year.toString();
-    // final String month = now.month.toString().padLeft(2, '0');
     Future.microtask(() {
       final controller =
           Provider.of<Attendancecontroller>(context, listen: false);
+      //fatch user leave logs
+      controller.getLeaveLogs();
+      controller.canApplyLeaveGet();
 
       final now = DateTime.now();
 
@@ -38,23 +40,6 @@ class _UserAttendanceScreenState extends State<UserAttendanceScreen> {
         now.month.toString().padLeft(2, '0'),
       );
     });
-
-    // Future.microtask(() {
-    //   final controller =
-    //       Provider.of<Attendancecontroller>(context, listen: false);
-
-    //   // Only call the fetch. The fetch method itself should handle
-    //   // calling prepareDataWithmodelClass once it gets a '200 OK'
-    //   Future.delayed(
-    //     Duration(seconds: 2),
-    //     () {
-    //       controller.fatchUserDailyAttendance(year, month);
-    //     },
-    //   );
-
-    //   //controller.updateFocusedDay(now);
-    //   controller.resetToToday();
-    // });
   }
 
   final List<String> leave = ["ML", "CL", "LWP"];
@@ -64,8 +49,6 @@ class _UserAttendanceScreenState extends State<UserAttendanceScreen> {
   //new attendance
 
   DateTime? _selectedDate;
-  CalendarFormat _calendarFormat = CalendarFormat.month;
-  DateTime? _focusedDay = DateTime.now();
 
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -86,233 +69,14 @@ class _UserAttendanceScreenState extends State<UserAttendanceScreen> {
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                          //show caleinder.........................................................................
-                          // _buildCalender(),//comment bcz we are using new calendar with event
-                          //---------------------------------------------------------------------
+                          //-----------------------------------------BUILD FULL MONTHLY CALENDAR WITH DATE----------------------------
+                          _buildFullMonthlyAttendance(),
 
-                          Consumer<Attendancecontroller>(
-                            builder: (context, pro, child) {
-                              return Stack(children: [
-                                if (pro.isLoadAttendace)
-                                  const Positioned.fill(
-                                    child: Center(
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                  ),
-                                TableCalendar(
-                                  holidayPredicate: (day) {
-                                    return day.weekday == DateTime.sunday;
-                                  },
-                                  calendarBuilders: CalendarBuilders(
-                                    holidayBuilder: (context, day, focusedDay) {
-                                      return Container(
-                                        margin: const EdgeInsets.all(4.0),
-                                        alignment: Alignment.center,
-                                        decoration: const BoxDecoration(
-                                          color: Colors
-                                              .transparent, // Or a light red if you prefer
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Text(
-                                          '${day.day}',
-                                          style: const TextStyle(
-                                            color: Color.fromARGB(255, 165, 207,
-                                                220), // Makes the text red
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    defaultBuilder: (context, day, focusedDay) {
-                                      final dateKey =
-                                          DateFormat('yyyy-MM-dd').format(day);
-                                      final status =
-                                          pro.attendanceListMap[dateKey];
-                                      // 3. Define styling based on attendance status
-                                      Color? bgColor;
-                                      Color textColor = Colors.black;
-                                      BoxBorder? border;
-                                      if (status == "Present") {
-                                        bgColor = Colors.green.shade100;
-                                        textColor = Colors.green.shade900;
-                                        border = Border.all(
-                                            color: Colors.green, width: 1);
-                                      } else if (status == "Absent") {
-                                        bgColor = Colors.red.shade50;
-                                        textColor = Colors.red.shade900;
-                                      } else if (status == "Upcoming") {
-                                        bgColor = const Color.fromARGB(
-                                            255, 227, 223, 224);
-                                        textColor = const Color.fromARGB(
-                                            255, 159, 166, 165);
-                                      }
-                                      return Container(
-                                        margin: const EdgeInsets.all(4.0),
-                                        alignment: Alignment.center,
-                                        decoration: BoxDecoration(
-                                          color: bgColor,
-                                          shape: BoxShape.circle,
-                                          border: border,
-                                        ),
-                                        child: Text(
-                                          '${day.day}',
-                                          style: TextStyle(
-                                            color: textColor,
-                                            fontWeight: status == "Present"
-                                                ? FontWeight.bold
-                                                : FontWeight.normal,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    todayBuilder: (context, day, focusedDay) {
-                                      return Container(
-                                        margin: const EdgeInsets.all(4.0),
-                                        alignment: Alignment.center,
-                                        decoration: const BoxDecoration(
-                                          color: Colors.blueAccent,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Text(
-                                          '${day.day}',
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                  headerStyle: HeaderStyle(
-                                    // Title styling
-                                    titleTextStyle: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20.0,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    // Header background decoration
-                                    decoration: BoxDecoration(
-                                      color: const Color.fromARGB(182, 167, 166,
-                                          169), // Example background color
-                                      borderRadius: BorderRadius.circular(
-                                          10.0), // Rounded corners
-                                    ),
-                                    // Center the title
-                                    titleCentered: true,
-                                    // Hide the format button
-                                    formatButtonVisible: false,
-                                    // Custom chevron icons
-                                    leftChevronIcon: const Icon(
-                                      Icons.chevron_left,
-                                      color: Colors.white,
-                                      size: 28,
-                                    ),
-                                    rightChevronIcon: const Icon(
-                                      Icons.chevron_right,
-                                      color: Colors.white,
-                                      size: 28,
-                                    ),
-                                    // Custom title format (e.g., "Month\nYear")
-                                    titleTextFormatter: (date, locale) {
-                                      final month =
-                                          DateFormat.MMMM(locale).format(date);
-                                      final years =
-                                          DateFormat.y(locale).format(date);
-                                      return '$month\n$years';
-                                    },
-                                  ),
-                                  // Other
-                                  pageAnimationDuration:
-                                      Duration(milliseconds: 500),
-                                  weekNumbersVisible: false,
-
-                                  daysOfWeekHeight: 27.0,
-                                  availableGestures: AvailableGestures.none,
-                                  pageAnimationCurve: Curves.easeInCubic,
-                                  daysOfWeekStyle: DaysOfWeekStyle(
-                                      weekdayStyle: TextStyle(
-                                          color: const Color.fromARGB(
-                                              255, 54, 79, 244))),
-                                  startingDayOfWeek: StartingDayOfWeek.sunday,
-                                  sixWeekMonthsEnforced: false,
-                                  focusedDay: pro.focusedDay!,
-                                  firstDay: pro.firstDay,
-                                  lastDay: pro.lastDay,
-                                  calendarFormat: CalendarFormat.month,
-                                  dayHitTestBehavior: HitTestBehavior.opaque,
-                                  selectedDayPredicate: (day) {
-                                    return isSameDay(_selectedDate, day);
-                                  },
-                                  onDaySelected: (selectedDay, focusDay) {
-                                    final selectedKey = DateFormat('yyyy-MM-dd')
-                                        .format(selectedDay);
-
-                                    final sessions =
-                                        pro.attendanceEvent[selectedKey] ?? [];
-                                    pro.updateFocusedDay(focusDay);
-                                    pro.updateSelectedSessions(selectedKey);
-                                    setState(() {
-                                      _selectedDate = selectedDay;
-                                    });
-
-                                    // showModalBottomSheet(
-                                    //   context: context,
-                                    //   builder: (_) {
-                                    //     return sessions.isEmpty
-                                    //         ? const Center(
-                                    //             child: Text("No sessions"))
-                                    //         : ListView.builder(
-                                    //             itemCount: sessions.length,
-                                    //             itemBuilder: (context, index) {
-                                    //               final session =
-                                    //                   sessions[index];
-
-                                    //               return ListTile(
-                                    //                 title: Text(
-                                    //                     "Login: ${session.loginTime ?? '--'}"),
-                                    //                 subtitle: Text(
-                                    //                     "Logout: ${session.logOutTime ?? '--'} | Working: ${session.workingHour ?? '--'}"),
-                                    //               );
-                                    //             },
-                                    //           );
-                                    //   },
-                                    // );
-                                  },
-
-                                  onPageChanged: (focusedDay) {
-                                    pro.updateFocusedDay(focusedDay);
-                                    pro.fatchUserDailyAttendance(
-                                        focusedDay.year.toString(),
-                                        focusedDay.month
-                                            .toString()
-                                            .padLeft(2, '0'));
-                                  },
-                                )
-                              ]);
-                            },
-                          ),
                           SizeConFig.verticalBox(0.01),
-                          Consumer<Attendancecontroller>(
-                            builder: (context, p, child) {
-                              // Check the filtered list, not the whole Map
-                              if (p.selectedDaySessions.isEmpty) {
-                                return const Center(
-                                    child: Text("No sessions for this day"));
-                              }
 
-                              return ListView.builder(
-                                shrinkWrap: true, // Use this if inside a Column
-                                // physics:
-                                //     NeverScrollableScrollPhysics(), // Use this if inside a ScrollView
-                                itemCount: p.selectedDaySessions.length,
-                                itemBuilder: (context, index) {
-                                  final session = p.selectedDaySessions[index];
-                                  return sessionLogCard(session);
+                          ///THIS CONSUMER MEHTHOD HELP TO VIEW LIST VIEW OF USER DAILT LOGOUT LOG
+                          _buildSessionListView(),
 
-                                  
-                                },
-                              );
-                            },
-                          ),
                           _buildBreakLine(),
                           SizeConFig.verticalBox(0.01),
                           Row(
@@ -397,7 +161,7 @@ class _UserAttendanceScreenState extends State<UserAttendanceScreen> {
                                                           child: _createFiled<
                                                                   String>(
                                                               controller:
-                                                                  applyLeaveController,
+                                                                  leaveTypeController,
                                                               itemLabel:
                                                                   (item) =>
                                                                       item,
@@ -526,6 +290,8 @@ class _UserAttendanceScreenState extends State<UserAttendanceScreen> {
                                                                   .proportionalWidth *
                                                               3,
                                                           child: TextField(
+                                                              controller:
+                                                                  leaveReasonController,
                                                               textAlignVertical:
                                                                   TextAlignVertical
                                                                       .center,
@@ -561,133 +327,16 @@ class _UserAttendanceScreenState extends State<UserAttendanceScreen> {
                                                         ),
                                                       ])),
                                                   SizeConFig.verticalBox(0.01),
-                                                  Container(
-                                                    width: SizeConFig
-                                                            .proportionalWidth *
-                                                        5,
-                                                    height: SizeConFig
-                                                            .proportionalHeight *
-                                                        0.5,
-                                                    //color: Colors.amber,
-                                                    child: Center(
-                                                      child: ElevatedButton(
-                                                          onPressed: () {},
-                                                          child: Text(
-                                                              "Submit For Approval")),
-                                                    ),
-                                                  )
+                                                  //APPLY LEAVE BUTTON CODE.................................................................................................
+                                                  _buildleaveApplyButton()
                                                 ],
                                               ),
                                             ),
                                           ),
 
                                           const SizedBox(width: 8),
-
-                                          // Right section..................................................
-                                          Expanded(
-                                            child: Container(
-                                              // color: const Color.fromARGB(
-                                              //   255,
-                                              //   60,
-                                              //   201,
-                                              //   67,
-                                              // ),
-                                              child: Column(
-                                                children: [
-                                                  Container(
-                                                    width: SizeConFig
-                                                            .proportionalWidth *
-                                                        5,
-                                                    height: SizeConFig
-                                                            .proportionalHeight *
-                                                        1.2,
-                                                    // color: Colors.pink,
-                                                    child: Row(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .spaceBetween,
-                                                      children: [
-                                                        _buildTotalLeaveRecondchart(
-                                                            typeList),
-                                                        _buildTotalLeaveRecondchart(
-                                                            usedList),
-                                                        _buildTotalLeaveRecondchart(
-                                                            balancedList),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  SizeConFig.verticalBox(0.01),
-                                                  Container(
-                                                    alignment:
-                                                        Alignment.centerLeft,
-                                                    width: SizeConFig
-                                                            .proportionalWidth *
-                                                        5,
-                                                    height: SizeConFig
-                                                            .proportionalHeight *
-                                                        0.2,
-                                                    // color: const Color.fromARGB(
-                                                    //     255, 192, 128, 85),
-                                                    child: BuildCustomText(
-                                                        data: "Alloted:",
-                                                        fontSize: 12,
-                                                        fontWeight:
-                                                            FontWeight.w500),
-                                                  ),
-                                                  Container(
-                                                    alignment:
-                                                        Alignment.centerLeft,
-                                                    width: SizeConFig
-                                                            .proportionalWidth *
-                                                        5,
-                                                    height: SizeConFig
-                                                            .proportionalHeight *
-                                                        0.3,
-                                                    // color: const Color.fromARGB(
-                                                    //     255, 192, 128, 85),
-                                                    child: Row(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        BuildCustomText(
-                                                            data: "CL: 12",
-                                                            fontSize: 12,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .w500),
-                                                        SizeConFig
-                                                            .horizontalBox(0.1),
-                                                        BuildCustomText(
-                                                            data: "ML: 3",
-                                                            fontSize: 12,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .w500),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  Container(
-                                                    alignment:
-                                                        Alignment.centerLeft,
-                                                    width: SizeConFig
-                                                            .proportionalWidth *
-                                                        5,
-                                                    height: SizeConFig
-                                                            .proportionalHeight *
-                                                        0.2,
-                                                    child: BuildCustomText(
-                                                      data:
-                                                          "Renews on: 02-12-2027",
-                                                      fontSize: 12,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                    ),
-                                                  )
-                                                ],
-                                              ),
-                                            ),
-                                          ),
+                                          //BUILD LEAVE LOGS ABD ATTOTED TOTAL LEAVE
+                                          _buildAttotedLeave()
                                         ],
                                       ),
                                     ),
@@ -699,6 +348,485 @@ class _UserAttendanceScreenState extends State<UserAttendanceScreen> {
                         ]))),
               ),
             )));
+  }
+
+//BUILD LEAV LEAVE APPLY BUTTON
+  Widget _buildleaveApplyButton() {
+    return Consumer<Attendancecontroller>(
+      builder: (context, controller, child) {
+        // 1. LOADING STATE
+        if (controller.isApply) {
+          // Matches your variable name '_isAppy'
+          return SizedBox(
+            width: SizeConFig.proportionalWidth * 5,
+            height: SizeConFig.proportionalHeight * 0.5,
+            child: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (controller.canApplyLeave != null &&
+            controller.canApplyLeave!.data == true) {
+          return Container(
+            width: SizeConFig.proportionalWidth * 5,
+            height: SizeConFig.proportionalHeight * 0.5,
+            alignment: Alignment.center,
+            child: Text(
+              controller.canApplyLeave!.message ??
+                  "Already Applied Leave Request",
+              style: const TextStyle(
+                  fontSize: 13, color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+          );
+        }
+
+        // 3. APPLY BUTTON STATE
+        return SizedBox(
+          width: SizeConFig.proportionalWidth * 5,
+          height: SizeConFig.proportionalHeight * 0.5,
+          child: ElevatedButton(
+            onPressed: () async {
+              // Access other providers if needed
+              final dashboardProvider =
+                  Provider.of<UserDashboardProvider>(context, listen: false);
+
+              // Prepare the request object
+              ApplyLeaveRequest leave = ApplyLeaveRequest(
+                leaveType: leaveTypeController.text,
+                fromDate: dashboardProvider.fromDateController.text,
+                toDate: dashboardProvider.toDateController.text,
+                reason: leaveReasonController.text,
+              );
+
+              // Call the service using the 'controller' from Consumer
+              final result = await controller.applyMonthlyLeave(leave.tojson());
+
+              if (result != null && context.mounted) {
+                ///call again method
+                controller.canApplyLeaveGet();
+                final bool isSuccess = result.success ?? false;
+                final Color primaryColor =
+                    isSuccess ? Colors.green.shade700 : Colors.red.shade700;
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    duration: Duration(seconds: 5),
+                    elevation: 6,
+                    behavior: SnackBarBehavior.floating,
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    content: Row(
+                      children: [
+                        Icon(
+                          isSuccess ? Icons.check_circle : Icons.error_outline,
+                          color: primaryColor,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                result.message ?? "Update",
+                                style: TextStyle(
+                                  color: primaryColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              if (result.data != null &&
+                                  result.data!['suggestion'] != null)
+                                Text(
+                                  result.data!['suggestion'],
+                                  style: const TextStyle(
+                                      color: Colors.black87, fontSize: 12),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    action: SnackBarAction(
+                      label: 'OK',
+                      textColor: primaryColor,
+                      onPressed: () =>
+                          ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+                    ),
+                  ),
+                );
+              }
+            },
+            child: const Text("Apply Leave"),
+          ),
+        );
+      },
+    );
+  }
+
+//BUILD TOTAL ALLOTED LEAVE
+
+  Widget _buildAttotedLeave() {
+    return Consumer<Attendancecontroller>(
+      builder: (context, contro, child) {
+        if (contro.isLeaveLogs) {
+          return Expanded(
+              child: Container(
+            width: SizeConFig.proportionalWidth * 5,
+            height: SizeConFig.proportionalHeight * 1.2,
+            child: CircularProgressIndicator(),
+          ));
+        }
+        if (contro.userLeaveLogs == null ||
+            contro.userLeaveLogs!.data == null) {
+          return const Center(child: Text("No leave logs found"));
+        }
+
+        return _buildLeaveLogs(contro.userLeaveLogs!);
+      },
+    );
+  }
+
+  ///BUILD FULL ATTENDANCE CALENDAR
+  Widget _buildFullMonthlyAttendance() {
+    return Consumer<Attendancecontroller>(
+      builder: (context, pro, child) {
+        return Stack(children: [
+          if (pro.isLoadAttendace)
+            const Positioned.fill(
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          TableCalendar(
+            holidayPredicate: (day) {
+              return day.weekday == DateTime.sunday;
+            },
+            calendarBuilders: CalendarBuilders(
+              holidayBuilder: (context, day, focusedDay) {
+                return Container(
+                  margin: const EdgeInsets.all(4.0),
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(
+                    color: Colors.transparent, // Or a light red if you prefer
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    '${day.day}',
+                    style: const TextStyle(
+                      color: Color.fromARGB(
+                          255, 165, 207, 220), // Makes the text red
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                );
+              },
+              defaultBuilder: (context, day, focusedDay) {
+                final dateKey = DateFormat('yyyy-MM-dd').format(day);
+                final status = pro.attendanceListMap[dateKey];
+                // 3. Define styling based on attendance status
+                Color? bgColor;
+                Color textColor = Colors.black;
+                BoxBorder? border;
+                if (status == "Present") {
+                  bgColor = Colors.green.shade100;
+                  textColor = Colors.green.shade900;
+                  border = Border.all(color: Colors.green, width: 1);
+                } else if (status == "Absent") {
+                  bgColor = Colors.red.shade50;
+                  textColor = Colors.red.shade900;
+                } else if (status == "Upcoming") {
+                  bgColor = const Color.fromARGB(255, 227, 223, 224);
+                  textColor = const Color.fromARGB(255, 159, 166, 165);
+                } else if (status == "Holiday") {
+                  bgColor = Colors.amber.shade100;
+                  textColor = Colors.amber.shade900;
+                  border = Border.all(color: Colors.amber, width: 1);
+                }
+                return Container(
+                  margin: const EdgeInsets.all(4.0),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    shape: BoxShape.circle,
+                    border: border,
+                  ),
+                  child: Text(
+                    '${day.day}',
+                    style: TextStyle(
+                      color: textColor,
+                      fontWeight: status == "Present"
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                  ),
+                );
+              },
+              todayBuilder: (context, day, focusedDay) {
+                return Container(
+                  margin: const EdgeInsets.all(4.0),
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(
+                    color: Colors.blueAccent,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    '${day.day}',
+                    style: const TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                );
+              },
+            ),
+            headerStyle: HeaderStyle(
+              // Title styling
+              titleTextStyle: const TextStyle(
+                color: Colors.white,
+                fontSize: 20.0,
+                fontWeight: FontWeight.bold,
+              ),
+              // Header background decoration
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(
+                    182, 167, 166, 169), // Example background color
+                borderRadius: BorderRadius.circular(10.0), // Rounded corners
+              ),
+              // Center the title
+              titleCentered: true,
+              // Hide the format button
+              formatButtonVisible: false,
+              // Custom chevron icons
+              leftChevronIcon: const Icon(
+                Icons.chevron_left,
+                color: Colors.white,
+                size: 28,
+              ),
+              rightChevronIcon: const Icon(
+                Icons.chevron_right,
+                color: Colors.white,
+                size: 28,
+              ),
+              // Custom title format (e.g., "Month\nYear")
+              titleTextFormatter: (date, locale) {
+                final month = DateFormat.MMMM(locale).format(date);
+                final years = DateFormat.y(locale).format(date);
+                return '$month\n$years';
+              },
+            ),
+            // Other
+            pageAnimationDuration: Duration(milliseconds: 500),
+            weekNumbersVisible: false,
+
+            daysOfWeekHeight: 27.0,
+            availableGestures: AvailableGestures.none,
+            pageAnimationCurve: Curves.easeInCubic,
+            daysOfWeekStyle: DaysOfWeekStyle(
+                weekdayStyle:
+                    TextStyle(color: const Color.fromARGB(255, 54, 79, 244))),
+            startingDayOfWeek: StartingDayOfWeek.sunday,
+            sixWeekMonthsEnforced: false,
+            focusedDay: pro.focusedDay!,
+            firstDay: pro.firstDay,
+            lastDay: pro.lastDay,
+            calendarFormat: CalendarFormat.month,
+            dayHitTestBehavior: HitTestBehavior.opaque,
+            selectedDayPredicate: (day) {
+              return isSameDay(_selectedDate, day);
+            },
+            onDaySelected: (selectedDay, focusDay) {
+              final selectedKey = DateFormat('yyyy-MM-dd').format(selectedDay);
+
+              final sessions = pro.attendanceEvent[selectedKey] ?? [];
+              pro.updateFocusedDay(focusDay);
+              pro.updateSelectedSessions(selectedKey);
+              setState(() {
+                _selectedDate = selectedDay;
+              });
+            },
+
+            onPageChanged: (focusedDay) {
+              pro.updateFocusedDay(focusedDay);
+              pro.fatchUserDailyAttendance(focusedDay.year.toString(),
+                  focusedDay.month.toString().padLeft(2, '0'));
+            },
+          )
+        ]);
+      },
+    );
+  }
+
+  Widget _buildBalance(UsedLeaves? used) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        BuildCustomText(
+          data: used!.usedCl.toString(),
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+        SizeConFig.verticalBox(0.01),
+        BuildCustomText(
+          data: used.usedMl.toString(),
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+        SizeConFig.verticalBox(0.01),
+        BuildCustomText(
+          data: used.usedLwp.toString(),
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBalanceLeave(BalancedLeaves? balance) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        BuildCustomText(
+          data: "Balance",
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+        BuildCustomText(
+          data: balance!.balancedCl.toString(),
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+        SizeConFig.verticalBox(0.01),
+        BuildCustomText(
+          data: balance.balancedMl.toString(),
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+        SizeConFig.verticalBox(0.01),
+        BuildCustomText(
+          data: balance.balancedLwp.toString(),
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUsedLeave(UsedLeaves? used) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        BuildCustomText(
+          data: "Used",
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+        BuildCustomText(
+          data: used!.usedCl.toString(),
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+        SizeConFig.verticalBox(0.01),
+        BuildCustomText(
+          data: used.usedMl.toString(),
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+        SizeConFig.verticalBox(0.01),
+        BuildCustomText(
+          data: used.usedLwp.toString(),
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLeaveLogs(UserLeaveLogs userLeaveLogs) {
+    return Expanded(
+      child: Container(
+        child: Column(
+          children: [
+            Container(
+              width: SizeConFig.proportionalWidth * 5,
+              height: SizeConFig.proportionalHeight * 1.2,
+              // color: Colors.pink,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildTotalLeaveRecondchart(typeList),
+                  _buildUsedLeave(userLeaveLogs.data!.used),
+                  _buildBalanceLeave(userLeaveLogs.data!.balance)
+                ],
+              ),
+            ),
+            SizeConFig.verticalBox(0.01),
+            Container(
+              alignment: Alignment.centerLeft,
+              width: SizeConFig.proportionalWidth * 5,
+              height: SizeConFig.proportionalHeight * 0.2,
+              // color: const Color.fromARGB(
+              //     255, 192, 128, 85),
+              child: BuildCustomText(
+                  data: "Alloted:", fontSize: 12, fontWeight: FontWeight.w500),
+            ),
+            Container(
+              alignment: Alignment.centerLeft,
+              width: SizeConFig.proportionalWidth * 5,
+              height: SizeConFig.proportionalHeight * 0.3,
+              // color: const Color.fromARGB(
+              //     255, 192, 128, 85),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  BuildCustomText(
+                      data: "CL: ${userLeaveLogs.data!.alloted!.allotedCl}",
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500),
+                  SizeConFig.horizontalBox(0.1),
+                  BuildCustomText(
+                      data: "ML: ${userLeaveLogs.data!.alloted!.alllotedMl}",
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500),
+                ],
+              ),
+            ),
+            Container(
+              alignment: Alignment.centerLeft,
+              width: SizeConFig.proportionalWidth * 5,
+              height: SizeConFig.proportionalHeight * 0.2,
+              child: BuildCustomText(
+                data: "Renews on: 02-12-2027",
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSessionListView() {
+    return Consumer<Attendancecontroller>(
+      builder: (context, p, child) {
+        // Check the filtered list, not the whole Map
+        if (p.selectedDaySessions.isEmpty) {
+          return const Center(child: Text("No sessions for this day"));
+        }
+
+        return ListView.builder(
+          shrinkWrap: true, // Use this if inside a Column
+          // physics:
+          //     NeverScrollableScrollPhysics(), // Use this if inside a ScrollView
+          itemCount: p.selectedDaySessions.length,
+          itemBuilder: (context, index) {
+            final session = p.selectedDaySessions[index];
+            return sessionLogCard(session);
+          },
+        );
+      },
+    );
   }
 
   Widget _buildFromDate(
@@ -745,7 +873,7 @@ class _UserAttendanceScreenState extends State<UserAttendanceScreen> {
     required String Function(T item) itemLabel,
   }) {
     return TextField(
-        controller: applyLeaveController,
+        controller: leaveTypeController,
         textAlignVertical: TextAlignVertical.center,
         style: const TextStyle(fontSize: 12),
         readOnly: true,
@@ -765,7 +893,7 @@ class _UserAttendanceScreenState extends State<UserAttendanceScreen> {
           suffixIcon: PopupMenuButton<T>(
             icon: const Icon(Icons.arrow_drop_down),
             onSelected: (value) {
-              applyLeaveController.text = itemLabel(value);
+              leaveTypeController.text = itemLabel(value);
             },
             itemBuilder: (context) {
               return items.map((aim) {
@@ -789,6 +917,25 @@ class _UserAttendanceScreenState extends State<UserAttendanceScreen> {
             },
           ),
         ));
+  }
+
+  Widget _buildTotalLeave(List<String> items) {
+    return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: List.generate(4, (index) {
+          final item = items;
+          return Column(
+            children: [
+              BuildCustomText(
+                data: item[index],
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+              SizeConFig.verticalBox(0.01),
+            ],
+          );
+        }));
   }
 
   Widget _buildTotalLeaveRecondchart(List<String> items) {
@@ -1043,64 +1190,6 @@ class _UserAttendanceScreenState extends State<UserAttendanceScreen> {
     );
   }
 
-  Widget _buildCalender() {
-    return Consumer<UserDashboardProvider>(builder: (context, provider, child) {
-      return TableCalendar(
-        onPageChanged: (focusedDay) {
-          print(focusedDay);
-          provider.events;
-        },
-        calendarBuilders: CalendarBuilders(
-          markerBuilder: (context, date, events) {
-            if (events.isEmpty) return const SizedBox();
-
-            // Get first event type (Present/Absent)
-            final eventType = events.first.toString();
-
-            Color color = Colors.grey;
-            if (eventType == 'Present') {
-              color = Colors.green;
-            } else if (eventType == 'Absent') {
-              color = Colors.red;
-            }
-
-            return Positioned(
-              bottom: 1,
-              child: Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            );
-          },
-        ),
-
-        calendarFormat: CalendarFormat.month, // Or week, twoWeeks
-        headerStyle: HeaderStyle(
-          formatButtonVisible: false, // Hide
-        ),
-        calendarStyle: CalendarStyle(
-          weekNumberTextStyle: TextStyle(color: Colors.red),
-          weekendTextStyle: TextStyle(color: Colors.red),
-          markerDecoration: BoxDecoration(
-            color: Colors.blue,
-            shape: BoxShape.circle,
-          ),
-        ),
-        focusedDay: provider.focusedDay,
-        firstDay: DateTime.utc(2020, 1, 1),
-        lastDay: DateTime.utc(2030, 12, 31),
-        eventLoader: (day) {
-          return provider.events[DateTime.utc(day.year, day.month, day.day)] ??
-              [];
-        },
-      );
-    });
-  }
-
   Widget sessionLogCard(dynamic item) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1119,12 +1208,11 @@ class _UserAttendanceScreenState extends State<UserAttendanceScreen> {
       ),
       child: Row(
         children: [
-         
-         // 1. Login Time Column
+          // 1. Login Time Column
           _buildMetricColumn(
             icon: Icons.login_rounded,
             label: "Login",
-            value: item.loginTime.toString().substring(11,19)?? "--:--",
+            value: item.loginTime.toString().substring(11, 19) ?? "--:--",
             color: Colors.green,
           ),
 
@@ -1134,7 +1222,7 @@ class _UserAttendanceScreenState extends State<UserAttendanceScreen> {
           _buildMetricColumn(
             icon: Icons.logout_rounded,
             label: "Logout",
-            value: item.logOutTime.substring(11,19) ?? "Active",
+            value: item.logOutTime.substring(11, 19) ?? "Active",
             color: Colors.orangeAccent,
           ),
 

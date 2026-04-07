@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:truenorthflutterfrontend/app/userAttendanceModuleAndLeave/model/apply_leave.dart';
+import 'package:truenorthflutterfrontend/app/userAttendanceModuleAndLeave/model/can_apply_leave.dart';
+import 'package:truenorthflutterfrontend/app/userAttendanceModuleAndLeave/model/leave_history.dart';
 import 'package:truenorthflutterfrontend/app/userAttendanceModuleAndLeave/model/user_daily_attendance.dart';
+import 'package:truenorthflutterfrontend/app/userAttendanceModuleAndLeave/model/user_leave_logs.dart';
 import 'package:truenorthflutterfrontend/app/userAttendanceModuleAndLeave/services/attendanceService.dart';
+import 'package:truenorthflutterfrontend/public/config/platform_type.dart';
 
 class Attendancecontroller extends ChangeNotifier {
 //create attendance service classs object for call api
@@ -107,283 +112,144 @@ class Attendancecontroller extends ChangeNotifier {
   final DateTime? _currentDay = DateTime.now(); // Immutable initial value
 
   DateTime? get currentDay => _currentDay;
-  Map<String, String> attendanceMap = {};
-  void prepareAttendanceData() {
-    for (var item in event) {
-      attendanceMap[item['date']] = item['status'];
-    }
+  //USER ALL OVER LEAVE LOGS................................................
+  UserLeaveLogs? _userLeaveLogs;
+  UserLeaveLogs? get userLeaveLogs => _userLeaveLogs;
+  bool _isLeaveLogs = false;
+  bool get isLeaveLogs => _isLeaveLogs;
+  Future<void> getLeaveLogs() async {
+    _isLeaveLogs = true;
     notifyListeners();
+
+    try {
+      final logResponse = await _attendanceservice.fatchUserLeaveLogs();
+      if (logResponse.isSuccess) {
+        _userLeaveLogs = logResponse.data;
+      } else {
+        _userLeaveLogs = null; // Ensure it's null on failure
+      }
+    } catch (e) {
+      _userLeaveLogs = null;
+    } finally {
+      _isLeaveLogs = false; // Set to false only ONCE at the very end
+      notifyListeners();
+    }
   }
 
-  final List<Map<String, dynamic>> event = [
-    {
-      "date": "2026-03-01",
-      "status": "Absent",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-02",
-      "status": "Absent",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-03",
-      "status": "Absent",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-04",
-      "status": "Absent",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-05",
-      "status": "Absent",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-06",
-      "status": "Absent",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-07",
-      "status": "Absent",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-08",
-      "status": "Absent",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-09",
-      "status": "Present",
-      "totalSession": 1,
-      "session": [
-        {
-          "loginDate": "2026-03-09",
-          "loginTime": "2026-03-09T10:48:57.703115",
-          "logOutTime": "2026-03-12T12:12:23.7001",
-          "workingHour": "73 hours 23 minutes"
-        }
-      ],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-10",
-      "status": "Absent",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-11",
-      "status": "Absent",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-12",
-      "status": "Present",
-      "totalSession": 1,
-      "session": [
-        {
-          "loginDate": "2026-03-12",
-          "loginTime": "2026-03-12T12:12:34.360331",
-          "logOutTime": "2026-03-12T12:27:03.684999",
-          "workingHour": "0 hours 14 minutes"
-        }
-      ],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-13",
-      "status": "Absent",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-14",
-      "status": "Absent",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-15",
-      "status": "Absent",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-16",
-      "status": "Absent",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-17",
-      "status": "Absent",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-18",
-      "status": "Absent",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-19",
-      "status": "Absent",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-20",
-      "status": "Present",
-      "totalSession": 1,
-      "session": [
-        {
-          "loginDate": "2026-03-20",
-          "loginTime": "2026-03-20T17:10:16.019108",
-          "logOutTime": "2026-03-20T18:13:02.537351",
-          "workingHour": "1 hours 2 minutes"
-        }
-      ],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-21",
-      "status": "Absent",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-22",
-      "status": "Absent",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-23",
-      "status": "Absent",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-24",
-      "status": "Absent",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-25",
-      "status": "Absent",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-26",
-      "status": "Upcoming",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-27",
-      "status": "Upcoming",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-28",
-      "status": "Upcoming",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-29",
-      "status": "Upcoming",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-30",
-      "status": "Upcoming",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
-    },
-    {
-      "date": "2026-03-31",
-      "status": "Upcoming",
-      "totalSession": 0,
-      "session": [],
-      "leave": null,
-      "holiday": null
+//USER CAN APPLY LEAVE OR NOT USING THIS  DISABLE BUUTON
+  CanApplyLeave? _canApplyLeave;
+  CanApplyLeave? get canApplyLeave => _canApplyLeave;
+  bool _isLeaveApply = false;
+  bool get isLeaveApply => _isLeaveApply;
+  Future<void> canApplyLeaveGet() async {
+    _isLeaveApply = true;
+    notifyListeners();
+    try {
+      final response = await _attendanceservice.canApplyLeaveFatch();
+      if (response.isSuccess) {
+        _canApplyLeave = response.data;
+        print(response.data!.data);
+      } else {
+        _canApplyLeave = null;
+      }
+    } catch (e) {
+      _canApplyLeave = null;
+    } finally {
+      _isLeaveApply = false;
+      notifyListeners();
     }
-  ];
+  }
+
+//FUNCTION FOR APPLY LEAVE...........................
+  ApplyLeaveResponse? applyLeaveResponse;
+  bool _isAppy = false;
+  bool get isApply => _isAppy;
+  Future<ApplyLeaveResponse?> applyMonthlyLeave(
+      Map<String, dynamic> tojson) async {
+    _isAppy = true;
+    notifyListeners();
+
+    final response = await _attendanceservice.applyMonthLeaveService(tojson);
+
+    _isAppy = false;
+
+    if (response.isSuccess) {
+      applyLeaveResponse = response.data;
+      notifyListeners();
+      return applyLeaveResponse;
+    } else {
+      // FIX: Extract the response data even if it's an error (isSuccess is false)
+      // This assumes your service still provides the parsed JSON in response.data on 400/500 errors
+      final errorResponse = response.data;
+      notifyListeners();
+      return errorResponse;
+    }
+  }
+//USER LEAVE APPLY HISTORY................................. TRACK WITH PAGINATOION
+
+  // LeaveHistoryResponse? _leaveHistoryResponse;
+  // LeaveHistoryResponse? get leaveHistoryResponse => _leaveHistoryResponse;
+  // List<LeaveRequest> _leaveHistory = [];
+  // List<LeaveRequest> get leaveHisry => _leaveHistory;
+
+  // bool _showLeaveHistory = false;
+  // bool get showLeaveHistory => _showLeaveHistory;
+  ApiError? error;
+  // int _currentPage = 0;
+  // int _size = 10;
+  // int get currentPage => _currentPage;
+  // int get size => _size;
+  // bool _isLastPage = false;
+  List<LeaveRequest> _leaveList = [];
+  List<LeaveRequest> get leaveList => _leaveList;
+  int _currentPage = 0;
+  bool _isLoadingMore = false;
+  bool _hasNextPage = true;
+  bool isRefresh = false;
+  int _size = 10; // Ensure this is defined
+
+  bool get isLoadingMore => _isLoadingMore;
+
+  Future<void> showUserLeaveApplyHistory({bool isRefresh = false}) async {
+    // 1. Reset logic for Refresh
+    if (isRefresh) {
+      _currentPage = 0;
+      _hasNextPage = true;
+      _leaveList.clear(); // Clear existing list to show fresh data
+      // We don't 'return' here, we continue to fetch the first page
+    }
+
+    // 2. Guard Clause: Don't fetch if already loading or no more data
+    if (!_hasNextPage || _isLoadingMore) return;
+
+    _isLoadingMore = true;
+    error = null;
+    notifyListeners();
+
+    try {
+      final response = await _attendanceservice.showUserapplyLeaveHistory(
+          _currentPage, _size);
+
+      if (response.isSuccess && response.data != null) {
+        final pageData = response.data!;
+
+        // 3. Add data to the list
+        _leaveList.addAll(pageData.content ?? []);
+
+        // 4. Update pagination status
+        _hasNextPage = !(pageData.last ?? true);
+        _currentPage++;
+      } else {
+        error = ApiError.invalidData;
+      }
+    } catch (e) {
+      error = ApiError.invalidData;
+      debugPrint("Pagination Error: $e");
+    } finally {
+      // 5. Always stop loading and notify UI
+      _isLoadingMore = false;
+      notifyListeners();
+    }
+  }
+  //team leader show leave request
 }

@@ -237,32 +237,7 @@ class UserDashboardProvider extends ChangeNotifier {
   int get currentPage => _currentPage;
   int get size => _size;
 
-  // Future<void> userWorkHistory() async {
-  //   _isHistoryload = true;
-  //   error = null;
-  //   notifyListeners();
-  //   try {
-  //     final historyResponse = await _service.getUserHistory(currentPage, size);
-  //     if (historyResponse.isSuccess && historyResponse.data != null) {
-  //       _usWrkHistory.addAll( historyResponse.data!.content);
-  //       print(historyResponse.data!.page);
-  //       print(historyResponse.data!.size);
-  //       print(historyResponse.data!.last);
-
-  //       print(historyResponse.data!.totalElements);
-  //       print(historyResponse.data!.totalPages);
-  //       if (historyResponse.data!.totalPages > _currentPage) {
-  //         //  _currentPage++;
-
-  //        // _usWrkHistory.addAll(historyResponse.data!.content);
-  //         _currentPage++;
-  //         notifyListeners();
-  //       }
-  //     }
-  //   } catch (e) {}
-  //   _isHistoryload = false;
-  //   notifyListeners();
-  // }
+  
   bool _isLastPage = false;
   Future<void> userWorkHistory() async {
     if (_isHistoryload || _isLastPage) return;
