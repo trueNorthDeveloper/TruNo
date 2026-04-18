@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
-import 'package:truenorthflutterfrontend/app/controller/adminController/admin_dashBoard_provider.dart';
-import 'package:truenorthflutterfrontend/app/controller/teamLeaderController/teamLeaderCon.dart';
-import 'package:truenorthflutterfrontend/app/controller/userController/login_provider.dart';
-import 'package:truenorthflutterfrontend/app/controller/user_home_layout_controller/homeLayoutController.dart';
-import 'package:truenorthflutterfrontend/app/userAttendanceModuleAndLeave/controller/attendanceController.dart';
+import 'package:truenorthflutterfrontend/app/adminApplication/controller/admin_dashBoard_provider.dart';
+import 'package:truenorthflutterfrontend/app/managerApplication/controller/teamLeaderCon.dart';
+import 'package:truenorthflutterfrontend/app/userApplication/userAuthModule/controller/login_provider.dart';
+import 'package:truenorthflutterfrontend/app/userApplication/userHomePageModule/controller/homeLayoutController.dart';
+import 'package:truenorthflutterfrontend/app/userApplication/userAttendanceAndLeaveModule/controller/attendanceController.dart';
 
-import 'package:truenorthflutterfrontend/app/view/adminView/admin_splash_screen.dart';
-import 'package:truenorthflutterfrontend/app/controller/user_home_layout_controller/loading_screen.dart';
-import 'package:truenorthflutterfrontend/app/controller/userController/login_controller_provider.dart';
-import 'package:truenorthflutterfrontend/app/controller/userController/user_dashboard_provider.dart';
-import 'package:truenorthflutterfrontend/app/controller/userController/user_project_provider.dart';
+import 'package:truenorthflutterfrontend/app/adminApplication/view/admin_splash_screen.dart';
+import 'package:truenorthflutterfrontend/app/userApplication/userAuthModule/view/loading_screen.dart';
+import 'package:truenorthflutterfrontend/app/unUsedButImp/login_controller_provider.dart';
+import 'package:truenorthflutterfrontend/app/userApplication/userHomePageModule/controller/user_dashboard_provider.dart';
+import 'package:truenorthflutterfrontend/app/userApplication/userWorkModule/controller/user_project_provider.dart';
 
 import 'package:truenorthflutterfrontend/public/config/platform_type.dart';
 import 'package:truenorthflutterfrontend/public/config/themdata.dart';
@@ -21,7 +21,6 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   runApp(
-    
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => LoginProvider()),
@@ -46,11 +45,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  // @override
-  // void initState() {
-  //   super.initState();
-  // }
-
   @override
   Widget build(BuildContext context) {
     SizeConFig.init(context);

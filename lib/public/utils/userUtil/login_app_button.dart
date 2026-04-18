@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
-class AppButton extends StatelessWidget {
-    final Widget? child;
-  final String text;
+class LoadingAppButton extends StatelessWidget {
+  final Widget? child;
+  final String? text;
+  final VoidCallback? onPressed;
+
   final Color buttonColor;
-  final VoidCallback onPressed;
   final double borderRadius;
   final double elevation;
   final double padding;
@@ -15,11 +16,10 @@ class AppButton extends StatelessWidget {
   final double height;
   final double borderWidth;
 
-  const AppButton({
+  const LoadingAppButton({
     this.child,
-    super.key,
-    required this.text,
-    required this.onPressed,
+    this.text,
+    this.onPressed,
     required this.buttonColor,
     required this.borderRadius,
     required this.elevation,
@@ -39,7 +39,7 @@ class AppButton extends StatelessWidget {
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(borderRadius),
       child: InkWell(
-        onTap: onPressed,
+      onTap: onPressed == null ? null : onPressed,
         borderRadius: BorderRadius.circular(borderRadius),
         child: Container(
           width: width,
@@ -51,16 +51,18 @@ class AppButton extends StatelessWidget {
             border: Border.all(color: textColor, width: borderWidth),
           ),
           alignment: Alignment.center,
-          child: Text(
-            text,
-            style: TextStyle(
-              color: textColor,
-              fontSize: fontSize,
-              fontWeight: fontWeight,
-            ),
-          ),
+          child: child ??
+              Text(
+                text ?? "",
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: fontSize,
+                  fontWeight: fontWeight,
+                ),
+              ),
         ),
       ),
     );
   }
+
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:truenorthflutterfrontend/app/view/userView/userLogRegsView/user_splash_screen.dart';
+import 'package:truenorthflutterfrontend/app/unUsedButImp/user_splash_screen.dart';
 
 
 

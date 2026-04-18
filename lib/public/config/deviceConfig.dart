@@ -77,6 +77,7 @@ class Deviceconfig {
 
       // Safe to get location now
       return await Geolocator.getCurrentPosition(
+        // ignore: deprecated_member_use
         desiredAccuracy:
             LocationAccuracy.high, // Or LocationAccuracy.best, etc.
       );

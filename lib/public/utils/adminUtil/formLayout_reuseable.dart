@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:truenorthflutterfrontend/app/controller/adminController/admin_dashBoard_provider.dart';
+import 'package:truenorthflutterfrontend/app/adminApplication/controller/admin_dashBoard_provider.dart';
 
 
 class FormlayoutReuseable extends StatelessWidget {

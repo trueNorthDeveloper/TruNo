@@ -23,7 +23,28 @@ class TokenService {
 //it will clear shareed prffrence...........................................
   static Future<void> clearSharredPrefrance() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.clear();
+    await prefs.clear();
+  }
+
+  static Future<void> clearTokens() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+      // Option A: Wipe EVERYTHING (Safest for logout)
+      bool success = await prefs.clear();
+
+      // await prefs.remove('access-token');
+      // await prefs.remove('refresh-token');
+      // await prefs.remove('user_role');
+      // await prefs.remove('user_id');
+      // await prefs.remove('eid');
+
+      if (success) {
+        print("All local storage cleared successfully.");
+      }
+    } catch (e) {
+      print("Error clearing tokens: $e");
+    }
   }
 
   static Future<String?> getAccessToken() async {
@@ -520,5 +541,36 @@ class TokenService {
         "Content-Type": "application/json",
       },
     );
+  }
+
+//........................................................PATCH REQUEST FOR TEAM LEADER...................................................
+  Future<http.Response> patchRequest(
+      String endPoint, Map<String, dynamic> tojson) async {
+    String? token = await getAccessToken();
+    if (token == null) {
+      throw Exception("Access token not found");
+    }
+    http.Response res = await _sendPatchRequestChild(endPoint, token, tojson);
+    if (_isAuthError(res.statusCode)) {
+      final refreshed = await getRefreshAccessToken();
+
+      if (refreshed) {
+        final newToken = await getAccessToken();
+
+        res = await _sendPatchRequestChild(endPoint, newToken, tojson);
+      }
+    }
+    return res;
+  }
+
+  Future<http.Response> _sendPatchRequestChild(
+      String endPoint, String? token, Map<String, dynamic> body) async {
+    return await http.patch(
+        body: jsonEncode(body),
+        Uri.parse("$projectBaseUrl$endPoint"),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json"
+        });
   }
 }
