@@ -3,9 +3,8 @@ import 'package:flutter/services.dart';
 
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:provider/provider.dart';
-import 'package:truenorthflutterfrontend/app/userApplication/userHomePageModule/view/instrumentLibarary.dart';
+
 import 'package:truenorthflutterfrontend/app/userApplication/userAttendanceAndLeaveModule/view/leaveScreen.dart';
-import 'package:truenorthflutterfrontend/app/userApplication/userHomePageModule/view/todoScreen.dart';
 
 import 'package:truenorthflutterfrontend/app/userApplication/userAttendanceAndLeaveModule/view/user_attendance_screen.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userAuthModule/view/user_logout_screen.dart';
@@ -36,7 +35,7 @@ class _MyUserhomePage extends State<UserHomePage> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<LoginProvider>(context, listen: false).loadUserSession();
+      Provider.of<LoginProvider>(context, listen: false).loadUserSession2();
     });
 
     Future.microtask(() =>
@@ -245,21 +244,26 @@ class _MyUserhomePage extends State<UserHomePage> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceEvenly,
                                   children: [
-                                    customBox(
-                                      "Report",
-                                      context,
-                                    ),
-                                    customBox(
-                                      "To Do",
-                                      context,
-                                      onTapCallback: () {
-                                        Navigator.of(context)
-                                            .push(MaterialPageRoute(
-                                          builder: (_) => Todoscreen(),
-                                        ));
-                                      },
-                                    ),
-                                    customBox("My chart", context),
+                                    _buildTemporayBox("Report", context),
+                                    //this will be uncomment during developemt
+                                    // customBox(
+                                    //   "Report",
+                                    //   context,
+                                    // ),
+                                    _buildTemporayBox("To Do", context),
+                                    // customBox(
+                                    //   "To Do",
+                                    //   context,
+                                    //   onTapCallback: () {
+                                    //     Navigator.of(context)
+                                    //         .push(MaterialPageRoute(
+                                    //       builder: (_) => Todoscreen(),
+                                    //     ));
+                                    //   },
+                                    // ),
+                                    //this will be uncomment during developemt
+                                    //customBox("My chart", context),
+                                    _buildTemporayBox("My chart", context),
                                   ],
                                 );
                         },
@@ -274,24 +278,40 @@ class _MyUserhomePage extends State<UserHomePage> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceEvenly,
                                   children: [
-                                    customBox(
-                                      "Instrument Libary",
-                                      context,
-                                      onTapCallback: () {
-                                        Navigator.of(context)
-                                            .push(MaterialPageRoute(
-                                          builder: (_) => Instrumentlibarary(),
-                                        ));
-                                      },
-                                    ),
-                                    customBox("Expenses", context),
-                                    customBox("High Priority", context),
+                                    //this will be uncomment during developemt
+                                    _buildTemporayBox(
+                                        "Instrument Libary", context),
+                                    // customBox(
+                                    //   "Instrument Libary",
+                                    //   context,
+                                    //   onTapCallback: () {
+                                    //     Navigator.of(context)
+                                    //         .push(MaterialPageRoute(
+                                    //       builder: (_) => Instrumentlibarary(),
+                                    //     ));
+                                    //   },
+                                    // ),
+                                    _buildTemporayBox("Expense", context),
+                                    //this will be uncomment during developemt
+                                    // customBox(
+                                    //   "Expenses",
+                                    //   context,
+                                    //   onTapCallback: () {
+                                    //     Navigator.of(context).push(
+                                    //         MaterialPageRoute(
+                                    //             builder: (_) =>
+                                    //                 const UserExpenseScreens()));
+                                    //   },
+                                    // ),
+                                    //this will be uncomment during developemt
+
+                                    // customBox("High Priority", context),
+                                    _buildTemporayBox("High Priority", context)
+                                    //new custom box...
                                   ],
                                 );
                         },
                       ),
-
-                      
 
                       SizedBox(height: SizeConFig.screenHeight * 1 / 100),
                       Container(
@@ -566,6 +586,34 @@ class _MyUserhomePage extends State<UserHomePage> {
         ));
   }
 
+  Widget _buildTemporayBox(String text, BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        ShowTaostMessage.toastMessage(context,
+            "This Section is under developement and will be available in a future update");
+      },
+      child: Container(
+        height: SizeConFig.screenHeight * 8 / 100,
+        width: SizeConFig.screenWidth * 20 / 100,
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: const Color.fromARGB(255, 239, 211, 193),
+            width: 2,
+          ),
+          borderRadius: BorderRadius.circular(10),
+          color: const Color.fromARGB(255, 192, 212, 221),
+        ),
+        child: Center(
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: CustomText.nameOfTextStyle,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget buildUserLoginSession() {
     return Consumer<LoginProvider>(
       builder: (context, provider, _) {
@@ -675,8 +723,8 @@ class _MyUserhomePage extends State<UserHomePage> {
               width: 30,
               child: Center(
                 child: const Text(
-                  "Do you want to logout",
-                  style: TextStyle(fontWeight: FontWeight.w500),
+                  "are you sure you want to logout ?",
+                  style: TextStyle(fontWeight: FontWeight.w500,fontSize: 13),
                 ),
               ),
             ),
@@ -686,7 +734,9 @@ class _MyUserhomePage extends State<UserHomePage> {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text("Yes"),
+                    child: const Text(
+                      "Yes",
+                    ),
                   ),
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(true),

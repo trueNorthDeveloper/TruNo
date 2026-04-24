@@ -33,11 +33,7 @@ class TokenService {
       // Option A: Wipe EVERYTHING (Safest for logout)
       bool success = await prefs.clear();
 
-      // await prefs.remove('access-token');
-      // await prefs.remove('refresh-token');
-      // await prefs.remove('user_role');
-      // await prefs.remove('user_id');
-      // await prefs.remove('eid');
+ 
 
       if (success) {
         print("All local storage cleared successfully.");
@@ -57,9 +53,7 @@ class TokenService {
     print("refresh token funcation working============");
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? refreshToken = await prefs.getString("refresh_token");
-    // String? access =await  prefs.getString("access_token");
-    //    String? role =await  prefs.getString("user_role");
-    print("refresh toke function ${refreshToken}");
+  
     return refreshToken;
   }
 
@@ -89,6 +83,10 @@ class TokenService {
     return prefs.getString('eid');
   }
 
+  static Future<int?> getUserUniqueID() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt("user_id");
+  }
 //GET REFRESH TOKEN----------------------------------------------------------------------------------
 
   static Future<bool> getRefreshAccessToken() async {

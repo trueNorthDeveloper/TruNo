@@ -4,12 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userAuthModule/controller/login_provider.dart';
 
 import 'package:truenorthflutterfrontend/app/userApplication/userWorkModule/controller/user_project_provider.dart';
-import 'package:truenorthflutterfrontend/app/managerApplication/view/createTaskScreen.dart';
 import 'package:truenorthflutterfrontend/app/managerApplication/view/teamLeader_project_review_screen.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userWorkModule/view/project_team_and_task_screen.dart';
 import 'package:truenorthflutterfrontend/public/config/platform_type.dart';
 import 'package:truenorthflutterfrontend/public/utils/userUtil/size_config.dart';
-
 
 class UserWorkModuleScreen extends StatefulWidget {
   const UserWorkModuleScreen({super.key});
@@ -19,8 +17,6 @@ class UserWorkModuleScreen extends StatefulWidget {
 }
 
 class _UserWorkModuleScreenState extends State<UserWorkModuleScreen> {
- 
-
   @override
   void initState() {
     super.initState();
@@ -201,19 +197,16 @@ class _UserWorkModuleScreenState extends State<UserWorkModuleScreen> {
 
                                       // 3️⃣ Show project list
                                       return Column(
-                                        children:
-                                            //   projectList.map((userProject) {
-                                            // final projectUid =
-                                            //     userProject.tnecProjectUid;
-                                            projectList
-                                                .asMap()
-                                                .entries
-                                                .map((entry) {
+                                        children: projectList
+                                            .asMap()
+                                            .entries
+                                            .map((entry) {
                                           final projectIndex = entry.key;
                                           final userProject = entry.value;
                                           final projectUid =
                                               userProject.tnecProjectUid;
-                                              String projectName=userProject.tnecProjectName;
+                                          String projectName =
+                                              userProject.tnecProjectName;
                                           //  final bool isTeamLeader = true;
                                           bool isTeamLeader = context
                                               .read<LoginControll>()
@@ -226,7 +219,7 @@ class _UserWorkModuleScreenState extends State<UserWorkModuleScreen> {
                                           //         .fatchAllTaskInTeam(
                                           //             projectUid, 1));
 
-                                          final int pendingTasks = 7;
+                                         // final int pendingTasks = 7;
                                           return ExpansionTile(
                                             title: Row(
                                               mainAxisAlignment:
@@ -253,15 +246,23 @@ class _UserWorkModuleScreenState extends State<UserWorkModuleScreen> {
                                                     ),
                                                   ),
                                                 ),
-
+//===========================================================================
+//=============================================================================
+//TODO  will be uncomment during developement Date 23-4-26 commented
+//==========================================================================
+//=========================================================================
+//===========================================================================
                                                 // TEAM LEADER BUTTON
-                                                if (isTeamLeader)
-                                                  //TEAM LEADER PROJECT OVERVIEW AND TASK REVIEW..........................
-                                                  teamLeaderView(projectUid,projectName),
+                                                //if (isTeamLeader)
+                                                //TEAM LEADER PROJECT OVERVIEW AND TASK REVIEW..........................
+
+                                                // teamLeaderView(
+                                                //     projectUid, projectName),
 
                                                 //PENDINF TASK CONTAINER BASED ON USER AND TEAMlEADER..............
-                                                pendingContainerBuild(
-                                                    pendingTasks, isTeamLeader)
+                                                // pendingContainerBuild(
+                                                //     pendingTasks,
+                                                //     isTeamLeader)
                                               ],
                                             ),
 
@@ -365,32 +366,39 @@ class _UserWorkModuleScreenState extends State<UserWorkModuleScreen> {
           ),
         ),
         //this for team leader................................................
-        Consumer<LoginControll>(
-          builder: (context, iampro, child) {
-            return iampro.isRole
-                ? Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      SizedBox(
-                          child: ElevatedButton.icon(
-                        onPressed: () {
-                          // print(iampro.user?.role);
-                          //final role = TokenService.getUserRole();
-                          //print(role);
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => Createtaskscreen(),
-                              ));
-                        },
-                        label: Text("Create Task"),
-                        icon: Icon(Icons.add_task),
-                      )),
-                    ],
-                  )
-                : SizedBox();
-          },
-        ),
+//===========================================================================
+//===========================================================================
+//=============================================================================
+//TODO  will be uncomment during developement Date 23-4-26 commented
+//==========================================================================
+//=========================================================================
+//===========================================================================
+        // Consumer<LoginControll>(
+        //   builder: (context, iampro, child) {
+        //     return iampro.isRole
+        //         ? Row(
+        //             mainAxisAlignment: MainAxisAlignment.end,
+        //             children: [
+        //               SizedBox(
+        //                   child: ElevatedButton.icon(
+        //                 onPressed: () {
+        //                   // print(iampro.user?.role);
+        //                   //final role = TokenService.getUserRole();
+        //                   //print(role);
+        //                   Navigator.push(
+        //                       context,
+        //                       MaterialPageRoute(
+        //                         builder: (context) => Createtaskscreen(),
+        //                       ));
+        //                 },
+        //                 label: Text("Create Task"),
+        //                 icon: Icon(Icons.add_task),
+        //               )),
+        //             ],
+        //           )
+        //         : SizedBox();
+        //   },
+        // ),
       ],
     ));
   }
@@ -404,11 +412,12 @@ class _UserWorkModuleScreenState extends State<UserWorkModuleScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => TeamleaderProjectReviewScreen(projectName:projectName),
+              builder: (context) =>
+                  TeamleaderProjectReviewScreen(projectName: projectName),
             ),
           );
 
-         // print("project overview${projectUid}");
+          // print("project overview${projectUid}");
         },
         child: Container(
           height: SizeConFig.screenHeight * 3 / 100,
@@ -510,282 +519,3 @@ class _UserWorkModuleScreenState extends State<UserWorkModuleScreen> {
     }
   }
 }
-//  SizedBox(
-//             height: SizeConFig.screenHeight * 70 / 100,
-//             child: Container(
-//               //   decoration: BoxDecoration(color: Colors.amber),
-//               child: Padding(
-//                 padding: EdgeInsets.all(5.0),
-//                 child: Consumer<UserProjectProvider>(
-//                   builder: (context, provider, child) {
-//                     //IT WILL LOAD PROJECT ...................................
-//                     if (provider.isLoading) {
-//                       return const Center(
-//                         child: CircularProgressIndicator(),
-//                       );
-//                     }
-//                     //AGAIN    get project on  click button................
-//                     if (provider.error != null) {
-//                       return Center(
-//                         child: Column(
-//                           children: [
-//                             Text(describeApiError(provider.error!)),
-//                             ElevatedButton(
-//                                 onPressed: () {
-//                                   Provider.of<UserProjectProvider>(context,
-//                                           listen: false)
-//                                       .fatchAllProjectType();
-//                                 },
-//                                 child: Text("Retry"))
-//                           ],
-//                         ),
-//                       );
-//                     }
-//                     // here show error
-//                     if (provider.projectType == null) {
-//                       return const Center(
-//                         child: Text("No Project Type Available."),
-//                       );
-//                     }
-//                     final project = provider.projectType!.data;
-//                     final hasProject = project != null && project.isNotEmpty;
-//                     return Center(
-//                         child: RefreshIndicator(
-//                             onRefresh: () async {
-//                               await Provider.of<UserProjectProvider>(context,
-//                                       listen: false)
-//                                   .fatchAllProjectType();
-//                             },
-//                             child: hasProject
-//                                 ? ListView.builder(
-//                                     itemCount:
-//                                         provider.projectType!.data!.length,
-//                                     itemBuilder: (context, index) {
-//                                       final type =
-//                                           provider.projectType!.data![index];
-//                                       final typeUid = type.tnecProjectTypeUid;
-
-//                                       return Card(
-//                                         child: Column(
-//                                           children: [
-//                                             // ---------- HEADER (TITLE + ICON) ----------
-//                                             InkWell(
-//                                               onTap: () {
-//                                                 Provider.of<UserProjectProvider>(
-//                                                         context,
-//                                                         listen: false)
-//                                                     .toggleExpand(index);
-//                                               },
-//                                               child: Padding(
-//                                                 padding: EdgeInsets.symmetric(
-//                                                     horizontal: 12,
-//                                                     vertical: 10),
-//                                                 child: Row(
-//                                                   mainAxisAlignment:
-//                                                       MainAxisAlignment
-//                                                           .spaceBetween,
-//                                                   children: [
-//                                                     Text(
-//                                                       type.tnecProjectTypeName,
-//                                                       style: const TextStyle(
-//                                                         fontSize: 13,
-//                                                         fontWeight:
-//                                                             FontWeight.w800,
-//                                                       ),
-//                                                     ),
-
-//                                                     /// CHANGE ICON BASED ON SELECTED INDEX
-//                                                     Icon(
-//                                                       provider.expandedIndex ==
-//                                                               index
-//                                                           ? Icons.arrow_drop_up
-//                                                           : Icons
-//                                                               .arrow_drop_down,
-//                                                       size: 28,
-//                                                     ),
-//                                                   ],
-//                                                 ),
-//                                               ),
-//                                             ),
-
-//                                             // ---------- EXPANDED CONTENT ----------
-//                                             if (provider.expandedIndex == index)
-//                                               Column(
-//                                                 children: provider
-//                                                     .userProjects[typeUid]!
-//                                                     .data!
-//                                                     .map((userProject) {
-//                                                   final projectUid = userProject
-//                                                       .tnecProjectUid;
-
-//                                                   final bool isTeamLeader =
-//                                                       true;
-//                                                   //here will we fatch new pending task of user.........................
-//                                                   // Provider.of<UserProjectProvider>(
-//                                                   //         context,
-//                                                   //         listen: false)
-//                                                   //     .fatchAllTaskInTeam(
-//                                                   //         projectUid, 2);
-//                                                  // provider.fatchAllTaskInTeam(projectUid,2);
-//                                                   return ExpansionTile(
-//                                                     title: Row(
-//                                                       mainAxisAlignment:
-//                                                           MainAxisAlignment
-//                                                               .spaceBetween,
-//                                                       children: [
-//                                                         // Project Name
-//                                                         SizedBox(
-//                                                           width: SizeConFig
-//                                                                   .screenWidth *
-//                                                               40 /
-//                                                               100,
-//                                                           child: Text(
-//                                                             userProject
-//                                                                 .tnecProjectName,
-//                                                             style:
-//                                                                 const TextStyle(
-//                                                               decorationThickness:
-//                                                                   2.5,
-//                                                               decorationStyle:
-//                                                                   TextDecorationStyle
-//                                                                       .wavy,
-//                                                               fontSize: 12,
-//                                                               fontWeight:
-//                                                                   FontWeight
-//                                                                       .w500,
-//                                                             ),
-//                                                           ),
-//                                                         ),
-
-//                                                         // TEAM LEADER BUTTON (only shows for team leader)
-//                                                         if (isTeamLeader)
-//                                                           Container(
-//                                                             height: SizeConFig
-//                                                                     .screenHeight *
-//                                                                 2 /
-//                                                                 100,
-//                                                             width: SizeConFig
-//                                                                     .screenWidth *
-//                                                                 30 /
-//                                                                 100,
-//                                                             child:
-//                                                                 ElevatedButton
-//                                                                     .icon(
-//                                                               onPressed: () {
-//                                                                 //here we will navigator project details
-//                                                                 print(
-//                                                                     projectUid);
-//                                                               },
-//                                                               label: Text(
-//                                                                   "Overview"),
-//                                                               icon: const Icon(
-//                                                                   Icons
-//                                                                       .analytics),
-//                                                             ),
-//                                                           ),
-//                                                         SizedBox(
-//                                                           child: Text("1"),
-//                                                         ),
-//                                                       ],
-//                                                     ),
-//                                                     onExpansionChanged:
-//                                                         (expanded) {
-//                                                       if (expanded &&
-//                                                           !provider.projectTeams
-//                                                               .containsKey(
-//                                                                   projectUid)) {
-//                                                         provider
-//                                                             .fatchProjectTeam(
-//                                                                 projectUid);
-//                                                       }
-//                                                     },
-//                                                     children: [
-//                                                       if (provider.isLoadingTeams[
-//                                                               projectUid] ==
-//                                                           true)
-//                                                         const Padding(
-//                                                           padding:
-//                                                               EdgeInsets.all(
-//                                                                   8.0),
-//                                                           child:
-//                                                               CircularProgressIndicator(),
-//                                                         )
-//                                                       else if (provider
-//                                                           .projectTeams
-//                                                           .containsKey(
-//                                                               projectUid))
-//                                                         ...provider
-//                                                             .projectTeams[
-//                                                                 projectUid]!
-//                                                             .data
-//                                                             .map((team) {
-//                                                           return ListTile(
-//                                                               title: Text(
-//                                                                 team.teamName,
-//                                                                 style: TextStyle(
-//                                                                     fontSize:
-//                                                                         12,
-//                                                                     fontWeight:
-//                                                                         FontWeight
-//                                                                             .w600),
-//                                                               ),
-//                                                               trailing: const Icon(
-//                                                                   Icons
-//                                                                       .arrow_forward_ios,
-//                                                                   size: 16),
-//                                                               onTap: () {
-//                                                                 Navigator.push(
-//                                                                   context,
-//                                                                   MaterialPageRoute(
-//                                                                       builder:
-//                                                                           (context) =>
-//                                                                               UserProjectTeamScreen(
-//                                                                                 teamName: team.teamName,
-//                                                                                 projectUid: projectUid,
-//                                                                                 teamUid: team.teamUid,
-//                                                                               )),
-//                                                                 );
-//                                                               });
-//                                                         })
-//                                                       else
-//                                                         const ListTile(
-//                                                           title: Text(
-//                                                               "No teams found."),
-//                                                         )
-//                                                     ],
-//                                                   );
-//                                                 }).toList(),
-//                                               )
-//                                           ],
-//                                         ),
-//                                       );
-//                                     })
-//                                 : ListView(
-//                                     physics: AlwaysScrollableScrollPhysics(),
-//                                     children: [
-//                                         const SizedBox(height: 80),
-//                                         const Icon(Icons.refresh,
-//                                             size: 40, color: Colors.grey),
-//                                         const SizedBox(height: 8),
-//                                         const Center(
-//                                           child: Text(
-//                                             "Refresh & Load Tasks",
-//                                             style: TextStyle(
-//                                                 fontSize: 14,
-//                                                 color: Colors.grey),
-//                                           ),
-//                                         ),
-//                                         const SizedBox(height: 20),
-//                                         const Center(
-//                                           child: Text(
-//                                             "No tasks found",
-//                                             style: TextStyle(
-//                                                 fontSize: 16,
-//                                                 fontWeight: FontWeight.w500),
-//                                           ),
-//                                         ),
-//                                       ])));
-//                   },
-//                 ),
-//               ),
-//             )),

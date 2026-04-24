@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:truenorthflutterfrontend/app/adminApplication/controller/admin_dashBoard_provider.dart';
 import 'package:truenorthflutterfrontend/app/managerApplication/controller/teamLeaderCon.dart';
+import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/controller/expenseController.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userAuthModule/controller/login_provider.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userHomePageModule/controller/homeLayoutController.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userAttendanceAndLeaveModule/controller/attendanceController.dart';
@@ -30,7 +31,8 @@ void main() async {
         ChangeNotifierProvider(create: (_) => LoginControll()),
         ChangeNotifierProvider(create: (_) => TeamleaderControllerPro()),
         ChangeNotifierProvider(create: (_) => Homelayoutcontroller()),
-        ChangeNotifierProvider(create: (_) => Attendancecontroller())
+        ChangeNotifierProvider(create: (_) => Attendancecontroller()),
+        ChangeNotifierProvider(create: (_) => Expensecontroller())
       ],
       child: const MyApp(),
     ),

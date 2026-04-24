@@ -1139,4 +1139,36 @@ class LoginProvider extends ChangeNotifier {
     }
     notifyListeners();
   }
+
+  Future<void> loadUserSession2() async {
+    // 1. Start loading immediately to prevent UI flicker
+    _isLoadingSession = true;
+    notifyListeners();
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final catchSession = prefs.getString("loginSession");
+
+      if (catchSession != null && catchSession.isNotEmpty) {
+        // 2. IMPORTANT: Convert Map to your Model object
+        _userLoginInfoModel2 =
+            UserLoginInfoModel.fromJson(jsonDecode(catchSession));
+        _isLoadingSession = false; // Loading finished
+        notifyListeners();
+        return;
+      }
+
+      // 3. Fallback to API if local session is missing
+      final result = await _userServicesForApi.loadSessionOnecs();
+      if (result.isSuccess) {
+        _userLoginInfoModel2 = result.data;
+      }
+    } catch (error) {
+      debugPrint("Session load error: $error");
+    } finally {
+      // 4. Always ensure loading is false, even on failure
+      _isLoadingSession = false;
+      notifyListeners();
+    }
+  }
 }

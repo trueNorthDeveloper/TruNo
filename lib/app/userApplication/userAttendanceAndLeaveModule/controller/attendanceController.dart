@@ -234,7 +234,7 @@ class Attendancecontroller extends ChangeNotifier {
         final pageData = response.data!;
 
         // 3. Add data to the list
-        _leaveList.addAll(pageData.content ?? []);
+        _leaveList.addAll(pageData.content);
 
         // 4. Update pagination status
         _hasNextPage = !(pageData.last ?? true);

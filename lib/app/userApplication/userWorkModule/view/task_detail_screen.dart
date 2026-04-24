@@ -3,11 +3,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
+import 'package:truenorthflutterfrontend/app/userApplication/userWorkModule/model/project_team_task.dart';
 
 import 'package:truenorthflutterfrontend/app/userApplication/userWorkModule/model/user_task_submit_model.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userWorkModule/model/team_members_model.dart';
 
-import 'package:truenorthflutterfrontend/app/userApplication/userWorkModule/model/user_task_response_model.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userHomePageModule/controller/user_dashboard_provider.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userWorkModule/controller/user_project_provider.dart';
 import 'package:truenorthflutterfrontend/app/unUsedButImp/user_list_of_screen.dart';
@@ -17,7 +17,8 @@ import 'package:truenorthflutterfrontend/public/utils/userUtil/mesage_snack_bar.
 import 'package:truenorthflutterfrontend/public/utils/userUtil/size_config.dart';
 
 class TaskDetailScreen extends StatefulWidget {
-  final Task task;
+ // final Task task;
+ final AllTask task;
 
   final List<Member> members;
 
@@ -144,7 +145,7 @@ class _MyWidgetState extends State<TaskDetailScreen> {
                                           SizeConFig.screenHeight * 3 / 100),
                                   Center(
                                     child: Text(
-                                      widget.task.taskName,
+                                      widget.task.taskName!,
                                       style: TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.w600,
@@ -166,28 +167,28 @@ class _MyWidgetState extends State<TaskDetailScreen> {
                                             MainAxisAlignment.spaceAround,
                                         children: [
                                           costomTextbox(
-                                              "Status", widget.task.taskStatus),
+                                              "Status", widget.task.taskStatus!),
                                           SizedBox(
                                             height: SizeConFig.screenHeight *
                                                 0.5 /
                                                 100,
                                           ),
                                           costomTextbox("Assigned to ",
-                                              widget.task.assignedTo.userName),
+                                              widget.task.assignedTo!.userName),
                                           SizedBox(
                                             height: SizeConFig.screenHeight *
                                                 0.5 /
                                                 100,
                                           ),
                                           costomTextbox("Allotment",
-                                              widget.task.allotmentDate),
+                                              widget.task.allotmentDate!),
                                           SizedBox(
                                             height: SizeConFig.screenHeight *
                                                 0.5 /
                                                 100,
                                           ),
                                           costomTextbox("Due Date",
-                                              widget.task.completionDate),
+                                              widget.task.completionDate!),
                                         ],
                                       ),
                                     ),
@@ -554,18 +555,18 @@ class _MyWidgetState extends State<TaskDetailScreen> {
                                                 TaskSubmit(
                                                     message:
                                                         message.text.trim(),
-                                                    taskId: widget.task.taskId,
+                                                    taskId: widget.task.taskId!,
                                                     // submittedById: uuid,
                                                     submittedToId:
                                                         selectedMemberToSubmit!
                                                             .userId,
                                                     parent: "projects",
-                                                    child: widget.task.project
+                                                    child: widget.task.project!
                                                         .projectName,
                                                     team: widget
-                                                        .task.team.teamName,
+                                                        .task.team!.teamName,
                                                     userEid: widget.task
-                                                        .assignedTo.userEid);
+                                                        .assignedTo!.userEid);
 
                                             final projectProvider = context
                                                 .read<UserProjectProvider>();

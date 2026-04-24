@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:truenorthflutterfrontend/app/managerApplication/view/user_create_task_by_team_leader.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userWorkModule/model/project_team_task.dart';
+import 'package:truenorthflutterfrontend/app/userApplication/userWorkModule/view/task_detail_screen.dart';
 
 import 'package:truenorthflutterfrontend/app/userApplication/userWorkModule/view/task_review_screen.dart';
-import 'package:truenorthflutterfrontend/app/managerApplication/view/user_create_task_by_team_leader.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userWorkModule/view/task_re_submit_screen.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userWorkModule/view/task_completed_screen.dart';
 
-import 'package:truenorthflutterfrontend/app/userApplication/userWorkModule/model/team_members_model.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userWorkModule/model/user_task_response_model.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userWorkModule/controller/user_project_provider.dart';
 import 'package:truenorthflutterfrontend/public/config/platform_type.dart';
@@ -30,44 +30,80 @@ class UserProjectTeamScreen extends StatefulWidget {
 
 class _UserProjectTeamScreenState extends State<UserProjectTeamScreen> {
   late ScrollController _scrollController;
+  //TODO
+  // @override
+  // void initState() {
+  //   super.initState();
+
+  //   getUserBySharedPreferenceId();
+
+  //   WidgetsBinding.instance.addPostFrameCallback((_) {
+  //     final provider = Provider.of<UserProjectProvider>(context, listen: false);
+  //     provider.fatchTeamMember(widget.projectUid, widget.teamUid);
+  //     // provider.fatchReviewTaskCon();
+  //     provider.fatchAllTaskINTeamUsingPagination2(
+  //         widget.projectUid, widget.teamUid);
+  //   });
+  //   _scrollController = ScrollController();
+  //   _scrollController.addListener(_onScroll);
+  // }
   @override
   void initState() {
     super.initState();
 
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
     getUserBySharedPreferenceId();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = Provider.of<UserProjectProvider>(context, listen: false);
 
-      // provider.fatchAllTaskInTeam(widget.projectUid, widget.teamUid);
+      /// 🔥 STEP 1: RESET OLD DATA (THIS IS MISSING IN YOUR CODE)
+      provider.resetTaskState();
+
+      /// 🔥 STEP 2: FETCH NEW DATA
       provider.fatchTeamMember(widget.projectUid, widget.teamUid);
-      // provider.fatchReviewTaskCon();
-      provider.fatchAllTaskINTeamUsingPagination(
+
+      provider.fatchAllTaskINTeamUsingPagination2(
           widget.projectUid, widget.teamUid);
     });
-    _scrollController = ScrollController();
-    _scrollController.addListener(_onScroll);
   }
 
-//it will work in scrolll
+  // @override
+  // void didUpdateWidget(covariant UserProjectTeamScreen oldWidget) {
+  //   super.didUpdateWidget(oldWidget);
+
+  //   if (oldWidget.projectUid != widget.projectUid ||
+  //       oldWidget.teamUid != widget.teamUid) {
+  //     final provider = Provider.of<UserProjectProvider>(context, listen: false);
+
+  //     provider.resetTaskState();
+
+  //     provider.fatchAllTaskINTeamUsingPagination(
+  //         widget.projectUid, widget.teamUid);
+  //   }
+  // }
+
   // void _onScroll() {
-  //   // Check if the user is near the end of the scroll position
   //   if (_scrollController.position.pixels >=
-  //           _scrollController.position.maxScrollExtent * 0.8 &&
-  //       !Provider.of<UserProjectProvider>(context, listen: false).showAllTask) {
-  //     Provider.of<UserProjectProvider>(context, listen: false)
-  //         .fatchAllTaskINTeamUsingPagination(widget.projectUid, widget.teamUid);
+  //       _scrollController.position.maxScrollExtent * 0.9) {
+  //     if (!Provider.of<UserProjectProvider>(context, listen: false)
+  //         .showAllTask) {
+  //       // Load next page
+  //       Provider.of<UserProjectProvider>(context, listen: false)
+  //           .fatchAllTaskINTeamUsingPagination(
+  //               widget.projectUid, widget.teamUid);
+  //     }
   //   }
   // }
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent * 0.9) {
-      if (!Provider.of<UserProjectProvider>(context, listen: false)
-          .showAllTask) {
-        // Load next page
-        Provider.of<UserProjectProvider>(context, listen: false)
-            .fatchAllTaskINTeamUsingPagination(
-                widget.projectUid, widget.teamUid);
+      final provider = Provider.of<UserProjectProvider>(context, listen: false);
+
+      if (!provider.showAllTask) {
+        provider.fatchAllTaskINTeamUsingPagination(
+            widget.projectUid, widget.teamUid);
       }
     }
   }
@@ -91,16 +127,16 @@ class _UserProjectTeamScreenState extends State<UserProjectTeamScreen> {
   Widget build(BuildContext context) {
     final provider = Provider.of<UserProjectProvider>(context, listen: true);
 
-    final teamProvider = Provider.of<UserProjectProvider>(context);
+    // final teamProvider = Provider.of<UserProjectProvider>(context);
 
-    final Member? user = teamProvider.teamMemberInfo.isNotEmpty
-        ? teamProvider.teamMemberInfo.firstWhere(
-            (member) => member.userId == userUid,
-            orElse: () => teamProvider.teamMemberInfo.first,
-          )
-        : null;
+    // final Member? user = teamProvider.teamMemberInfo.isNotEmpty
+    //     ? teamProvider.teamMemberInfo.firstWhere(
+    //         (member) => member.userId == userUid,
+    //         orElse: () => teamProvider.teamMemberInfo.first,
+    //       )
+    //     : null;
 
-    final isTeamLeader = user?.role == 'TEAMLEADER';
+    //final isTeamLeader = user?.role == 'TEAMLEADER';
     final reviewTask = provider.taskReviewResponse?.data
             .where((submit) =>
                 submit.submittedTo.submitToId == userUid &&
@@ -350,31 +386,40 @@ class _UserProjectTeamScreenState extends State<UserProjectTeamScreen> {
                       constraints: BoxConstraints(maxHeight: 600),
                       child: Consumer<UserProjectProvider>(
                           builder: (context, pro, child) {
-                        if (pro.showAllTask && pro.counter == 0) {
-                          return Center(child: CircularProgressIndicator());
-                        }
+                        // if (pro.showAllTask && pro.counter == 0) {
+                        //   return Center(child: CircularProgressIndicator());
+                        // }
                         List<AllTask> activeList;
+                        String name = "";
                         switch (pro.counter) {
                           case 0:
                             activeList = pro.pendingTask;
+                            name = "pending";
                             break;
                           case 1:
                             activeList = pro.resubmit;
+                            name = "resubmit";
                             break;
                           case 2:
                             activeList = pro.underReview;
+                            name = "underReview";
                             break;
                           case 3:
                             activeList = pro.completed;
+                            name = "completed";
                             break;
                           default:
                             activeList = [];
                         }
+                        if (pro.showAllTask && activeList.isEmpty) {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        }
                         if (activeList.isEmpty && !pro.showAllTask) {
-                          return Center(
+                          return const Center(
                               child: Text("No tasks found in this category"));
                         }
-                        return buildListView(activeList, pro);
+                        return buildListView(activeList, pro, name);
                       }
 
                           // if (pro.counter == 0) {
@@ -399,31 +444,57 @@ class _UserProjectTeamScreenState extends State<UserProjectTeamScreen> {
             ),
           ),
         ),
-        floatingActionButton: isTeamLeader
-            ? FloatingActionButton(
-                onPressed: () {
-                  if (user != null) {
-                    final teamMembers =
-                        Provider.of<UserProjectProvider>(context, listen: false)
-                            .teamMemberInfo;
+//IF YOU WANT REMOVE THIS CODE YOU CAN BCZ ITS OLD FUNCATIONS
+        // floatingActionButton: isTeamLeader
+        //     ? FloatingActionButton(
+        //         onPressed: () {
+        //           if (user != null) {
+        //             final teamMembers =
+        //                 Provider.of<UserProjectProvider>(context, listen: false)
+        //                     .teamMemberInfo;
 
+        //             Navigator.push(
+        //                 context,
+        //                 MaterialPageRoute(
+        //                   builder: (context) => CreateTaskByTeamLeader(
+        //                       leaderDetail: user,
+        //                       teamMember: teamMembers,
+        //                       projectId: widget.projectUid,
+        //                       teamId: widget.teamUid),
+        //                 ));
+        //           }
+        //         },
+        //         child: Icon(Icons.create),
+        //       )
+        //     : null
+        //------------------------
+        floatingActionButton: Consumer<UserProjectProvider>(
+          builder: (context, pro, child) {
+            if (pro.isTeamLeaderTrue) {
+              return FloatingActionButton(
+                onPressed: () {
+                  if (pro.member != null) {
                     Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => CreateTaskByTeamLeader(
-                              leaderDetail: user,
-                              teamMember: teamMembers,
+                              leaderDetail: pro.member!,
+                              teamMember: pro.teamMemberInfo,
                               projectId: widget.projectUid,
                               teamId: widget.teamUid),
                         ));
                   }
                 },
                 child: Icon(Icons.create),
-              )
-            : null);
+              );
+            }
+            return SizedBox();
+          },
+        ));
   }
 
-  Widget buildListView(List<AllTask> data, UserProjectProvider provider) {
+  Widget buildListView(
+      List<AllTask> data, UserProjectProvider provider, String name) {
     return ListView.builder(
       controller: _scrollController,
       itemCount: data.length + (provider.showAllTask ? 1 : 0),
@@ -462,23 +533,32 @@ class _UserProjectTeamScreenState extends State<UserProjectTeamScreen> {
             statusColor = Colors.red;
             break;
         }
-       
 
         return SizedBox(
             height: MediaQuery.of(context).size.height * 11 / 100,
             child: ListTile(
                 onTap: () {
-                  switch ("peding") {
+                  switch (name) {
                     case "pending":
+                      //pemnding screen
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => TaskDetailScreen(
+                                  task: tasks,
+                                  members: provider.teamMemberInfo)));
+
                       break;
                     case "resubmit":
-                      // Navigator.push(
-                      //     context,
-                      //     MaterialPageRoute(
-                      //         builder: (context) =>
-                      //             ResubmitScreen(taskId: tasks.taskId!)));
+                      //switch to resubmit screen after revision task
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  ResubmitScreen(taskId: tasks.taskId!)));
                       break;
                     case "underReview":
+                      //switch to underreview screen
                       Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -487,12 +567,12 @@ class _UserProjectTeamScreenState extends State<UserProjectTeamScreen> {
                       print("under review task");
                       break;
                     case "completed":
-
-                      // Navigator.push(
-                      //     context,
-                      //     MaterialPageRoute(
-                      //         builder: (context) => TaskCompletedScreen(
-                      //             taskId: tasks.taskId!)));
+                      //switch to completed screen
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  TaskCompletedScreen(taskId: tasks.taskId!)));
                       break;
                     default:
                       break;
@@ -565,19 +645,37 @@ class _UserProjectTeamScreenState extends State<UserProjectTeamScreen> {
   Widget _buildInkWell(
       int count, String text, int length, UserProjectProvider pr) {
     return InkWell(
-        onTap: () {
-          pr.increaseCounter(count);
-        },
-        child: Column(
-          children: [
-            _buildCounter(text, length, Colors.orange),
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.7 / 100,
-            ),
-            if (pr.counter == count) buildLine(Colors.green)
-          ],
-        ));
+      onTap: () {
+        pr.increaseCounter(count);
+        //  _scrollController.jumpTo(0);
+      },
+      child: Column(
+        children: [
+          _buildCounter(text, length, Colors.orange),
+          SizedBox(height: 5),
+
+          /// ✅ Active tab indicator
+          if (pr.counter == count) buildLine(Colors.green),
+        ],
+      ),
+    );
   }
+  // Widget _buildInkWell(
+  //     int count, String text, int length, UserProjectProvider pr) {
+  //   return InkWell(
+  //       onTap: () {
+  //         pr.increaseCounter(count);
+  //       },
+  //       child: Column(
+  //         children: [
+  //           _buildCounter(text, length, Colors.orange),
+  //           SizedBox(
+  //             height: MediaQuery.of(context).size.height * 0.7 / 100,
+  //           ),
+  //           if (pr.counter == count) buildLine(Colors.green)
+  //         ],
+  //       ));
+  // }
 
   Widget _buildCounter(String title, int count, Color color) {
     return Column(
@@ -1170,6 +1268,7 @@ class _UserProjectTeamScreenState extends State<UserProjectTeamScreen> {
                                             fontSize: 10, color: statusColor)),
                                     // ignore: deprecated_member_use
                                     backgroundColor:
+                                        // ignore: deprecated_member_use
                                         statusColor.withOpacity(0.2),
                                     padding:
                                         const EdgeInsetsDirectional.symmetric(

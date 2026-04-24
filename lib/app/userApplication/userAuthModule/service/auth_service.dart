@@ -142,43 +142,44 @@ class UserServicesForApi {
       return Resultt.systemError(ApiError.server);
     }
   }
-Future<Result<UsermeModel>> loginAfterMeService2(String token) async {
-  try {
-    final url = Uri.parse(Apiconstants.me);
-    print("Attempting to call: $url"); // DEBUG PRINT
-    print("Using Token: Bearer $token"); // DEBUG PRINT
 
-    final response = await http.get(
-      url,
-      headers: {
-        "Authorization": "Bearer $token",
-        "Content-Type": "application/json",
-      },
-    ).timeout(const Duration(seconds: 15));
+  Future<Result<UsermeModel>> loginAfterMeService2(String token) async {
+    try {
+      final url = Uri.parse(Apiconstants.me);
+      print("Attempting to call: $url"); // DEBUG PRINT
+      print("Using Token: Bearer $token"); // DEBUG PRINT
 
-    print("Response Status: ${response.statusCode}"); // DEBUG PRINT
-    print("Response Body: ${response.body}"); // DEBUG PRINT
+      final response = await http.get(
+        url,
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+      ).timeout(const Duration(seconds: 15));
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return Result.success(UsermeModel.fromJson(data));
-    } else if (response.statusCode == 401 || response.statusCode == 403) {
-      return Result.failure(ApiError.unauthorized);
-    } else {
-      return Result.failure(ApiError.server);
+      print("Response Status: ${response.statusCode}"); // DEBUG PRINT
+      print("Response Body: ${response.body}"); // DEBUG PRINT
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return Result.success(UsermeModel.fromJson(data));
+      } else if (response.statusCode == 401 || response.statusCode == 403) {
+        return Result.failure(ApiError.unauthorized);
+      } else {
+        return Result.failure(ApiError.server);
+      }
+    } on SocketException {
+      return Result.failure(ApiError.network);
+    } on TimeoutException {
+      return Result.failure(ApiError.timeout);
+    } on FormatException {
+      print("Error during Me API call: JSON parse error");
+      return Result.failure(ApiError.jsonFormat);
+    } catch (e) {
+      print("Error during Me API call: $e"); // THIS WILL TELL YOU WHY
+      return Result.failure(ApiError.unknown);
     }
-  } on SocketException {
-    return Result.failure(ApiError.network);
-  } on TimeoutException {
-    return Result.failure(ApiError.timeout);
-  } on FormatException {
-    print("Error during Me API call: JSON parse error");
-    return Result.failure(ApiError.jsonFormat);
-  } catch (e) {
-    print("Error during Me API call: $e"); // THIS WILL TELL YOU WHY
-    return Result.failure(ApiError.unknown);
   }
-}
   // Future<Result<UsermeModel>> loginAfterMeService2(String token) async {
   //   try {
   //     final url = Uri.parse(Apiconstants.me); // Use your constant
@@ -270,7 +271,8 @@ Future<Result<UsermeModel>> loginAfterMeService2(String token) async {
       if (respone.statusCode == 200) {
         final jsonMap = jsonDecode(respone.body) as Map<String, dynamic>;
         final userInfo = UserLoginInfoModel.fromJson(jsonMap);
-        //prefs.setString("loginInfo", jsonEncode(jsonMap));
+        final prefs = await SharedPreferences.getInstance();
+        prefs.setString("loginSession", jsonEncode(jsonMap));
         return Result.success(userInfo);
       } else {
         return Result.failure(ApiError.jsonFormat);

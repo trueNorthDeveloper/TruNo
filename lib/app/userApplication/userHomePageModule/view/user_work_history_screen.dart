@@ -82,6 +82,12 @@ class _MyUserWorkHistory extends State<UserWorkHistory> {
               if (prov.error != null) {
                 return Center(child: Text(prov.error.toString()));
               }
+              if(prov.usWrkHistory.isEmpty)
+              {
+                return Center(
+                  child: Text("There is nothing to view"),
+                );
+              }
 
               return ListView.builder(
                 controller: _scrollController,

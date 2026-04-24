@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/widgets.dart';
 
@@ -16,6 +17,7 @@ import 'package:truenorthflutterfrontend/app/userApplication/userWorkModule/mode
 import 'package:truenorthflutterfrontend/app/userApplication/userWorkModule/model/user_task_response_model.dart';
 
 import 'package:truenorthflutterfrontend/public/config/platform_type.dart';
+import 'package:truenorthflutterfrontend/service/token/tokenService.dart';
 
 class UserProjectProvider extends ChangeNotifier {
   int counter = 0;
@@ -216,18 +218,14 @@ class UserProjectProvider extends ChangeNotifier {
     notifyListeners(); // show loader
 
     final response = await _service.getAllTeamMember(projectId, teamId);
-    //print("only-response${response.data}");
 
     if (response.isSuccess && response.data != null) {
       final teamResponse = response.data!.data;
 
-      // teamMemberInfo =
-      //     teamResponse!.data.expand((team) => team.members).toList();
       teamMemberInfo = teamResponse!.members;
+      await isUserTeamLeaderInTeam(teamMemberInfo);
 
-      // CLEAR previous error here
       error = null;
-      // print("TEAM MEMBERS LOADED: ${teamMemberInfo.length}");
     } else {
       teamMemberInfo = [];
       error = response.error ?? ApiError.server;
@@ -240,7 +238,9 @@ class UserProjectProvider extends ChangeNotifier {
   bool _isReviewTask = false;
   bool get isReviewTask => _isReviewTask;
   TaskReviewResponse? taskReviewResponse;
-
+  //list declareed to review task for team leader
+  List<TaskData> _reviewList = [];
+  List<TaskData> get reviewList => _reviewList;
   Future<void> fatchReviewTaskCon() async {
     _isReviewTask = true;
     error = error;
@@ -248,6 +248,10 @@ class UserProjectProvider extends ChangeNotifier {
     final review = await _service.fatchReviewTask();
     if (review.isSuccess) {
       taskReviewResponse = review.data;
+      //FILTER DATA.........................
+      //  final   userId= TokenService.getUserUniqueID();
+      //     _reviewList=taskReviewResponse!.data.where((i) {
+      //       i.submittedTo.submitToId==userId;}).toList()??[];
     } else {
       error = review.error;
     }
@@ -517,25 +521,6 @@ class UserProjectProvider extends ChangeNotifier {
           currentPage, size, projectId, teamId);
 
       if (taskResponse.isSuccess) {
-        // final pageData = taskResponse.data!;
-        // print("1. Success hit. Items found: ${pageData.content.length}");
-
-        // // Use the PRIVATE variable _underReview here to avoid the getter loop
-        // final pending = pageData.content
-        //     .where((t) => t.taskStatus!.toUpperCase() == "PENDING")
-        //     .toList();
-        // _pendingTask.addAll(pending);
-        // print("2. Pending processed: ${pending.length}");
-
-        // final uReview = pageData.content
-        //     .where((t) => t.taskStatus!.toUpperCase() == "UNDER_REVIEW")
-        //     .toList();
-        // _underReview.addAll(uReview);
-        // print("3. Under Review processed: ${uReview.length}");
-
-        // _isLastPage = pageData.last;
-        // _currentPage++;
-        // print("4. Finished data mapping.");
         final pageData = taskResponse.data!;
         final newTasks = pageData.content;
         for (var task in newTasks) {
@@ -560,6 +545,79 @@ class UserProjectProvider extends ChangeNotifier {
       _showAllTask = false;
       notifyListeners(); // Always notify, even on failure
     }
+      }
+
+    Future<void> fatchAllTaskINTeamUsingPagination2(int projectId, int teamId,
+        {bool isRefresh = false}) async {
+      if (isRefresh) {
+        _currentPage = 0;
+        _isLastPage = false;
+        _pendingTask.clear();
+        _resubmit.clear();
+        _underReview.clear();
+        _completed.clear();
+
+        notifyListeners();
+      }
+      if (_showAllTask || _isLastPage) return;
+      // if (_currentPage == 0) {
+      //   _listOfAllTask.clear();
+      //   _pendingTask.clear();
+      //   _resubmit.clear();
+      //   _underReview.clear();
+      //   _completed.clear();
+      // }
+      _showAllTask = true;
+      error = null;
+      notifyListeners();
+      try {
+        final taskResponse = await _service.getAllProjectAndTeamTaskService(
+            currentPage, size, projectId, teamId);
+
+        if (taskResponse.isSuccess) {
+          final pageData = taskResponse.data!;
+          final newTasks = pageData.content;
+          for (var task in newTasks) {
+            String status = task.taskStatus?.toUpperCase() ?? "";
+            if (status == "PENDING" && !exists(_pendingTask,task))
+              _pendingTask.add(task);
+            else if (status == "UNDER_REVIEW" &&!exists(_underReview, task))
+              _underReview.add(task);
+            else if (status == "RESUBMIT"&&exists(_resubmit, task))
+              _resubmit.add(task);
+            else if (status == "COMPLETED"&&exists(_completed, task)) _completed.add(task);
+          }
+          _isLastPage = pageData.last;
+          _currentPage++;
+        }
+      } catch (e, stacktrace) {
+        print("CRASH DETECTED: $e");
+        print(
+            "STACKTRACE: $stacktrace"); // This will tell you the exact line of the Stack Overflow
+        error = ApiError.invalidData;
+      } finally {
+        _showAllTask = false;
+        notifyListeners(); // Always notify, even on failure
+      }
+    }
+   
+
+ bool exists(List<AllTask> list, AllTask task) {
+  return list.any((t) => t.taskId == task.taskId);
+ }
+ void resetTaskState() {
+  _currentPage = 0;
+  _isLastPage = false;
+  _showAllTask = false;
+
+  _pendingTask.clear();
+  _resubmit.clear();
+  _underReview.clear();
+  _completed.clear();
+
+  notifyListeners();
+}
+
 //     try {
 //       final taskResponse = await _service.getAllProjectAndTeamTaskService(
 //           currentPage, size, projectId, teamId);
@@ -598,5 +656,26 @@ class UserProjectProvider extends ChangeNotifier {
 //     } catch (e) {
 //       error = ApiError.invalidData;
 //     }
+  
+
+//PROJECT TEAM LEADER AUTHICATE BASED IN TEAM MEMBER........................................................
+  bool isTeamLeaderTrue = false;
+  Member? _member;
+  Member? get member => _member;
+  Future<void> isUserTeamLeaderInTeam(List<Member> teamMemberInfo) async {
+    //  isTeamLeaderTrue = true;
+    //notifyListeners();
+    //step find if user is teamleader.......
+    for (var user in teamMemberInfo) {
+      String role = user.role;
+      var userId = user.userId;
+      int? id = await TokenService.getUserUniqueID();
+      if (userId == id && role.toUpperCase() == "TEAMLEADER") {
+        _member = user;
+        isTeamLeaderTrue = true;
+        notifyListeners();
+      }
+      break;
+    }
   }
 }

@@ -34,6 +34,7 @@ class _MyUserProfile extends State<UserProfileUI> {
   Future<UserProfileModel?> userProfile() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+    //  print(prefs.getString("userProfile"));
 
       final cachedProfile = prefs.getString("userProfile");
       if (cachedProfile != null && cachedProfile.isNotEmpty) {
@@ -173,57 +174,6 @@ class _MyUserProfile extends State<UserProfileUI> {
                                                 ),
                                         ),
                                       ),
-
-                                      // ClipOval(
-                                      //   child: snapshot.data!.imageURL != null &&
-                                      //           snapshot.data!.imageURL!.isNotEmpty
-                                      //       ? Image.network(
-                                      //           snapshot.data!.imageURL!,
-                                      //           height:
-                                      //               SizeConFig.screenHeight * 0.1,
-                                      //           width: SizeConFig.screenWidth * 0.2,
-                                      //           fit: BoxFit.cover,
-                                      //           loadingBuilder: (context, child,
-                                      //               loadingProgress) {
-                                      //             if (loadingProgress == null)
-                                      //               return child;
-                                      //             return const Center(
-                                      //                 child:
-                                      //                     CircularProgressIndicator());
-                                      //           },
-                                      //           errorBuilder:
-                                      //               (context, error, stackTrace) {
-                                      //             return Image.asset(
-                                      //               Appimage.splash,
-                                      //               height:
-                                      //                   SizeConFig.screenHeight *
-                                      //                       0.1,
-                                      //               width: SizeConFig.screenWidth *
-                                      //                   0.2,
-                                      //               fit: BoxFit.cover,
-                                      //             );
-                                      //           },
-                                      //         )
-                                      //       : Image.asset(
-                                      //           Appimage.splash,
-                                      //           height:
-                                      //               SizeConFig.screenHeight * 0.1,
-                                      //           width: SizeConFig.screenWidth * 0.2,
-                                      //           fit: BoxFit.cover,
-                                      //         ),
-                                      // ),
-                                      // DecoratedBox(
-                                      //     decoration: BoxDecoration(),
-                                      //     child: CircleAvatar(
-                                      //       backgroundColor: Color(0xfffb934d),
-                                      //       radius: 80,
-                                      //       child: Icon(
-                                      //         Icons.person,
-                                      //         size: 100,
-                                      //       ),
-                                      //     )
-
-                                      //     ),
                                       SizedBox(
                                           height: SizeConFig.screenHeight *
                                               0.5 /
@@ -238,8 +188,8 @@ class _MyUserProfile extends State<UserProfileUI> {
                                               "Email", snapshot.data!.empEmail),
                                           customUIandText("Phone Number",
                                               snapshot.data!.empPhone),
-                                          customUIandText("Designation",
-                                              snapshot.data!.empDesignation),
+                                          // customUIandText("Designation",
+                                          //     snapshot.data!.empDesignation),
                                           customUIandText(
                                               "Role", snapshot.data!.empRole),
                                         ],
