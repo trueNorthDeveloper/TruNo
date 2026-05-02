@@ -179,53 +179,177 @@ class UserDashboardProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // double _progress = 0.0;
+  // bool _isDownloading = false;
+  // String _downloadMessage = "Press the button to download";
+
+  // double get progress => _progress;
+  // bool get isDownloading => _isDownloading;
+  // String get downloadMessage => _downloadMessage;
+
+  // Future<void> downloadApk(String url) async {
+  //   try {
+  //     _isDownloading = true;
+  //     _progress = 0.0;
+  //     _downloadMessage = "Starting download...";
+  //     notifyListeners();
+
+  //     Directory appDocDir = await getApplicationDocumentsDirectory();
+  //     String path = "${appDocDir.path}/update.apk";
+
+  //     await Dio().download(
+  //       url,
+  //       path,
+  //       onReceiveProgress: (received, total) {
+  //         if (total > 0) {
+  //           _progress = received / total;
+
+  //           final percent = (_progress * 100).toStringAsFixed(0);
+  //           _downloadMessage = "Downloading... $percent%";
+
+  //           notifyListeners();
+  //         }
+  //       },
+  //     );
+
+  //     _downloadMessage = "Download complete! Opening installer...";
+  //     notifyListeners();
+
+  //     await OpenFilex.open(path);
+
+  //     _isDownloading = false;
+  //     notifyListeners();
+  //   } catch (e) {
+  //     _isDownloading = false;
+  //     _downloadMessage = "Download failed: $e";
+  //     notifyListeners();
+  //   }
+  // }
   double _progress = 0.0;
-  bool _isDownloading = false;
-  String _downloadMessage = "Press the button to download";
+bool _isDownloading = false;
+bool _isCompleted = false;
+String _downloadMessage = "Press the button to download";
 
-  double get progress => _progress;
-  bool get isDownloading => _isDownloading;
-  String get downloadMessage => _downloadMessage;
+double get progress => _progress;
+bool get isDownloading => _isDownloading;
+bool get isCompleted => _isCompleted;
+String get downloadMessage => _downloadMessage;
 
-  Future<void> downloadApk(String url) async {
-    try {
-      _isDownloading = true;
-      _progress = 0.0;
-      _downloadMessage = "Starting download...";
-      notifyListeners();
+// Future<void> downloadApk(String url) async {
+//   try {
+//     _isDownloading = true;
+//     _isCompleted = false;
+//     _progress = 0.0;
+//     _downloadMessage = "Starting download...";
+//     notifyListeners();
 
-      Directory appDocDir = await getApplicationDocumentsDirectory();
-      String path = "${appDocDir.path}/update.apk";
+//     Directory appDocDir = await getApplicationDocumentsDirectory();
+//     String path = "${appDocDir.path}/update.apk";
 
-      await Dio().download(
-        url,
-        path,
-        onReceiveProgress: (received, total) {
-          if (total > 0) {
-            _progress = received / total;
+//     await Dio().download(
+//       url,
+//       path,
+//       onReceiveProgress: (received, total) {
+//         if (total > 0) {
+//           _progress = received / total;
+//           final percent = (_progress * 100).toStringAsFixed(0);
+//           _downloadMessage = "Downloading... $percent%";
+//           notifyListeners();
+//         }
+//       },
+//     );
 
-            final percent = (_progress * 100).toStringAsFixed(0);
-            _downloadMessage = "Downloading... $percent%";
+//     // ✅ Mark as completed BEFORE opening installer
+//     _progress = 1.0;
+//     _isDownloading = false;
+//     _isCompleted = true;
+//     _downloadMessage = "Download complete. Opening installer...";
+//     notifyListeners();
 
-            notifyListeners();
-          }
-        },
-      );
+//     // Small delay so UI updates properly
+//     await Future.delayed(const Duration(milliseconds: 500));
 
-      _downloadMessage = "Download complete! Opening installer...";
-      notifyListeners();
+//     await OpenFilex.open(path);
 
-      await OpenFilex.open(path);
+//   } catch (e) {
+//     _isDownloading = false;
+//     _isCompleted = false;
+//     _downloadMessage = "Download failed: $e";
+//     notifyListeners();
+//   }
+// }
+Future<void> downloadApk(String url) async {
+  try {
+    print("📥 Download URL: $url");
 
-      _isDownloading = false;
-      notifyListeners();
-    } catch (e) {
-      _isDownloading = false;
-      _downloadMessage = "Download failed: $e";
-      notifyListeners();
+    if (url.isEmpty) {
+      throw Exception("Invalid download URL");
     }
-  }
 
+    _isDownloading = true;
+    _isCompleted = false;
+    _progress = 0.0;
+    _downloadMessage = "Starting download...";
+    notifyListeners();
+
+    Directory appDocDir = await getApplicationDocumentsDirectory();
+    String path = "${appDocDir.path}/update.apk";
+
+    final dio = Dio();
+
+    await dio.download(
+      url,
+      path,
+      options: Options(
+        responseType: ResponseType.bytes,
+        followRedirects: true,
+        validateStatus: (status) {
+          return status != null && status >= 200 && status < 500;
+        },
+      ),
+      onReceiveProgress: (received, total) {
+        if (total > 0) {
+          _progress = received / total;
+          final percent = (_progress * 100).toStringAsFixed(0);
+          _downloadMessage = "Downloading... $percent%";
+          notifyListeners();
+        }
+      },
+    );
+
+    _progress = 1.0;
+    _isDownloading = false;
+    _isCompleted = true;
+    _downloadMessage = "Download complete. Opening installer...";
+    notifyListeners();
+
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    final result = await OpenFilex.open(path);
+    print("📂 Open result: $result");
+
+  } on DioException catch (e) {
+    _isDownloading = false;
+    _isCompleted = false;
+
+    if (e.response != null) {
+      _downloadMessage =
+          "Download failed (Error ${e.response?.statusCode})";
+    } else {
+      _downloadMessage = "Network error. Check connection.";
+    }
+
+    print("❌ Dio error: ${e.message}");
+    notifyListeners();
+
+  } catch (e) {
+    _isDownloading = false;
+    _isCompleted = false;
+    _downloadMessage = "Download failed. Please try again.";
+    print("❌ Error: $e");
+    notifyListeners();
+  }
+}
   UserWorkHistoryResponse? userWorkHistoryResponse;
   bool _isHistoryload = false;
   bool get isHistoryload => _isHistoryload;

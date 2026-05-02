@@ -104,5 +104,5 @@ class Apiconstants {
   static String me = "$baseUrl/v2me";
   static String refreshTokenAcess = "$baseUrl/v2refreshToken";
   static String userlogout = "$baseUrl/automaticLogout";
-  static String checkuserCredentail = "$baseUrl/checkCredentail";
+  static String checkuserCredentail = "$baseUrl/checkCredential";
 }

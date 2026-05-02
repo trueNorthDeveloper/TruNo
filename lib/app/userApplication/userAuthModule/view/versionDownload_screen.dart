@@ -32,29 +32,70 @@ class _VersiondownloadScreenState extends State<VersiondownloadScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<UserDashboardProvider>(context, listen: true);
-
-    return SafeArea(
-      child: Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              provider.isDownloading
-                  ? Column(
-                      children: [
-                        LinearProgressIndicator(
-                          value: provider.progress,
-                        ),
-                        const SizedBox(height: 16.0),
-                        Text(provider.downloadMessage),
-                      ],
-                    )
-                  : Center(child: const Text("finalizing...")),
-            ],
-          ),
-        ),
+    return Scaffold(
+        body: Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: provider.isDownloading
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  LinearProgressIndicator(value: provider.progress),
+                  const SizedBox(height: 16),
+                  Text(provider.downloadMessage),
+                ],
+              )
+            : provider.isCompleted
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.check_circle, color: Colors.green, size: 60),
+                      SizedBox(height: 16),
+                      Text("Download complete. Please install the update."),
+                    ],
+                  )
+                : Text(provider.downloadMessage),
       ),
-    );
+    ));
+
+    // return SafeArea(
+    //   child: Scaffold(
+    //     body: Padding(
+    //       padding: const EdgeInsets.all(16.0),
+    //       child: Column(
+    //         mainAxisAlignment: MainAxisAlignment.center,
+    //         children: [
+    //           // provider.isDownloading
+    //           //     ? Column(
+    //           //         children: [
+    //           //           LinearProgressIndicator(
+    //           //             value: provider.progress,
+    //           //           ),
+    //           //           const SizedBox(height: 16.0),
+    //           //           Text(provider.downloadMessage),
+    //           //         ],
+    //           //       )
+    //           //     : Center(child: const Text("finalizing...")),
+    //           provider.isDownloading
+    //               ? Column(
+    //                   children: [
+    //                     LinearProgressIndicator(value: provider.progress),
+    //                     const SizedBox(height: 16.0),
+    //                     Text(provider.downloadMessage),
+    //                   ],
+    //                 )
+    //               : Column(
+    //                   mainAxisAlignment: MainAxisAlignment.center,
+    //                   children: const [
+    //                     Icon(Icons.check_circle, color: Colors.green, size: 60),
+    //                     SizedBox(height: 16),
+    //                     Text("Download complete. Please install the update."),
+    //                   ],
+    //                 ),
+    //         ],
+    //       ),
+    //     ),
+    //   ),
+    // );
   }
 }
