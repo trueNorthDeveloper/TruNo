@@ -1,6 +1,10 @@
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:table_calendar/table_calendar.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/controller/expenseController.dart';
+import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/view/userExpenseCategory.dart';
 import 'package:truenorthflutterfrontend/public/utils/userUtil/size_config.dart';
 
 class UserExpenseScreens extends StatefulWidget {
@@ -11,33 +15,6 @@ class UserExpenseScreens extends StatefulWidget {
 }
 
 class _UserexpensescreenzsState extends State<UserExpenseScreens> {
-  final _formKey = GlobalKey<FormState>();
-  final _amountController = TextEditingController();
-  String? _selectedCategory;
-  final List<Map<String, dynamic>> _categories = [
-    {'name': 'Petrol', 'icon': Icons.local_gas_station},
-    {'name': 'Rent', 'icon': Icons.home},
-    {'name': 'Loading', 'icon': Icons.local_shipping},
-    {'name': 'Site Item', 'icon': Icons.construction},
-    {'name': 'Breakfast', 'icon': Icons.coffee},
-    {'name': 'Lunch', 'icon': Icons.lunch_dining},
-    {'name': 'Dinner', 'icon': Icons.restaurant},
-    {'name': 'Travel', 'icon': Icons.directions_bus},
-    {'name': 'Bike', 'icon': Icons.pedal_bike},
-    {'name': 'Boat', 'icon': Icons.directions_boat},
-    {'name': 'Labour', 'icon': Icons.engineering},
-    {'name': 'Water', 'icon': Icons.water_drop},
-    {'name': 'Vehical', 'icon': Icons.settings},
-    {'name': 'Stationary', 'icon': Icons.edit_note},
-    {'name': 'Grocery', 'icon': Icons.local_grocery_store},
-    {'name': 'Others', 'icon': Icons.border_outer_sharp},
-  ];
-  void _submitForm() {
-    if (_formKey.currentState!.validate() && _selectedCategory != null) {
-      print('Amount: ${_amountController.text}, Cat: $_selectedCategory');
-    }
-  }
-
   @override
   void initState() {
     super.initState();
@@ -71,153 +48,310 @@ class _UserexpensescreenzsState extends State<UserExpenseScreens> {
           ),
         ),
       ),
-      body: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              //show date top of screen with icons increse and decrese date
-              Consumer<Expensecontroller>(
-                builder: (context, con, child) {
-                  return _builDate(con);
-                },
-              ),
-              SizedBox(
-                height: SizeConFig.screenHeight * 1 / 100,
-              ),
-//item of top of the screen like total credit and balance and expense....
-              _buildItemCat(),
-//TEXT FILED FOR ADD AMOUNT ON SELECTED FILED
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: TextFormField(
-                  controller: _amountController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                      labelText: 'Amount', border: OutlineInputBorder()),
-                  validator: (v) =>
-                      (v == null || v.isEmpty) ? 'Enter amount' : null,
-                ),
-              ),
-              const Text('Select Category:',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-//create category of selected items
-              _buildCategoryItem(),
-//SAVE BUTTON OF ITEM......
-              ElevatedButton(
-                  onPressed: _submitForm, child: const Text('Save Expense')),
-            ],
-          )),
-    );
-  }
-
-  Widget _buildCategoryItem() {
-    return Expanded(
-      child: GridView.builder(
-        padding: const EdgeInsets.all(16),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 5,
-          crossAxisSpacing: 4,
-          //
-          //mainAxisSpacing: 10
-        ),
-        itemCount: _categories.length,
-        itemBuilder: (context, index) {
-          final cat = _categories[index];
-          bool isSelected = _selectedCategory == cat['name'];
-          return GestureDetector(
-            onTap: () => setState(() => _selectedCategory = cat['name']),
-            child: Container(
-              decoration: BoxDecoration(
-                color: isSelected
-                    // ignore: deprecated_member_use
-                    ? Colors.blue.withOpacity(0.2)
-                    : Colors.grey[100],
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                    color: isSelected ? Colors.blue : Colors.transparent),
-              ),
-              child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(cat['icon']),
-                    Text(
-                      cat['name'],
-                      style: TextStyle(fontSize: 13),
-                    )
-                  ]),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildItemCat() {
-    return Container(
-      height: 100,
-      child: GridView.builder(
-        itemCount: 4,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2, crossAxisSpacing: 150, mainAxisExtent: 50),
-        itemBuilder: (context, index) {
-          return GestureDetector(
-            onTap: () {},
-            child: Container(
-              child: Column(
-                children: [
-                  Icon(Icons.settings_applications),
-                  Text(
-                    "Item",
-                    style: TextStyle(fontSize: 13),
-                  )
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _builDate(Expensecontroller controller) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Container(
-        decoration: BoxDecoration(
-            color: const Color.fromARGB(255, 157, 199, 199),
-            borderRadius: BorderRadius.circular(11)),
-        child: Center(
-            child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      body: SingleChildScrollView(
+        child: SafeArea(
+            child: Column(
           children: [
-            _buildIncreseDecrseButton(
-                () => controller.changeDate(-1), Icons.arrow_forward_ios),
-            Text("${controller.dateFormat.format(controller.selectedDate)}"),
-            _buildIncreseDecrseButton(
-                () => controller.changeDate(1), Icons.arrow_back_ios_new_sharp)
+            // SizedBox(
+            //   height: SizeConFig.screenHeight * 1 / 100,
+            // ),
+            //TOTAL SUMMARY TOP OF THE SCREEN...
+            _buildTotalSummary(),
+            //SHOW CALENDAR WITH AMOUNT
+            _expenseShowCalendar(),
+
+            Consumer<Expensecontroller>(
+              builder: (context, xpensecontroller, child) {
+                if (xpensecontroller.itemAmount.isEmpty) {
+                  return const Text("empty");
+                }
+
+                final data = xpensecontroller.itemAmount;
+
+                return ExpansionTile(
+                  // The "Header" showing the total amount
+                  title: Text(
+                    "Total Amount: ₹${data["dayTotalAmount"]}",
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text("Date: ${data["date"]}"),
+                  // The "Expanded" list showing other details
+                  children: data.entries
+                      .where((entry) =>
+                          entry.key != "dayTotalAmount" && entry.key != "date")
+                      .map((entry) => ListTile(
+                            title: Text(entry.key[0].toUpperCase() +
+                                entry.key.substring(1)), // Capitalize key
+                            trailing: Text("₹${entry.value}"),
+                          ))
+                      .toList(),
+                );
+              },
+            ),
+
+            _buildCoroseal(),
           ],
         )),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => Userexpensecategory(),
+              ));
+        },
+        child: Icon(Icons.add),
+      ),
     );
   }
 
-  Widget _buildIncreseDecrseButton(VoidCallback onTap, IconData icon) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            // ignore: deprecated_member_use
-            color: Colors.blue.withOpacity(0.1),
-            spreadRadius: 2,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+  Widget _expenseShowCalendar() {
+    return Consumer<Expensecontroller>(
+        builder: (context, expenseProvider, child) {
+      return TableCalendar(
+        holidayPredicate: (day) {
+          return day.weekday == DateTime.sunday;
+        },
+        calendarBuilders: CalendarBuilders(
+          holidayBuilder: (context, day, focusedDay) {
+            return Container(
+              margin: const EdgeInsets.all(4.0),
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(
+                color: Color.fromARGB(
+                    0, 188, 30, 30), // Or a light red if you prefer
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                '${day.day}',
+                style: const TextStyle(
+                  color:
+                      Color.fromARGB(255, 165, 207, 220), // Makes the text red
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            );
+          },
+          defaultBuilder: (context, day, focusedDay) {
+            //final dateKey = DateFormat('yyyy-MM-dd').format(day);
+            //final status = pro.attendanceListMap[dateKey];
+            // 3. Define styling based on attendance status
+            Color? bgColor;
+            Color textColor = Colors.black;
+            BoxBorder? border;
+            // if (status == "Present") {
+            //   bgColor = Colors.green.shade100;
+            //   textColor = Colors.green.shade900;
+            //   border = Border.all(color: Colors.green, width: 1);
+            // } else if (status == "Absent") {
+            //   bgColor = Colors.red.shade50;
+            //   textColor = Colors.red.shade900;
+            // } else if (status == "Upcoming") {
+            //   bgColor = const Color.fromARGB(255, 227, 223, 224);
+            //   textColor = const Color.fromARGB(255, 159, 166, 165);
+            // } else if (status == "Holiday") {
+            //   bgColor = Colors.amber.shade100;
+            //   textColor = Colors.amber.shade900;
+            //   border = Border.all(color: Colors.amber, width: 1);
+            // }
+            return Container(
+              margin: const EdgeInsets.all(4.0),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: bgColor,
+                shape: BoxShape.circle,
+                border: border,
+              ),
+              child: Text(
+                '${day.day}',
+                style: TextStyle(
+                  color: textColor,
+                  // fontWeight: status == "Present"
+                  //   ? FontWeight.bold
+                  // : FontWeight.normal,
+                ),
+              ),
+            );
+          },
+          todayBuilder: (context, day, focusedDay) {
+            return Container(
+              margin: const EdgeInsets.all(4.0),
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(
+                color: Colors.blueAccent,
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                '${day.day}',
+                style: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            );
+          },
+        ),
+        headerStyle: HeaderStyle(
+          // Title styling
+          titleTextStyle: const TextStyle(
+            color: Colors.white,
+            fontSize: 20.0,
+            fontWeight: FontWeight.bold,
           ),
-        ],
+          // Header background decoration
+          decoration: BoxDecoration(
+            color: const Color.fromARGB(
+                182, 167, 166, 169), // Example background color
+            borderRadius: BorderRadius.circular(10.0), // Rounded corners
+          ),
+          // Center the title
+          titleCentered: true,
+          // Hide the format button
+          formatButtonVisible: false,
+          // Custom chevron icons
+          leftChevronIcon: const Icon(
+            Icons.chevron_left,
+            color: Colors.white,
+            size: 28,
+          ),
+          rightChevronIcon: const Icon(
+            Icons.chevron_right,
+            color: Colors.white,
+            size: 28,
+          ),
+          // Custom title format (e.g., "Month\nYear")
+          titleTextFormatter: (date, locale) {
+            final month = DateFormat.MMMM(locale).format(date);
+            final years = DateFormat.y(locale).format(date);
+            return '$month\n$years';
+          },
+        ),
+        // Other
+        pageAnimationDuration: Duration(milliseconds: 500),
+        weekNumbersVisible: false,
+
+        daysOfWeekHeight: 27.0,
+        availableGestures: AvailableGestures.none,
+        pageAnimationCurve: Curves.easeInCubic,
+        daysOfWeekStyle: DaysOfWeekStyle(
+            weekdayStyle:
+                TextStyle(color: const Color.fromARGB(255, 54, 79, 244))),
+        startingDayOfWeek: StartingDayOfWeek.sunday,
+        sixWeekMonthsEnforced: false,
+        focusedDay: expenseProvider.focusedDay!,
+        firstDay: expenseProvider.firstDay,
+        lastDay: expenseProvider.lastDay,
+        calendarFormat: CalendarFormat.month,
+        dayHitTestBehavior: HitTestBehavior.opaque,
+        // selectedDayPredicate: (day) {
+        //   return isSameDay(_selectedDate, day);
+        // },
+        onDaySelected: (selectedDay, focusDay) {
+          final selectedKey = DateFormat('dd-MM-yyyy').format(selectedDay);
+          //yyyy-MM-dd').
+          print(selectedKey);
+          expenseProvider.callexpenseAmountDateWise(selectedKey);
+          //final sessions = pro.attendanceEvent[selectedKey] ?? [];
+          // pro.updateFocusedDay(focusDay);
+          //  pro.updateSelectedSessions(selectedKey);
+          // setState(() {
+          //   _selectedDate = selectedDay;
+          // });
+        },
+
+        onPageChanged: (focusedDay) {
+          // pro.updateFocusedDay(focusedDay);
+          // pro.fatchUserDailyAttendance(focusedDay.year.toString(),
+          //   focusedDay.month.toString().padLeft(2, '0'));
+        },
+      );
+    });
+  }
+
+  final List<String> textList = ['hey navendra welcome to trueNorth'];
+  Widget _buildCoroseal() {
+    return CarouselSlider(
+      options: CarouselOptions(
+        height: 50.0,
+        autoPlay: true,
+        animateToClosest: true,
+        enableInfiniteScroll: true,
+      ), // autoPlay
+      items: textList.map((text) {
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(10)),
+            color: const Color.fromARGB(255, 136, 157, 194),
+          ),
+          width: SizeConFig.proportionalWidth * 7,
+          child:
+              Center(child: Text(text, style: TextStyle(color: Colors.white))),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildTotalSummary() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              // ignore: deprecated_member_use
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildTextAndAmount("Paid", "2,000", Colors.green),
+            _divider(),
+            _buildTextAndAmount("Balance", "900", Colors.blueGrey),
+            _divider(),
+            _buildTextAndAmount("Total", "100", Colors.redAccent),
+          ],
+        ),
       ),
-      child: IconButton(
-          color: Colors.blue, iconSize: 20, onPressed: onTap, icon: Icon(icon)),
+    );
+  }
+
+  Widget _buildTextAndAmount(String name, String amount, Color color) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          name,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey.shade600,
+          ),
+        ),
+        SizedBox(height: SizeConFig.screenHeight * 0.4 / 100),
+        Text(
+          "$amount",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _divider() {
+    return Container(
+      height: 30,
+      width: 1,
+      color: Colors.grey.shade200,
     );
   }
 }

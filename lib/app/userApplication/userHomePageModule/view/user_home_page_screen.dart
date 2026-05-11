@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:provider/provider.dart';
+import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/view/userExpenseScreen.dart';
 
 import 'package:truenorthflutterfrontend/app/userApplication/userAttendanceAndLeaveModule/view/leaveScreen.dart';
 
@@ -291,18 +292,19 @@ class _MyUserhomePage extends State<UserHomePage> {
                                     //     ));
                                     //   },
                                     // ),
-                                    _buildTemporayBox("Expense", context),
+                                    //  _buildTemporayBox("Expense", context),
                                     //this will be uncomment during developemt
-                                    // customBox(
-                                    //   "Expenses",
-                                    //   context,
-                                    //   onTapCallback: () {
-                                    //     Navigator.of(context).push(
-                                    //         MaterialPageRoute(
-                                    //             builder: (_) =>
-                                    //                 const UserExpenseScreens()));
-                                    //   },
-                                    // ),
+
+                                    customBox(
+                                      "Expenses",
+                                      context,
+                                      onTapCallback: () {
+                                        Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                                builder: (_) =>
+                                                    const UserExpenseScreens()));
+                                      },
+                                    ),
                                     //this will be uncomment during developemt
 
                                     // customBox("High Priority", context),
@@ -724,7 +726,7 @@ class _MyUserhomePage extends State<UserHomePage> {
               child: Center(
                 child: const Text(
                   "are you sure you want to logout ?",
-                  style: TextStyle(fontWeight: FontWeight.w500,fontSize: 13),
+                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
                 ),
               ),
             ),
