@@ -1,5 +1,10 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+
 
 class Expensecontroller extends ChangeNotifier {
   DateTime selectedDate = DateTime.now();
@@ -125,4 +130,74 @@ class Expensecontroller extends ChangeNotifier {
     setValue = val;
     notifyListeners();
   }
+
+//BY USING THIS METHOD SELECT MULTIPLE IMAGE FROM GALLLEY
+  bool _isImage = false;
+  bool get isImage => _isImage;
+  List<String> _listofImage = [];
+
+  List<String> get listofImage => _listofImage;
+  final ImagePicker imagePicker = ImagePicker();
+  void selectMutlipleImageFromGallery() async {
+    final List<XFile>? selectedImages = await imagePicker.pickMultiImage();
+    if (selectedImages!.isNotEmpty) {
+      List<String> item = selectedImages.map((item) => (item.path)).toList();
+      _listofImage.addAll(item);
+        _isImage = true; 
+      notifyListeners();
+    }
+  }
+
+//CLEAR IMAGE ON TAB CLOSE BUTTON
+  void clearImageList(int index) {
+    _listofImage.removeAt(index);
+      if (_listofImage.isEmpty) {
+    _isImage = false;
+  }
+
+    notifyListeners();
+  }
+
+  bool _isFile = false;
+  File? get file => _file;
+  File? _file;
+  bool get isFile => _isFile;
+  List<String> _listOfFilesPdfDoc = [];
+  List<String> get listOfFilesPdfDoc => _listOfFilesPdfDoc;
+  void selectPdfDocFromDevice() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        allowMultiple: true,
+        type: FileType.any,
+      );
+      if (result != null && result.files.isNotEmpty) {
+        List<String> filePath = result.paths.whereType<String>().toList();
+        _listOfFilesPdfDoc.addAll(filePath);
+          _isFile = true;
+        notifyListeners();
+      }
+    } catch (e) {
+      print("Error picking files: $e");
+    }
+  }
+
+  void clearListFiles(int index) {
+    try {
+      _listOfFilesPdfDoc.removeAt(index);
+        if (_listOfFilesPdfDoc.isEmpty) {
+      _isFile = false;
+    }
+      notifyListeners();
+    } catch (e) {
+      print("Error picking files: $e");
+    }
+  }
+  void resetControllerState() {
+  _listofImage.clear();
+  _listOfFilesPdfDoc.clear();
+  _isImage = false;
+  _isFile = false;
+  notifyListeners();
+}
+
 }
