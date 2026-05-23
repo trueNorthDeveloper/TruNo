@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/controller/expenseController.dart';
-import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/view/userExpenseCategory.dart';
+import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/view/userExpenseCategoryScreen.dart';
 import 'package:truenorthflutterfrontend/public/utils/userUtil/size_config.dart';
 
 class UserExpenseScreens extends StatefulWidget {

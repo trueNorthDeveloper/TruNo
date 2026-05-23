@@ -4,9 +4,13 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-
+import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/model/expenseCategoriesModel.dart';
+import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/service/expenseModuleService.dart';
+import 'package:truenorthflutterfrontend/public/config/platform_type.dart';
+import 'package:truenorthflutterfrontend/public/utils/userUtil/api_result.dart';
 
 class Expensecontroller extends ChangeNotifier {
+  Expensemoduleservice _service = Expensemoduleservice();
   DateTime selectedDate = DateTime.now();
   final DateFormat dateFormat = DateFormat('dd-MM-yyyy');
   //yyyy-MM-dd');
@@ -143,7 +147,7 @@ class Expensecontroller extends ChangeNotifier {
     if (selectedImages!.isNotEmpty) {
       List<String> item = selectedImages.map((item) => (item.path)).toList();
       _listofImage.addAll(item);
-        _isImage = true; 
+      _isImage = true;
       notifyListeners();
     }
   }
@@ -151,9 +155,9 @@ class Expensecontroller extends ChangeNotifier {
 //CLEAR IMAGE ON TAB CLOSE BUTTON
   void clearImageList(int index) {
     _listofImage.removeAt(index);
-      if (_listofImage.isEmpty) {
-    _isImage = false;
-  }
+    if (_listofImage.isEmpty) {
+      _isImage = false;
+    }
 
     notifyListeners();
   }
@@ -173,7 +177,7 @@ class Expensecontroller extends ChangeNotifier {
       if (result != null && result.files.isNotEmpty) {
         List<String> filePath = result.paths.whereType<String>().toList();
         _listOfFilesPdfDoc.addAll(filePath);
-          _isFile = true;
+        _isFile = true;
         notifyListeners();
       }
     } catch (e) {
@@ -184,20 +188,45 @@ class Expensecontroller extends ChangeNotifier {
   void clearListFiles(int index) {
     try {
       _listOfFilesPdfDoc.removeAt(index);
-        if (_listOfFilesPdfDoc.isEmpty) {
-      _isFile = false;
-    }
+      if (_listOfFilesPdfDoc.isEmpty) {
+        _isFile = false;
+      }
       notifyListeners();
     } catch (e) {
       print("Error picking files: $e");
     }
   }
-  void resetControllerState() {
-  _listofImage.clear();
-  _listOfFilesPdfDoc.clear();
-  _isImage = false;
-  _isFile = false;
-  notifyListeners();
-}
 
+  void resetControllerState() {
+    _listofImage.clear();
+    _listOfFilesPdfDoc.clear();
+    _isImage = false;
+    _isFile = false;
+    notifyListeners();
+  }
+
+//EXPENSE CATEGORY PROVIDER METHOD..............................
+  bool _isLoadExpenseCategory = false;
+  bool get isLoadExpenseCategory => _isLoadExpenseCategory;
+  List<ExpenseCategoriesModel> _expCateList = [];
+  List<ExpenseCategoriesModel> get expenseCateList => _expCateList;
+  ApiError? catError;
+  Future<void> fatchExpenseCategory() async {
+    _isLoadExpenseCategory = true;
+    notifyListeners();
+    try {
+      final response = await _service.fatchExpenseCategory();
+      if (response.isSuccess) {
+        _expCateList = response.data;
+      } else {
+        catError=response.error;
+        _expCateList = [];
+      }
+    } catch (e) {
+      _expCateList = [];
+    } finally {
+      _isLoadExpenseCategory = false;
+      notifyListeners();
+    }
+  }
 }

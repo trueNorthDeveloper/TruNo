@@ -21,7 +21,11 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
   @override
   void initState() {
     super.initState();
-    initializeControllers();
+    // initializeControllers();
+    Future.microtask(() {
+      final controller = Provider.of<Expensecontroller>(context, listen: false);
+      controller.fatchExpenseCategory();
+    });
   }
 
   void initializeControllers() {
@@ -633,6 +637,15 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
   }
 
   Widget _buildCategoryItem(Expensecontroller controller) {
+    if (controller.isLoadExpenseCategory) {
+      return Center(child: CircularProgressIndicator());
+    }
+    if (controller.catError == true) {
+      return Text("${controller.catError}");
+    }
+    if (controller.expenseCateList.isEmpty) {
+      return SizedBox();
+    }
     return Container(
       //height: 285,
       height: SizeConFig.screenHeight * 0.28,
@@ -644,16 +657,26 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
           //
           //mainAxisSpacing: 10
         ),
-        itemCount: _categories.length,
+        //itemCount: _categories.length,
+        itemCount: controller.expenseCateList.length,
         itemBuilder: (context, index) {
-          final cat = _categories[index];
-          bool isSelected = _selectedCategory == cat['name'];
+          // final cat = _categories[index];
+          final cat = controller.expenseCateList[index];
+          //bool isSelected = _selectedCategory == cat['name'];
+          bool isSelected = _selectedCategory == cat.categoryName;
 
           return GestureDetector(
+            // onTap: () {
+            //   setState(() {
+            //     _selectedCategory = cat["name"];
+            //     selectedCategory = _categories[index]['name'];
+            //   });
             onTap: () {
+
+              print(cat.id);
               setState(() {
-                _selectedCategory = cat["name"];
-                selectedCategory = _categories[index]['name'];
+                _selectedCategory = cat.categoryName;
+                // selectedCategory = _categories[index]['name'];
               });
               // controller.setIndexValue(index);
             },
@@ -670,10 +693,10 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
               child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(cat['icon']),
+                    Icon(Icons.power),
                     Text(
-                      cat['name'],
-                      style: TextStyle(fontSize: 13),
+                      cat.categoryName,
+                      style: TextStyle(fontSize: 13,fontWeight:FontWeight.w500),
                     )
                   ]),
             ),
