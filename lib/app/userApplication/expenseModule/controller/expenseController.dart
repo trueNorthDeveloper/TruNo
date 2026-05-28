@@ -4,10 +4,13 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/model/expenseCategoriesModel.dart';
+import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/model/expenseCategoryResponse.dart';
+import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/model/expenseDynamicFieldResponseModel.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/service/expenseModuleService.dart';
 import 'package:truenorthflutterfrontend/public/config/platform_type.dart';
 import 'package:truenorthflutterfrontend/public/utils/userUtil/api_result.dart';
+
+import '../model/expenseDynamicFieldResponseModel.dart';
 
 class Expensecontroller extends ChangeNotifier {
   Expensemoduleservice _service = Expensemoduleservice();
@@ -208,25 +211,59 @@ class Expensecontroller extends ChangeNotifier {
 //EXPENSE CATEGORY PROVIDER METHOD..............................
   bool _isLoadExpenseCategory = false;
   bool get isLoadExpenseCategory => _isLoadExpenseCategory;
-  List<ExpenseCategoriesModel> _expCateList = [];
-  List<ExpenseCategoriesModel> get expenseCateList => _expCateList;
+  List<ExpenseCategory> _expCateList = [];
+  List<ExpenseCategory> get expenseCateList => _expCateList;
   ApiError? catError;
   Future<void> fatchExpenseCategory() async {
     _isLoadExpenseCategory = true;
+    catError = null; 
     notifyListeners();
     try {
       final response = await _service.fatchExpenseCategory();
+
       if (response.isSuccess) {
-        _expCateList = response.data;
+        _expCateList = response.data.data;
+        
       } else {
-        catError=response.error;
-        _expCateList = [];
+        catError = response.error;
       }
     } catch (e) {
       _expCateList = [];
+  catError = ApiError.unknown;
     } finally {
       _isLoadExpenseCategory = false;
       notifyListeners();
     }
+  }
+
+  //RETRIVE DYNAMIC FILED......................................
+  bool _showAllField = false;
+  bool get showAllField => _showAllField;
+  List<DynamicField> _dynamicField = [];
+  List<DynamicField> get dynamicField => _dynamicField;
+  String? _errorMessage;
+
+  Future<void> dynamicFormField(int id) async {
+    _showAllField = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final output = await _service.fatchDynamicFieldReponse(id);
+      if (output.isSuccess) {
+        _dynamicField = output.data.data;
+        
+        
+      }
+    } catch (e) {
+      _errorMessage = e.toString();
+    } finally {
+      _showAllField = false;
+      notifyListeners();
+    }
+  }
+
+  void updateFieldValue(String fieldName, dynamic value) {
+    // _formValues[fieldName] = value;
+    notifyListeners();
   }
 }

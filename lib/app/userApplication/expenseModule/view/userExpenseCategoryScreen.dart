@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -73,6 +74,42 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
     {'name': 'Grocery', 'icon': Icons.local_grocery_store},
     {'name': 'Others', 'icon': Icons.border_outer_sharp},
   ];
+  IconData getCategoryIcon(String categoryName) {
+    switch (categoryName.toLowerCase().trim()) {
+      case 'fuel':
+        return Icons.local_gas_station;
+      case 'hotel':
+        return Icons.home;
+      case 'transport':
+        return Icons.local_shipping;
+      case 'site_item':
+        return Icons.construction;
+      case 'breakfast':
+        return Icons.coffee;
+      case 'lunch':
+        return Icons.lunch_dining;
+      case 'dinner':
+        return Icons.restaurant;
+      case 'travel':
+        return Icons.directions_bus;
+      case 'bike':
+        return Icons.pedal_bike;
+      case 'boat':
+        return Icons.directions_boat;
+      case 'labour':
+        return Icons.engineering;
+      case 'water':
+        return Icons.water_drop;
+      case 'stationary':
+        return Icons.edit_note;
+      case 'grocery':
+        return Icons.local_grocery_store;
+
+      default:
+        return Icons.category;
+    }
+  }
+
   final _formKey = GlobalKey<FormState>();
   String? fuelTypee;
   final Map<String, dynamic> categoryConfig = {
@@ -426,7 +463,12 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
                           _buildCategoryItem(controller),
                     ),
                     Divider(),
-                    buildDynamicForm(),
+                   //TODO// buildDynamicForm(),
+                  // buildDynamicUpdateform
+                    Consumer<Expensecontroller>(
+                      builder: (context, controller, child) =>
+                           buildDynamicUpdateform(controller)
+                    ),
                   ],
                 ),
               ),
@@ -566,7 +608,7 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
   }
 
   Widget _buildDropDownText(
-      List<String> item, String label, TextEditingController controller) {
+      List<dynamic> item, String label, TextEditingController controller) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Container(
@@ -640,9 +682,9 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
     if (controller.isLoadExpenseCategory) {
       return Center(child: CircularProgressIndicator());
     }
-    if (controller.catError == true) {
-      return Text("${controller.catError}");
-    }
+    // if (controller.catError! == true) {
+    //   return Text("${controller.catError}");
+    // }
     if (controller.expenseCateList.isEmpty) {
       return SizedBox();
     }
@@ -660,10 +702,12 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
         //itemCount: _categories.length,
         itemCount: controller.expenseCateList.length,
         itemBuilder: (context, index) {
+          final data = controller.expenseCateList[index];
+
           // final cat = _categories[index];
-          final cat = controller.expenseCateList[index];
+          // final cat = controller.expenseCateList[index];
           //bool isSelected = _selectedCategory == cat['name'];
-          bool isSelected = _selectedCategory == cat.categoryName;
+          bool isSelected = _selectedCategory == data.categoryName;
 
           return GestureDetector(
             // onTap: () {
@@ -672,10 +716,10 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
             //     selectedCategory = _categories[index]['name'];
             //   });
             onTap: () {
-
-              print(cat.id);
+              controller.dynamicFormField(data.id);
               setState(() {
-                _selectedCategory = cat.categoryName;
+                _selectedCategory = data.categoryName;
+                //_selectedCategory = cat.categoryName;
                 // selectedCategory = _categories[index]['name'];
               });
               // controller.setIndexValue(index);
@@ -693,10 +737,11 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
               child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.power),
+                    Icon(getCategoryIcon(data.categoryName)),
                     Text(
-                      cat.categoryName,
-                      style: TextStyle(fontSize: 13,fontWeight:FontWeight.w500),
+                      data.categoryName,
+                      style:
+                          TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
                     )
                   ]),
             ),
@@ -810,6 +855,57 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
             },
           )),
     );
+  }
+
+  Widget buildDynamicUpdateform(Expensecontroller controller) {
+    if (controller.showAllField==true) {
+      return CircularProgressIndicator();
+    }
+    if (controller.dynamicField.isEmpty) {
+      return SizedBox();
+    }
+    final field = controller.dynamicField;
+    return Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            ...field.map((field) {
+              final label = field.fieldLabel;
+              final controller = controllers[label];
+              if (field.fieldType == "DROPDOWN") {
+                return _buildDropDownText(field.optionss, label, controller!);
+              }
+              if (field.fieldType == "TEXT") {
+                return _createResuableTextFiled(
+                    controller!, field.fieldLabel, "a");
+              }
+              //  if (field.fieldType == "NUMBER") {
+              //   return _createResuableTextFiled(
+              //       controller!, field.fieldLabel,"enter");
+              // }
+              if(field.fieldType=="NUMBER")
+              {
+                return TextField();
+              }
+              if (field.fieldType == "IMAGE") {
+                return selectImageAndFill(field.fieldLabel);
+              }
+              return SizedBox();
+            }).toList(),
+            ElevatedButton(
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  ShowTaostMessage.toastMessage(
+                    context,
+                    "Processing Data",
+                  );
+                }
+                submitForm();
+              },
+              child: const Text("Submit"),
+            )
+          ],
+        ));
   }
 
   Widget buildDynamicForm() {
