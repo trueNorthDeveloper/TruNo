@@ -4,8 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/controller/expenseController.dart';
-import 'package:truenorthflutterfrontend/public/utils/userUtil/app_button.dart';
-import 'package:truenorthflutterfrontend/public/utils/userUtil/app_field_text.dart';
+import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/model/expenseDynamicFieldResponseModel.dart';
 import 'package:truenorthflutterfrontend/public/utils/userUtil/mesage_snack_bar.dart';
 import 'package:truenorthflutterfrontend/public/utils/userUtil/size_config.dart';
 
@@ -16,29 +15,25 @@ class Userexpensecategory extends StatefulWidget {
 
 class _UserexpensescreenzsState extends State<Userexpensecategory> {
   ///new  code--------------------------start-------------------
-
-  Map<String, TextEditingController> controllers = {};
-  Map<String, dynamic> formData = {};
   @override
   void initState() {
     super.initState();
-    // initializeControllers();
-    Future.microtask(() {
-      final controller = Provider.of<Expensecontroller>(context, listen: false);
-      controller.fatchExpenseCategory();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<Expensecontroller>().fatchExpenseCategory();
     });
   }
 
-  void initializeControllers() {
-    categoryConfig.forEach((category, config) {
-      for (var field in config['fields']) {
-        String key = field['label'];
-
-        controllers[key] = TextEditingController();
-      }
-    });
+//date 30-3-26----------------
+  Map<String, TextEditingController> controllers = {};
+  Map<String, dynamic> selectedValues = {};
+  void initializeControllers(List<DynamicField> fields) {
+    for (var field in fields) {
+      controllers[field.fieldName] = TextEditingController();
+    }
   }
 
+//date 30-3-26----------------
   @override
   void dispose() {
     controllers.forEach((key, controller) {
@@ -50,30 +45,28 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
 
   /// new code   -----------------------------------end------------
 
-  String? _selectedCategory;
-  final List<String> fuelType = ["Diesel", "Petrol"];
-  final List<String> rentType = ["Hotel", "home", "A", "B"];
-  // final _amountController = TextEditingController();
-  //final _fuelTypeController = TextEditingController();
-  final commanController = TextEditingController();
-  final commanResuableController = TextEditingController();
-  final List<Map<String, dynamic>> _categories = [
-    {'name': 'Fuel', 'icon': Icons.local_gas_station},
-    {'name': 'Hotel', 'icon': Icons.home},
-    {'name': 'Transport', 'icon': Icons.local_shipping},
-    {'name': 'SiteItem', 'icon': Icons.construction},
-    {'name': 'Breakfast', 'icon': Icons.coffee},
-    {'name': 'Lunch', 'icon': Icons.lunch_dining},
-    {'name': 'Dinner', 'icon': Icons.restaurant},
-    {'name': 'Travel', 'icon': Icons.directions_bus},
-    {'name': 'Bike', 'icon': Icons.pedal_bike},
-    {'name': 'Boat', 'icon': Icons.directions_boat},
-    {'name': 'Labour', 'icon': Icons.engineering},
-    {'name': 'Water', 'icon': Icons.water_drop},
-    {'name': 'Stationary', 'icon': Icons.edit_note},
-    {'name': 'Grocery', 'icon': Icons.local_grocery_store},
-    {'name': 'Others', 'icon': Icons.border_outer_sharp},
-  ];
+  // final List<String> fuelType = ["Diesel", "Petrol"];
+  // final List<String> rentType = ["Hotel", "home", "A", "B"];
+
+  //final commanController = TextEditingController();
+  // final commanResuableController = TextEditingController();
+  // final List<Map<String, dynamic>> _categories = [
+  //   {'name': 'Fuel', 'icon': Icons.local_gas_station},
+  //   {'name': 'Hotel', 'icon': Icons.home},
+  //   {'name': 'Transport', 'icon': Icons.local_shipping},
+  //   {'name': 'SiteItem', 'icon': Icons.construction},
+  //   {'name': 'Breakfast', 'icon': Icons.coffee},
+  //   {'name': 'Lunch', 'icon': Icons.lunch_dining},
+  //   {'name': 'Dinner', 'icon': Icons.restaurant},
+  //   {'name': 'Travel', 'icon': Icons.directions_bus},
+  //   {'name': 'Bike', 'icon': Icons.pedal_bike},
+  //   {'name': 'Boat', 'icon': Icons.directions_boat},
+  //   {'name': 'Labour', 'icon': Icons.engineering},
+  //   {'name': 'Water', 'icon': Icons.water_drop},
+  //   {'name': 'Stationary', 'icon': Icons.edit_note},
+  //   {'name': 'Grocery', 'icon': Icons.local_grocery_store},
+  //   {'name': 'Others', 'icon': Icons.border_outer_sharp},
+  // ];
   IconData getCategoryIcon(String categoryName) {
     switch (categoryName.toLowerCase().trim()) {
       case 'fuel':
@@ -111,301 +104,306 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
   }
 
   final _formKey = GlobalKey<FormState>();
-  String? fuelTypee;
-  final Map<String, dynamic> categoryConfig = {
-    "Fuel": {
-      "fields": [
-        {
-          "type": "dropdown",
-          "label": "Fuel Type",
-          "items": ["Petrol", "Diesel", "CNG"],
-        },
-        {
-          "type": "text",
-          "label": "Fuel Amount",
-          "hint": "Enter fuel amount",
-          "validator": "amount",
-          "amount": "100"
-        },
-        {"type": "image", "label": "Fuel Receipt"},
-      ]
-    },
-    "Hotel": {
-      "fields": [
-        {
-          "type": "dropdown",
-          "label": "Select Hotel",
-          "items": ["Hotel", "Room", "Flat"],
-        },
-        {
-          "type": "text",
-          "label": "Rent Amount",
-          "hint": "Enter rent amount",
-          "validator": "amount",
-          "amount": "2000"
-        },
-      ]
-    },
-    "Transport": {
-      "fields": [
-        {
-          "type": "dropdown",
-          "label": "Transport Type",
-          "items": ["Coupe", "Suv", "Van"],
-        },
-        {
-          "type": "text",
-          "label": "From",
-          "hint": "Enter source",
-        },
-        {
-          "type": "text",
-          "label": "To",
-          "hint": "Enter destination",
-        },
-        {
-          "type": "text",
-          "label": "Transport Amount",
-          "hint": "Enter Freight Charges",
-          "validator": "amount",
-          "amount": "3000"
-        },
-      ]
-    },
-    "SiteItem": {
-      "fields": [
-        {
-          "type": "dropdown",
-          "label": "Select Item",
-          "items": ["Paint", "Brush", "InchTape", "ScrewDriver", "etc"],
-        },
-        {
-          "type": "text",
-          "label": "Amount",
-          "hint": "Enter amount",
-          "validator": "amount",
-          "amount": "100"
-        },
-      ]
-    },
-    "Breakfast": {
-      "fields": [
-        {
-          "type": "text",
-          "label": "Number of Member",
-          "hint": "Enter total member",
-          "validator": "amount",
-        },
-        {
-          "type": "text",
-          "label": "BreakFast Amount",
-          "hint": "Enter  amount",
-          "validator": "amount",
-          "amount": "200"
-        },
-      ]
-    },
-    "Lunch": {
-      "fields": [
-        {
-          "type": "text",
-          "label": "Number of Member",
-          "hint": "Enter total member",
-          "validator": "amount",
-        },
-        {
-          "type": "text",
-          "label": "Luch Amount",
-          "hint": "Enter  amount",
-          "validator": "amount",
-          "amount": "200"
-        },
-      ]
-    },
-    "Dinner": {
-      "fields": [
-        {
-          "type": "text",
-          "label": "Number of Member",
-          "hint": "Enter total member",
-          "validator": "amount",
-        },
-        {
-          "type": "text",
-          "label": "Dinner Amount",
-          "hint": "Enter  amount",
-          "validator": "amount",
-          "amount": "150"
-        },
-      ]
-    },
-    "Travel": {
-      "fields": [
-        {
-          "type": "dropdown",
-          "label": "Type Of Transport",
-          "items": ["Bus", "Train"],
-        },
-        {
-          "type": "text",
-          "label": "From",
-          "hint": "Enter source",
-        },
-        {
-          "type": "text",
-          "label": "To",
-          "hint": "Enter destination",
-        },
-        {
-          "type": "text",
-          "label": "Travel Amount",
-          "hint": "Enter amount",
-          "validator": "amount",
-          "amount": "3000"
-        },
-      ]
-    },
-    "Bike": {
-      "fields": [
-        {
-          "type": "dropdown",
-          "label": "Bike Type",
-          "items": ["Scooty", "Bike"],
-        },
-        {
-          "type": "text",
-          "label": "Bike Number",
-          "hint": "Enter Bike Number",
-          "validator": "amount",
-        },
-        {"type": "image", "label": "Bike Image"},
-        {
-          "type": "text",
-          "label": "Bike Amount",
-          "hint": "Enter Bike amount",
-          "validator": "amount",
-          "amount": "1000"
-        },
-      ]
-    },
-    "Boat": {
-      "fields": [
-        // {
-        //   "type": "dropdown",
-        //   "label": "Boat Type",
-        //   "items": [
-        //     "Airboat",
-        //     "Amphibious automobile",
-        //     "Bow rider",
-        //     "Cabin cruiser",
-        //     "Center console",
-        //     " dory"
-        //   ],
-        // },
-        {
-          "type": "text",
-          "label": "Boat Amount",
-          "hint": "Enter Boat amount",
-          "validator": "amount",
-          "amount": "1000"
-        },
-      ]
-    },
-    "Labour": {
-      "fields": [
-        {
-          "type": "dropdown",
-          "label": "Labour Type",
-          "items": [
-            "Physical Labour",
-            "Skilled Labour",
-            "Semi-skilled Labour",
-            "Unskilled Labour",
-            "Contract Labour",
-            " Casual Labour",
-            "Migrant Labour"
-          ],
-        },
-        {"type": "image", "label": "Image & ID"},
-        {
-          "type": "text",
-          "label": "Labour Amount",
-          "hint": "Enter labour amount",
-          "validator": "amount",
-          "amount": "1500"
-        },
-      ]
-    },
-    "Water": {
-      "fields": [
-        // {
-        //   "type": "text",
-        //   "label": "Total battles",
-        //   "hint": "Enter Total Battle",
-        //   "validator": "amount",
-        // },
-        {
-          "type": "text",
-          "label": "Water  Amount",
-          "hint": "Enter Water amount",
-          "validator": "amount",
-          "amount": "100"
-        },
-      ]
-    },
-    "Stationary": {
-      "fields": [
-        {
-          "type": "text",
-          "label": "Stationary Item",
-          "hint": "Enter Stationary item",
-          "validator": "amount",
-        },
-        {
-          "type": "text",
-          "label": "Water  Amount",
-          "hint": "Enter Stationary amount",
-          "validator": "amount",
-          "amount": "100"
-        },
-      ]
-    },
-    "Grocery": {
-      "fields": [
-        {
-          "type": "text",
-          "label": "Grocery Item",
-          "hint": "Enter Grocery item",
-          "validator": "amount",
-        },
-        {
-          "type": "text",
-          "label": "Grocery  Amount",
-          "hint": "Enter Grocery amount",
-          "validator": "amount",
-          "amount": "200"
-        },
-      ]
-    },
-    "Others": {
-      "fields": [
-        {
-          "type": "text",
-          "label": "Description",
-          "hint": "Enter description",
-        },
-        {
-          "type": "text",
-          "label": "Amount",
-          "hint": "Enter amount",
-          "validator": "amount",
-          "amount": "100"
-        },
-      ]
-    },
-  };
 
-  String selectedCategory = "";
+  // final Map<String, dynamic> categoryConfig = {
+  //   "Fuel": {
+  //     "fields": [
+  //       {
+  //         "type": "dropdown",
+  //         "label": "Fuel Type",
+  //         "items": ["Petrol", "Diesel", "CNG"],
+  //       },
+  //       {
+  //         "type": "text",
+  //         "label": "Fuel Amount",
+  //         "hint": "Enter fuel amount",
+  //         "validator": "amount",
+  //         "amount": "100"
+  //       },
+  //       {"type": "image", "label": "Fuel Receipt"},
+  //     ]
+  //   },
+  //   "Hotel": {
+  //     "fields": [
+  //       {
+  //         "type": "dropdown",
+  //         "label": "Select Hotel",
+  //         "items": ["Hotel", "Room", "Flat"],
+  //       },
+  //       {
+  //         "type": "text",
+  //         "label": "Rent Amount",
+  //         "hint": "Enter rent amount",
+  //         "validator": "amount",
+  //         "amount": "2000"
+  //       },
+  //     ]
+  //   },
+  //   "Transport": {
+  //     "fields": [
+  //       {
+  //         "type": "dropdown",
+  //         "label": "Transport Type",
+  //         "items": ["Coupe", "Suv", "Van"],
+  //       },
+  //       {
+  //         "type": "text",
+  //         "label": "From",
+  //         "hint": "Enter source",
+  //       },
+  //       {
+  //         "type": "text",
+  //         "label": "To",
+  //         "hint": "Enter destination",
+  //       },
+  //       {
+  //         "type": "text",
+  //         "label": "Transport Amount",
+  //         "hint": "Enter Freight Charges",
+  //         "validator": "amount",
+  //         "amount": "3000"
+  //       },
+  //     ]
+  //   },
+  //   "SiteItem": {
+  //     "fields": [
+  //       {
+  //         "type": "dropdown",
+  //         "label": "Select Item",
+  //         "items": ["Paint", "Brush", "InchTape", "ScrewDriver", "etc"],
+  //       },
+  //       {
+  //         "type": "text",
+  //         "label": "Amount",
+  //         "hint": "Enter amount",
+  //         "validator": "amount",
+  //         "amount": "100"
+  //       },
+  //     ]
+  //   },
+  //   "Breakfast": {
+  //     "fields": [
+  //       {
+  //         "type": "text",
+  //         "label": "Number of Member",
+  //         "hint": "Enter total member",
+  //         "validator": "amount",
+  //       },
+  //       {
+  //         "type": "text",
+  //         "label": "BreakFast Amount",
+  //         "hint": "Enter  amount",
+  //         "validator": "amount",
+  //         "amount": "200"
+  //       },
+  //     ]
+  //   },
+  //   "Lunch": {
+  //     "fields": [
+  //       {
+  //         "type": "text",
+  //         "label": "Number of Member",
+  //         "hint": "Enter total member",
+  //         "validator": "amount",
+  //       },
+  //       {
+  //         "type": "text",
+  //         "label": "Luch Amount",
+  //         "hint": "Enter  amount",
+  //         "validator": "amount",
+  //         "amount": "200"
+  //       },
+  //     ]
+  //   },
+  //   "Dinner": {
+  //     "fields": [
+  //       {
+  //         "type": "text",
+  //         "label": "Number of Member",
+  //         "hint": "Enter total member",
+  //         "validator": "amount",
+  //       },
+  //       {
+  //         "type": "text",
+  //         "label": "Dinner Amount",
+  //         "hint": "Enter  amount",
+  //         "validator": "amount",
+  //         "amount": "150"
+  //       },
+  //     ]
+  //   },
+  //   "Travel": {
+  //     "fields": [
+  //       {
+  //         "type": "dropdown",
+  //         "label": "Type Of Transport",
+  //         "items": ["Bus", "Train"],
+  //       },
+  //       {
+  //         "type": "text",
+  //         "label": "From",
+  //         "hint": "Enter source",
+  //       },
+  //       {
+  //         "type": "text",
+  //         "label": "To",
+  //         "hint": "Enter destination",
+  //       },
+  //       {
+  //         "type": "text",
+  //         "label": "Travel Amount",
+  //         "hint": "Enter amount",
+  //         "validator": "amount",
+  //         "amount": "3000"
+  //       },
+  //     ]
+  //   },
+  //   "Bike": {
+  //     "fields": [
+  //       {
+  //         "type": "dropdown",
+  //         "label": "Bike Type",
+  //         "items": ["Scooty", "Bike"],
+  //       },
+  //       {
+  //         "type": "text",
+  //         "label": "Bike Number",
+  //         "hint": "Enter Bike Number",
+  //         "validator": "amount",
+  //       },
+  //       {"type": "image", "label": "Bike Image"},
+  //       {
+  //         "type": "text",
+  //         "label": "Bike Amount",
+  //         "hint": "Enter Bike amount",
+  //         "validator": "amount",
+  //         "amount": "1000"
+  //       },
+  //     ]
+  //   },
+  //   "Boat": {
+  //     "fields": [
+  //       // {
+  //       //   "type": "dropdown",
+  //       //   "label": "Boat Type",
+  //       //   "items": [
+  //       //     "Airboat",
+  //       //     "Amphibious automobile",
+  //       //     "Bow rider",
+  //       //     "Cabin cruiser",
+  //       //     "Center console",
+  //       //     " dory"
+  //       //   ],
+  //       // },
+  //       {
+  //         "type": "text",
+  //         "label": "Boat Amount",
+  //         "hint": "Enter Boat amount",
+  //         "validator": "amount",
+  //         "amount": "1000"
+  //       },
+  //     ]
+  //   },
+  //   "Labour": {
+  //     "fields": [
+  //       {
+  //         "type": "dropdown",
+  //         "label": "Labour Type",
+  //         "items": [
+  //           "Physical Labour",
+  //           "Skilled Labour",
+  //           "Semi-skilled Labour",
+  //           "Unskilled Labour",
+  //           "Contract Labour",
+  //           " Casual Labour",
+  //           "Migrant Labour"
+  //         ],
+  //       },
+  //       {"type": "image", "label": "Image & ID"},
+  //       {
+  //         "type": "text",
+  //         "label": "Labour Amount",
+  //         "hint": "Enter labour amount",
+  //         "validator": "amount",
+  //         "amount": "1500"
+  //       },
+  //     ]
+  //   },
+  //   "Water": {
+  //     "fields": [
+  //       // {
+  //       //   "type": "text",
+  //       //   "label": "Total battles",
+  //       //   "hint": "Enter Total Battle",
+  //       //   "validator": "amount",
+  //       // },
+  //       {
+  //         "type": "text",
+  //         "label": "Water  Amount",
+  //         "hint": "Enter Water amount",
+  //         "validator": "amount",
+  //         "amount": "100"
+  //       },
+  //     ]
+  //   },
+  //   "Stationary": {
+  //     "fields": [
+  //       {
+  //         "type": "text",
+  //         "label": "Stationary Item",
+  //         "hint": "Enter Stationary item",
+  //         "validator": "amount",
+  //       },
+  //       {
+  //         "type": "text",
+  //         "label": "Water  Amount",
+  //         "hint": "Enter Stationary amount",
+  //         "validator": "amount",
+  //         "amount": "100"
+  //       },
+  //     ]
+  //   },
+  //   "Grocery": {
+  //     "fields": [
+  //       {
+  //         "type": "text",
+  //         "label": "Grocery Item",
+  //         "hint": "Enter Grocery item",
+  //         "validator": "amount",
+  //       },
+  //       {
+  //         "type": "text",
+  //         "label": "Grocery  Amount",
+  //         "hint": "Enter Grocery amount",
+  //         "validator": "amount",
+  //         "amount": "200"
+  //       },
+  //     ]
+  //   },
+  //   "Others": {
+  //     "fields": [
+  //       {
+  //         "type": "text",
+  //         "label": "Description",
+  //         "hint": "Enter description",
+  //       },
+  //       {
+  //         "type": "text",
+  //         "label": "Amount",
+  //         "hint": "Enter amount",
+  //         "validator": "amount",
+  //         "amount": "100"
+  //       },
+  //     ]
+  //   },
+  // };
+
+  //String selectedCategory = "";
+//?DATE 2-6-2============================================
+
+  int? selectedCategoryId;
+  String? selectedCategoryName;
+  final Map<String, dynamic> formData = {};
 
   @override
   Widget build(BuildContext context) {
@@ -419,31 +417,36 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
           }
         },
         child: Scaffold(
-            appBar: AppBar(
-              centerTitle: true,
-              flexibleSpace: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Color.fromARGB(255, 184, 203, 219),
-                      Color.fromARGB(255, 168, 243, 245)
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-              ),
-              title: const Text(
-                "EXPENSE CATEGORY",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.3,
+          appBar: AppBar(
+            centerTitle: true,
+            flexibleSpace: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color.fromARGB(255, 184, 203, 219),
+                    Color.fromARGB(255, 168, 243, 245)
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
               ),
             ),
-            body: SafeArea(
-              child: SingleChildScrollView(
+            title: const Text(
+              "EXPENSE CATEGORY",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.3,
+              ),
+            ),
+          ),
+          body: RefreshIndicator(
+            onRefresh: () async {
+              await context.read<Expensecontroller>().refreshExpenseCategory();
+            },
+            child: SingleChildScrollView(
+              physics: AlwaysScrollableScrollPhysics(),
+              child: SafeArea(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -457,121 +460,173 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
                       child: const Text('Select Category:',
                           style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
-                    //SELCYT EXPENSE CATEGORY BASED ON INDEX.... VARIABLE.............
+                    //calling method for select list of category top of the screen
                     Consumer<Expensecontroller>(
                       builder: (context, controller, child) =>
                           _buildCategoryItem(controller),
                     ),
                     Divider(),
-                   //TODO// buildDynamicForm(),
-                  // buildDynamicUpdateform
+                    //calling provider method.... dynamic text form field for fill update use expense.....
                     Consumer<Expensecontroller>(
-                      builder: (context, controller, child) =>
-                           buildDynamicUpdateform(controller)
-                    ),
+                        builder: (context, controller, child) =>
+                            buildDynamicExpenseForm(controller)),
                   ],
                 ),
               ),
-            )));
+            ),
+          ),
+        ));
   }
 
   Widget selectImageAndFill(String label) {
     return Consumer<Expensecontroller>(
       builder: (context, expenseController, child) {
-        if (expenseController.isImage == false &&
-            expenseController.isFile == false) {
-          return Center(
-            child: AppButton(
-              text: label,
-              onPressed: () async {
+        // No Image Selected
+        if (!expenseController.isImage && !expenseController.isFile) {
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () async {
                 FocusScope.of(context).unfocus();
+
                 final result = await showDialogBoxForImage(context);
+
                 if (result == "image") {
                   expenseController.selectMutlipleImageFromGallery();
                 } else if (result == "file") {
                   expenseController.selectPdfDocFromDevice();
                 }
               },
-              buttonColor: Colors.blue,
-              borderRadius: 80,
-              elevation: 4,
-              padding: 12,
-              fontSize: 12,
-              textColor: Colors.white,
-              fontWeight: FontWeight.bold,
-              width: MediaQuery.of(context).size.width * 0.3,
-              height: 40,
-              borderWidth: 0,
-            ),
-          );
-        }
-
-        if (expenseController.listofImage.isNotEmpty) {
-          final image = expenseController.listofImage;
-          return Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-              ),
-              itemCount: image.length + 1,
-              itemBuilder: (context, index) {
-                if (index == image.length) {
-                  return GestureDetector(
-                    onTap: () {
-                      expenseController.selectMutlipleImageFromGallery();
-                    },
-                    child: Container(
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.add, size: 40),
-                    ),
-                  );
-                }
-
-                final img = image[index];
-                // FIXED: Stack is now placed correctly inside the grid item cell
-                return Stack(
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 24,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.blue.shade300,
+                  ),
+                ),
+                child: Column(
                   children: [
-                    Positioned.fill(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.file(
-                          File(img),
-                          fit: BoxFit.cover,
-                        ),
+                    const Icon(
+                      Icons.cloud_upload_outlined,
+                      size: 40,
+                      color: Colors.blue,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    Positioned(
-                      right: 4,
-                      top: 4,
-                      child: GestureDetector(
-                        onTap: () {
-                          expenseController.clearImageList(index);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: const BoxDecoration(
-                            color: Colors.black54,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.close,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      "Tap to upload images or PDF",
+                      style: TextStyle(fontSize: 12),
                     ),
                   ],
-                );
-              },
+                ),
+              ),
             ),
           );
         }
+
+        // Image Preview
+        if (expenseController.listofImage.isNotEmpty) {
+          final images = expenseController.listofImage;
+
+          return Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Uploaded Image (${images.length})",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                  ),
+                  itemCount: images.length + 1,
+                  itemBuilder: (context, index) {
+                    // Add More Tile
+                    if (index == images.length) {
+                      return InkWell(
+                        onTap: () {
+                          expenseController.selectMutlipleImageFromGallery();
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.grey,
+                            ),
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.add,
+                              size: 35,
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+
+                    final img = images[index];
+
+                    return Stack(
+                      children: [
+                        Positioned.fill(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.file(
+                              File(img),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: 5,
+                          right: 5,
+                          child: InkWell(
+                            onTap: () {
+                              expenseController.clearImageList(index);
+                            },
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
+                              padding: const EdgeInsets.all(4),
+                              child: const Icon(
+                                Icons.close,
+                                size: 16,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
+          );
+        }
+
         return const SizedBox();
       },
     );
@@ -607,126 +662,56 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
     );
   }
 
-  Widget _buildDropDownText(
-      List<dynamic> item, String label, TextEditingController controller) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Container(
-          // decoration: BoxDecoration(
-          //   color: Colors.red,
-          // ),
-          width: SizeConFig.proportionalWidth * 5,
-          child: TextField(
-            controller: controller,
-            readOnly: true,
-            decoration: InputDecoration(
-              labelText: label,
-              filled: true,
-              fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 18,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(
-                  color: Colors.grey.shade400,
-                  width: 1.2,
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(
-                  color: Colors.grey.shade400,
-                  width: 1.2,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(
-                  color: Theme.of(context).primaryColor,
-                  width: 1.5,
-                ),
-              ),
-              prefixIcon: const Icon(
-                Icons.local_gas_station,
-              ),
-              suffixIcon: PopupMenuButton<String>(
-                icon: const Icon(Icons.arrow_drop_down),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                onSelected: (value) {
-                  setState(() {
-                    // selectedFuelType = value;
-                    // controller.text = value;
-                    // _fuelTypeController.text = value;
-                    controller.text = value;
-                  });
-                },
-                itemBuilder: (BuildContext context) {
-                  return item.map((item) {
-                    return PopupMenuItem<String>(
-                      value: item,
-                      child: Text(item),
-                    );
-                  }).toList();
-                },
-              ),
-            ),
-          )),
-    );
-  }
-
   Widget _buildCategoryItem(Expensecontroller controller) {
-    if (controller.isLoadExpenseCategory) {
+    if (controller.isLoadExpenseCategory &&
+        controller.expenseCateList.isEmpty) {
       return Center(child: CircularProgressIndicator());
     }
-    // if (controller.catError! == true) {
-    //   return Text("${controller.catError}");
-    // }
-    if (controller.expenseCateList.isEmpty) {
-      return SizedBox();
+    if (controller.catError != null && controller.expenseCateList.isEmpty) {
+      return Center(child: Text("Failed to load categories"));
     }
-    return Container(
-      //height: 285,
+    if (controller.expenseCateList.isEmpty) {
+      return const SizedBox();
+    }
+
+    return SizedBox(
       height: SizeConFig.screenHeight * 0.28,
       child: GridView.builder(
         padding: const EdgeInsets.all(16),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 5,
           crossAxisSpacing: 4,
-          //
-          //mainAxisSpacing: 10
         ),
-        //itemCount: _categories.length,
         itemCount: controller.expenseCateList.length,
         itemBuilder: (context, index) {
           final data = controller.expenseCateList[index];
-
-          // final cat = _categories[index];
-          // final cat = controller.expenseCateList[index];
-          //bool isSelected = _selectedCategory == cat['name'];
-          bool isSelected = _selectedCategory == data.categoryName;
-
+          bool isSelected = selectedCategoryId == data.id;
           return GestureDetector(
-            // onTap: () {
-            //   setState(() {
-            //     _selectedCategory = cat["name"];
-            //     selectedCategory = _categories[index]['name'];
-            //   });
-            onTap: () {
-              controller.dynamicFormField(data.id);
-              setState(() {
-                _selectedCategory = data.categoryName;
-                //_selectedCategory = cat.categoryName;
-                // selectedCategory = _categories[index]['name'];
+            onTap: () async {
+              // current code always calls API:
+              if (selectedCategoryId == data.id) {
+                return;
+              }
+              // Clear previous form data
+              controllers.forEach((key, controller) {
+                controller.clear();
               });
-              // controller.setIndexValue(index);
+              controllers.clear();
+              selectedValues.clear();
+              formData.clear();
+              //for clear image form provider
+              controller.clearAllAttachments();
+
+              await controller.dynamicFormField(data.id);
+              setState(() {
+                selectedCategoryId = data.id;
+                selectedCategoryName = data.categoryName;
+              });
             },
             child: Container(
               decoration: BoxDecoration(
                 color: isSelected
+
                     // ignore: deprecated_member_use
                     ? Colors.blue.withOpacity(0.2)
                     : Colors.grey[100],
@@ -763,10 +748,10 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             _buildIncreseDecrseButton(
-                () => controller.changeDate(-1), Icons.arrow_forward_ios),
+                () => controller.changeDate(-1), Icons.arrow_back),
             Text("${controller.dateFormat.format(controller.selectedDate)}"),
             _buildIncreseDecrseButton(
-                () => controller.changeDate(1), Icons.arrow_back_ios_new_sharp)
+                () => controller.changeDate(1), Icons.arrow_forward)
           ],
         )),
       ),
@@ -793,169 +778,62 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
     );
   }
 
-  Widget _createResuableTextFiled(
-    TextEditingController controller,
-    String label,
-    String hint, {
-    String? validatorType,
-    String? validateAmount,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Container(
-          width: SizeConFig.proportionalWidth * 5,
-          child: AppTextField(
-            controller: controller,
-            label: label,
-            //   focusNode: _myFocusNode,
-            hint: hint,
-            keyboardType: TextInputType.numberWithOptions(),
-            // validator: (value) {
-            //   if (value == null || value.trim().isEmpty) {
-            //     return "Please enter $label";
-            //   }
-
-            //   /// Amount Validation
-            //   if (validatorType == "amount") {
-            //     final number = int.tryParse(value);
-
-            //     if (number == null) {
-            //       return "Invalid amount";
-            //     }
-
-            //     if (number > 100) {
-            //       return "Amount too large";
-            //     }
-            //   }
-
-            //   /// Number Validation
-            //   if (validatorType == "number") {
-            //     if (int.tryParse(value) == null) {
-            //       return "Only numbers allowed";
-            //     }
-            //   }
-
-            //   return null;
-            // },
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return "please enter $label";
-              }
-              final validAmount = int.tryParse(validateAmount!);
-              if (validatorType == "amount") {
-                final number = int.tryParse(value);
-                if (number == null) {
-                  return "Invalid amount";
-                }
-                if (number > validAmount!) {
-                  return "Amount too Large >${validAmount}";
-                }
-              }
-              return null;
-            },
-          )),
+  void submitForm() {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    final expenseController = context.read<Expensecontroller>();
+    final payload = {
+      "expenseCategoryId": selectedCategoryId,
+      "expenseCategoryName": selectedCategoryName,
+      "expenseFields": formData,
+      "attachments": List<String>.from(expenseController.listofImage),
+    };
+    debugPrint(payload.toString());
+    ShowTaostMessage.toastMessage(
+      context,
+      "Data Submitted",
     );
   }
 
-  Widget buildDynamicUpdateform(Expensecontroller controller) {
-    if (controller.showAllField==true) {
-      return CircularProgressIndicator();
+  //DATE NEW CODE ..............................1=6-26
+  double maxAllowedAmount = 0;
+  Widget buildDynamicExpenseForm(Expensecontroller controller) {
+    if (controller.showAllField) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
     }
-    if (controller.dynamicField.isEmpty) {
-      return SizedBox();
-    }
-    final field = controller.dynamicField;
-    return Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            ...field.map((field) {
-              final label = field.fieldLabel;
-              final controller = controllers[label];
-              if (field.fieldType == "DROPDOWN") {
-                return _buildDropDownText(field.optionss, label, controller!);
-              }
-              if (field.fieldType == "TEXT") {
-                return _createResuableTextFiled(
-                    controller!, field.fieldLabel, "a");
-              }
-              //  if (field.fieldType == "NUMBER") {
-              //   return _createResuableTextFiled(
-              //       controller!, field.fieldLabel,"enter");
-              // }
-              if(field.fieldType=="NUMBER")
-              {
-                return TextField();
-              }
-              if (field.fieldType == "IMAGE") {
-                return selectImageAndFill(field.fieldLabel);
-              }
-              return SizedBox();
-            }).toList(),
-            ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  ShowTaostMessage.toastMessage(
-                    context,
-                    "Processing Data",
-                  );
-                }
-                submitForm();
-              },
-              child: const Text("Submit"),
-            )
-          ],
-        ));
-  }
 
-  Widget buildDynamicForm() {
-    if (selectedCategory.isEmpty) {
+    if (controller.dynamicField.isEmpty) {
       return const SizedBox();
     }
-
-    final fields = categoryConfig[selectedCategory]["fields"];
 
     return Form(
       key: _formKey,
       child: Column(
-        //  / mainAxisAlignment: MainAxisAlignment.start,
-        //crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          ...fields.map<Widget>((field) {
-            /// DROPDOWN
-            final label = field["label"];
-            final controller = controllers[label]!;
-            if (field["type"] == "dropdown") {
-              return _buildDropDownText(
-                  List<String>.from(field["items"]), label, controller);
-            }
+          ...controller.dynamicField.map((field) {
+            switch (field.fieldType) {
+              case "DROPDOWN":
+                return buildDropdown(field);
 
-            /// TEXTFIELD
-            if (field["type"] == "text") {
-              return _createResuableTextFiled(
-                  //commanResuableController, field["label"], field["hint"],
-                  controller,
-                  label,
-                  field["hint"],
-                  validatorType: field["validator"],
-                  validateAmount: field["amount"]);
-            }
-            if (field["type"] == "image") {
-              return selectImageAndFill(field["label"]);
-            }
+              case "TEXT":
+                return buildTextField(field);
 
-            return const SizedBox();
+              case "NUMBER":
+                return buildNumberField(field);
+
+              case "IMAGE":
+                return buildImageField(field);
+
+              default:
+                return const SizedBox();
+            }
           }).toList(),
           ElevatedButton(
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                ShowTaostMessage.toastMessage(
-                  context,
-                  "Processing Data",
-                );
-              }
-              submitForm();
-            },
+            // onPressed: submitValidation,
+            onPressed: submitForm,
             child: const Text("Submit"),
           )
         ],
@@ -963,48 +841,172 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
     );
   }
 
-  void submitForm() {
-    if (_formKey.currentState!.validate()) {
-      Map<String, dynamic> finalData = {};
+  Widget buildImageField(DynamicField field) {
+    return FormField(
+      validator: (value) {
+        final expenseController =
+            Provider.of<Expensecontroller>(context, listen: false);
 
-      final fields = categoryConfig[selectedCategory]["fields"];
+        if (field.isRequired &&
+            expenseController.listofImage.isEmpty &&
+            expenseController.isFile == false) {
+          return "${field.fieldLabel} is required";
+        }
 
-      for (var field in fields) {
-        String label = field["label"];
+        return null;
+      },
+      builder: (FormFieldState state) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            selectImageAndFill(field.fieldLabel),
+            if (state.hasError)
+              Padding(
+                padding: const EdgeInsets.only(left: 16, top: 4),
+                child: Text(
+                  state.errorText!,
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
 
-        finalData[label] = controllers[label]?.text ?? "";
-      }
+  Widget buildTextField(DynamicField field) {
+    controllers.putIfAbsent(
+      field.fieldName,
+      () => TextEditingController(),
+    );
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: TextFormField(
+        controller: controllers[field.fieldName],
+        onChanged: (value) {
+          formData[field.fieldName] = value.trim();
+        },
+        decoration: InputDecoration(
+          labelText: field.fieldLabel,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        validator: (value) {
+          if (field.isRequired && (value == null || value.trim().isEmpty)) {
+            return "${field.fieldLabel} is required";
+          }
+          return null;
+        },
+      ),
+    );
+  }
 
-      finalData["category"] = selectedCategory;
+  Widget buildDropdown(DynamicField field) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: DropdownButtonFormField<String>(
+        menuMaxHeight: 250,
+        itemHeight: 50,
+        isDense: true,
+        isExpanded: true,
+        borderRadius: BorderRadius.circular(12),
+        value: selectedValues[field.fieldName],
+        decoration: InputDecoration(
+            labelText: field.fieldLabel,
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(
+                  color: Colors.grey.shade400,
+                  width: 1.2,
+                )),
+            filled: true),
+        items: field.optionss.map((option) {
+          return DropdownMenuItem(
+            value: option.label,
+            child: Text(option.label),
+            onTap: () {
+              maxAllowedAmount = option.value;
+            },
+          );
+        }).toList(),
+        onChanged: (value) {
+          setState(() {
+            selectedValues[field.fieldName] = value;
+            formData[field.fieldName] = value;
+          });
+        },
+        validator: (value) {
+          if (field.isRequired && (value == null || value.isEmpty)) {
+            return "${field.fieldLabel} is required";
+          }
+          return null;
+        },
+      ),
+    );
+  }
 
-      print(finalData);
+  Widget buildNumberField(DynamicField field) {
+    controllers.putIfAbsent(
+      field.fieldName,
+      () => TextEditingController(),
+    );
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: TextFormField(
+        controller: controllers[field.fieldName],
+        keyboardType: TextInputType.number,
+        onChanged: (value) {
+          formData[field.fieldName] = int.tryParse(value);
+        },
+        decoration: InputDecoration(
+          labelText: field.fieldLabel,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        validator: (value) {
+          if (field.isRequired && (value == null || value.isEmpty)) {
+            return "${field.fieldLabel} is required";
+          }
 
-      /*
-    OUTPUT:
+          final amount = int.tryParse(value ?? "");
 
-    {
-      category: Fuel,
-      Fuel Type: Diesel,
-      Fuel Amount: 50
-    }
+          if (amount == null) {
+            return "Enter valid amount";
+          }
+          if (field.fieldName.toLowerCase() == "amount") {
+            if (amount > maxAllowedAmount) {
+              return "Maximum ₹$maxAllowedAmount allowed";
+            }
+          }
 
-    */
-
-      ShowTaostMessage.toastMessage(
-        context,
-        "Data Submitted",
-      );
-    }
+          return null;
+        },
+      ),
+    );
   }
 }
-  // Padding(
-              //   padding: const EdgeInsets.all(16.0),
-              //   child: TextFormField(
-              //     controller: _amountController,
-              //     keyboardType: TextInputType.number,
-              //     decoration: const InputDecoration(
-              //         labelText: 'Amount', border: OutlineInputBorder()),
-              //     validator: (v) =>
-              //         (v == null || v.isEmpty) ? 'Enter amount' : null,
-              //   ),
-              // ),
+// {
+//   "expenseCategoryId": 1,
+//   "expenseCategoryName": "Fuel",
+//   "expenseFields": {
+//     "Fuel": "HP Petrol Pump",
+//     "Fuel-Type": "Petrol",
+//     "Amount": 500,
+//     "Bill-Image": [
+//       "/storage/emulated/0/Download/bill1.jpg",
+//       "/storage/emulated/0/Download/bill2.jpg"
+//     ]
+//   }
+// }
+// setState(() {
+//   selectedCategoryId = data.id;
+//   selectedCategoryName = data.categoryName;
+
+//   formData.clear();
+//   selectedValues.clear();
+
+//   controllers.forEach((key, controller) {
+//     controller.clear();
+//   });
+// });

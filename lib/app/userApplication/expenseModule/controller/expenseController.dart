@@ -8,9 +8,6 @@ import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/model
 import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/model/expenseDynamicFieldResponseModel.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/service/expenseModuleService.dart';
 import 'package:truenorthflutterfrontend/public/config/platform_type.dart';
-import 'package:truenorthflutterfrontend/public/utils/userUtil/api_result.dart';
-
-import '../model/expenseDynamicFieldResponseModel.dart';
 
 class Expensecontroller extends ChangeNotifier {
   Expensemoduleservice _service = Expensemoduleservice();
@@ -147,12 +144,15 @@ class Expensecontroller extends ChangeNotifier {
   final ImagePicker imagePicker = ImagePicker();
   void selectMutlipleImageFromGallery() async {
     final List<XFile>? selectedImages = await imagePicker.pickMultiImage();
-    if (selectedImages!.isNotEmpty) {
-      List<String> item = selectedImages.map((item) => (item.path)).toList();
-      _listofImage.addAll(item);
-      _isImage = true;
-      notifyListeners();
+    if (selectedImages == null || selectedImages.isEmpty) {
+      return;
     }
+    _listofImage.addAll(
+      selectedImages.map((e) => e.path),
+    );
+    _isImage = true;
+
+    notifyListeners();
   }
 
 //CLEAR IMAGE ON TAB CLOSE BUTTON
@@ -200,6 +200,18 @@ class Expensecontroller extends ChangeNotifier {
     }
   }
 
+  void clearAllAttachments() {
+    _listofImage.clear();
+
+    _isImage = false;
+
+    _isFile = false;
+
+    //selectedFile = null; // if you have pdf/file
+
+    notifyListeners();
+  }
+
   void resetControllerState() {
     _listofImage.clear();
     _listOfFilesPdfDoc.clear();
@@ -214,22 +226,43 @@ class Expensecontroller extends ChangeNotifier {
   List<ExpenseCategory> _expCateList = [];
   List<ExpenseCategory> get expenseCateList => _expCateList;
   ApiError? catError;
-  Future<void> fatchExpenseCategory() async {
+  bool get hasExpenseCategory => _expCateList.isNotEmpty;
+  Future<void> fatchExpenseCategory({bool forceRefresh = false}) async {
+    if (_expCateList.isNotEmpty && !forceRefresh) {
+      return;
+    }
     _isLoadExpenseCategory = true;
-    catError = null; 
+    catError = null;
     notifyListeners();
     try {
       final response = await _service.fatchExpenseCategory();
 
       if (response.isSuccess) {
         _expCateList = response.data.data;
-        
       } else {
         catError = response.error;
       }
     } catch (e) {
       _expCateList = [];
-  catError = ApiError.unknown;
+      catError = ApiError.unknown;
+    } finally {
+      _isLoadExpenseCategory = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> refreshExpenseCategory() async {
+    _isLoadExpenseCategory = true;
+    notifyListeners();
+
+    try {
+      final response = await _service.fatchExpenseCategory();
+
+      if (response.isSuccess) {
+        _expCateList = response.data.data;
+      }
+    } catch (e) {
+      catError = ApiError.unknown;
     } finally {
       _isLoadExpenseCategory = false;
       notifyListeners();
@@ -242,17 +275,24 @@ class Expensecontroller extends ChangeNotifier {
   List<DynamicField> _dynamicField = [];
   List<DynamicField> get dynamicField => _dynamicField;
   String? _errorMessage;
+  final Map<int, List<DynamicField>> _dynamicFieldCache = {};
 
-  Future<void> dynamicFormField(int id) async {
+  Future<void> dynamicFormField(int categoryId) async {
+    if (_dynamicFieldCache.containsKey(categoryId)) {
+      _dynamicField = _dynamicFieldCache[categoryId]!;
+      notifyListeners();
+      return;
+    }
+
     _showAllField = true;
     _errorMessage = null;
     notifyListeners();
     try {
-      final output = await _service.fatchDynamicFieldReponse(id);
+      final output = await _service.fatchDynamicFieldReponse(categoryId);
       if (output.isSuccess) {
         _dynamicField = output.data.data;
-        
-        
+        _dynamicFieldCache[categoryId] =
+            List<DynamicField>.from(output.data.data);
       }
     } catch (e) {
       _errorMessage = e.toString();
@@ -266,4 +306,5 @@ class Expensecontroller extends ChangeNotifier {
     // _formValues[fieldName] = value;
     notifyListeners();
   }
+  
 }

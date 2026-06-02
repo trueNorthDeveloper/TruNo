@@ -916,3 +916,45 @@ Future<void> sendSurvey() async {
     //     ],
     //   ),
     // );
+    ==========================================
+    // Widget buildDropdown(
+  //   DynamicField field,
+  // ) {
+  //   return Padding(
+  //     padding: const EdgeInsets.all(16.0),
+  //     child: Container(
+  //       width: SizeConFig.proportionalWidth * 5,
+  //       child: DropdownButtonFormField<String>(
+  //         value: controllers[field.fieldName]?.text.isEmpty == true
+  //             ? null
+  //             : controllers[field.fieldName]?.text,
+  //         decoration: InputDecoration(
+  //           border: OutlineInputBorder(
+  //             borderRadius: BorderRadius.circular(14),
+  //             borderSide: BorderSide(
+  //               color: Colors.grey.shade400,
+  //               width: 1.2,
+  //             ),
+  //           ),
+  //           filled: true,
+  //           labelText: field.fieldLabel,
+  //         ),
+  //         items: field.optionss.map((option) {
+  //           return DropdownMenuItem<String>(
+  //             value: option.label,
+  //             child: Text(option.label),
+  //           );
+  //         }).toList(),
+  //         onChanged: (value) {
+  //           controllers[field.fieldName]?.text = value ?? '';
+  //         },
+  //         validator: (value) {
+  //           if (field.isRequired && (value == null || value.isEmpty)) {
+  //             return "${field.fieldLabel} is required";
+  //           }
+  //           return null;
+  //         },
+  //       ),
+  //     ),
+  //   );
+  // }
