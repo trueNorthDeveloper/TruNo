@@ -4,7 +4,9 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/controller/expenseController.dart';
+import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/model/myBalanceResponse.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/view/userExpenseCategoryScreen.dart';
+import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/view/userTranscationHistory.dart';
 import 'package:truenorthflutterfrontend/public/utils/userUtil/size_config.dart';
 
 class UserExpenseScreens extends StatefulWidget {
@@ -20,6 +22,9 @@ class _UserexpensescreenzsState extends State<UserExpenseScreens> {
     super.initState();
     // Fetch and format on page open
     Provider.of<Expensecontroller>(context, listen: false).resetDate();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<Expensecontroller>().getMyAccountBalace();
+    });
   }
 
   @override
@@ -47,6 +52,23 @@ class _UserexpensescreenzsState extends State<UserExpenseScreens> {
             letterSpacing: 1.3,
           ),
         ),
+        actions: [
+          Row(
+            children: [
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Usertranscationhistory(),
+                      ));
+                },
+                icon: const Icon(Icons.remove_red_eye),
+                label: const Text('Transcations'),
+              )
+            ],
+          )
+        ],
       ),
       body: SingleChildScrollView(
         child: SafeArea(
@@ -56,7 +78,12 @@ class _UserexpensescreenzsState extends State<UserExpenseScreens> {
             //   height: SizeConFig.screenHeight * 1 / 100,
             // ),
             //TOTAL SUMMARY TOP OF THE SCREEN...
-            _buildTotalSummary(),
+
+            Consumer<Expensecontroller>(builder: (context, prov, child) {
+              if (prov.showBalance) return CircularProgressIndicator();
+              return _buildTotalSummary(prov.myBalanceResponse);
+            }),
+
             //SHOW CALENDAR WITH AMOUNT
             _expenseShowCalendar(),
 
@@ -290,7 +317,7 @@ class _UserexpensescreenzsState extends State<UserExpenseScreens> {
     );
   }
 
-  Widget _buildTotalSummary() {
+  Widget _buildTotalSummary(MyBalanceRespone? myBalanceResponse) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Container(
@@ -311,18 +338,26 @@ class _UserexpensescreenzsState extends State<UserExpenseScreens> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            _buildTextAndAmount("Paid", "2,000", Colors.green),
+            // _buildTextAndAmount("Paid", "2,000", Colors.green),
+            // _divider(),
+            // _buildTextAndAmount("Balance", "900", Colors.blueGrey),
+            // _divider(),
+            // _buildTextAndAmount("Total", "100", Colors.redAccent),
+            _buildTextAndAmount("Paid",
+                myBalanceResponse?.data?.totalCreditAmount, Colors.green),
             _divider(),
-            _buildTextAndAmount("Balance", "900", Colors.blueGrey),
+            _buildTextAndAmount("Balance",
+                myBalanceResponse?.data?.availableAmount, Colors.blueGrey),
             _divider(),
-            _buildTextAndAmount("Total", "100", Colors.redAccent),
+            _buildTextAndAmount("Expense",
+                myBalanceResponse?.data?.totalExpenseAmount, Colors.redAccent),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTextAndAmount(String name, String amount, Color color) {
+  Widget _buildTextAndAmount(String name, dynamic amount, Color color) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [

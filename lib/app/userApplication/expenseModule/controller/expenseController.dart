@@ -1,3 +1,4 @@
+import 'dart:core';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -6,24 +7,13 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/model/expenseCategoryResponse.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/model/expenseDynamicFieldResponseModel.dart';
+import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/model/myBalanceResponse.dart';
+import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/model/transactionHistoryResponse.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/service/expenseModuleService.dart';
 import 'package:truenorthflutterfrontend/public/config/platform_type.dart';
 
 class Expensecontroller extends ChangeNotifier {
   Expensemoduleservice _service = Expensemoduleservice();
-  DateTime selectedDate = DateTime.now();
-  final DateFormat dateFormat = DateFormat('dd-MM-yyyy');
-  //yyyy-MM-dd');
-  //CHANGE DATE ON CLICK BUTTON
-  void changeDate(int days) async {
-    selectedDate = selectedDate.add(Duration(days: days));
-    notifyListeners();
-  }
-
-//RESET DATE WITH CURRENT DATE
-  void resetDate() {
-    selectedDate = DateTime.now();
-  }
 
 //expense with calendar.............................
   DateTime? _focusedDay = DateTime.now();
@@ -220,6 +210,35 @@ class Expensecontroller extends ChangeNotifier {
     notifyListeners();
   }
 
+  DateTime selectedDate = DateTime.now();
+  // final DateFormat dateFormat = DateFormat('dd-MM-yyyy');
+
+  final DateFormat dateFormat = DateFormat('dd-MM-yyyy'); // UI Display format
+  final DateFormat apiDateFormat = DateFormat('yyyy-MM-dd'); // API format
+  void changeDate(int days) async {
+    selectedDate = selectedDate.add(Duration(days: days));
+
+    await fetchExpenseCategoryBySelectedDate();
+    notifyListeners();
+  }
+
+  //show category
+  bool isCategoryLoading = false;
+  Future<void> fetchExpenseCategoryBySelectedDate() async {
+    isCategoryLoading = true;
+    notifyListeners();
+    String formateDate = apiDateFormat.format(selectedDate);
+    print(formateDate);
+    await fatchExpenseCategory(formateDate);
+    isCategoryLoading = false;
+    notifyListeners();
+  }
+
+//RESET DATE WITH CURRENT DATE
+  void resetDate() {
+    selectedDate = DateTime.now();
+  }
+
 //EXPENSE CATEGORY PROVIDER METHOD..............................
   bool _isLoadExpenseCategory = false;
   bool get isLoadExpenseCategory => _isLoadExpenseCategory;
@@ -227,7 +246,8 @@ class Expensecontroller extends ChangeNotifier {
   List<ExpenseCategory> get expenseCateList => _expCateList;
   ApiError? catError;
   bool get hasExpenseCategory => _expCateList.isNotEmpty;
-  Future<void> fatchExpenseCategory({bool forceRefresh = false}) async {
+  Future<void> fatchExpenseCategory(String date,
+      {bool forceRefresh = false}) async {
     if (_expCateList.isNotEmpty && !forceRefresh) {
       return;
     }
@@ -235,7 +255,7 @@ class Expensecontroller extends ChangeNotifier {
     catError = null;
     notifyListeners();
     try {
-      final response = await _service.fatchExpenseCategory();
+      final response = await _service.fatchExpenseCategory(date);
 
       if (response.isSuccess) {
         _expCateList = response.data.data;
@@ -251,12 +271,12 @@ class Expensecontroller extends ChangeNotifier {
     }
   }
 
-  Future<void> refreshExpenseCategory() async {
+  Future<void> refreshExpenseCategory(String date) async {
     _isLoadExpenseCategory = true;
     notifyListeners();
 
     try {
-      final response = await _service.fatchExpenseCategory();
+      final response = await _service.fatchExpenseCategory(date);
 
       if (response.isSuccess) {
         _expCateList = response.data.data;
@@ -306,5 +326,90 @@ class Expensecontroller extends ChangeNotifier {
     // _formValues[fieldName] = value;
     notifyListeners();
   }
-  
+
+  ///fatth user account balance datw 2-7-26
+  bool _showBalance = false;
+  bool get showBalance => _showBalance;
+  // MyBalanceRespone?  _myBalanceRespone;
+  // MyBalanceRespone get MyBalanceRespone => _myBalanceRespone;
+  MyBalanceRespone? _myBalanceResponse;
+
+  MyBalanceRespone? get myBalanceResponse => _myBalanceResponse;
+
+  Future<void> getMyAccountBalace() async {
+    _showBalance = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final balance = await _service.fatchMyAccountBalance();
+      if (balance.isSuccess) {
+        _myBalanceResponse = balance.data;
+        //print(balance.data);
+      }
+    } catch (e) {
+      _errorMessage = e.toString();
+    } finally {
+      _showBalance = false;
+      notifyListeners();
+    }
+  }
+
+  //----------------------------------------------------------
+  //user account transcation using pagination...........
+  bool _isLoadTranscation = false;
+  bool get isLoadTranscation => _isLoadTranscation;
+
+  List<TransactionContent> _transcationHistory = [];
+  List<TransactionContent> get transcationHistory => _transcationHistory;
+
+  int _currentPage = 0;
+  final int _size = 10;
+  bool _isLastPage = false;
+  ApiError? error;
+
+  Future<void> fatchTranscationHistory() async {
+    if (_isLoadTranscation || _isLastPage) return;
+
+    _isLoadTranscation = true;
+    error = null;
+    notifyListeners();
+
+    try {
+      final transcationResponse =
+          await _service.fatchAccountHistory(_currentPage, _size);
+      if (transcationResponse.isSuccess && transcationResponse.data != null) {
+        final pageData = transcationResponse.data!;
+
+        if (pageData.content != null) {
+          _transcationHistory.addAll(pageData.content!);
+        }
+        _isLastPage = pageData.last ?? true;
+        _currentPage++;
+      } else {
+        error = transcationResponse.error;
+      }
+    } catch (e) {
+      error = ApiError.unknown;
+    } finally {
+      _isLoadTranscation = false;
+      notifyListeners();
+    }
+  }
+
+  //EXPENSE SUBMIT CONTROLLER ................
+  bool _isSubmitExpense = false;
+  bool get isSubmitExpense => _isSubmitExpense;
+
+  Future<void> expenseSubmitCoontroller() async {
+    _isSubmitExpense = true;
+    notifyListeners();
+    try {
+      //final requestResponse = await _service.submitExpenseService();
+      //if (requestResponse!.isSuccess) {}
+    } catch (e) {
+    } finally {
+      _isSubmitExpense = false;
+      notifyListeners();
+    }
+  }
 }
