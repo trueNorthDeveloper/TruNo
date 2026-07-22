@@ -1,11 +1,9 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/controller/expenseController.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/model/expenseDynamicFieldResponseModel.dart';
-import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/model/expenseSubmitRequest.dart';
 import 'package:truenorthflutterfrontend/public/utils/userUtil/mesage_snack_bar.dart';
 import 'package:truenorthflutterfrontend/public/utils/userUtil/size_config.dart';
 
@@ -15,19 +13,22 @@ class Userexpensecategory extends StatefulWidget {
 }
 
 class _UserexpensescreenzsState extends State<Userexpensecategory> {
-  ///new  code--------------------------start-------------------
+  DateTime selectedDate = DateTime.now();
+
   @override
   void initState() {
     super.initState();
-//call expense category api top of screen
+    //clear lsit of category..................
+    final controller = Provider.of<Expensecontroller>(context, listen: false);
+    //controller.resetListOfCategory();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<Expensecontroller>().fetchExpenseCategoryBySelectedDate();
+      context.read<Expensecontroller>().callCategoryFirstTime();
     });
   }
 
 //date 30-3-26----------------
-  Map<String, TextEditingController> controllers = {};
-  Map<String, dynamic> selectedValues = {};
+  // Map<String, TextEditingController> controllers = {};
+  // Map<String, dynamic> selectedValues = {};
   void initializeControllers(List<DynamicField> fields) {
     for (var field in fields) {
       controllers[field.fieldName] = TextEditingController();
@@ -35,60 +36,38 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
   }
 
 //date 30-3-26----------------
-  @override
-  void dispose() {
-    controllers.forEach((key, controller) {
-      controller.dispose();
-    });
+  // @override
+  // void dispose() {
+  //   controllers.forEach((key, controller) {
+  //     controller.dispose();
+  //   });
 
-    super.dispose();
-  }
+  //   super.dispose();
+  // }
 
-  IconData getCategoryIcon(String categoryName) {
-    switch (categoryName.toLowerCase().trim()) {
-      case 'fuel':
-        return Icons.local_gas_station;
-      case 'hotel':
-        return Icons.home;
-      case 'transport':
-        return Icons.local_shipping;
-      case 'site_item':
-        return Icons.construction;
-      case 'breakfast':
-        return Icons.coffee;
-      case 'lunch':
-        return Icons.lunch_dining;
-      case 'dinner':
-        return Icons.restaurant;
-      case 'travel':
-        return Icons.directions_bus;
-      case 'bike':
-        return Icons.pedal_bike;
-      case 'boat':
-        return Icons.directions_boat;
-      case 'labour':
-        return Icons.engineering;
-      case 'water':
-        return Icons.water_drop;
-      case 'stationary':
-        return Icons.edit_note;
-      case 'grocery':
-        return Icons.local_grocery_store;
-
-      default:
-        return Icons.category;
-    }
-  }
-
-  final _formKey = GlobalKey<FormState>();
-
+  // Text controllers keyed by field name (TEXT / NUMBER fields)
+  final Map<String, TextEditingController> controllers = {};
+  // Selected category tracking
   int? selectedCategoryId;
   String? selectedCategoryName;
+  // Submitted form values: [{ "fieldId": ..., "value": ... }, ...]
+  final List<Map<String, dynamic>> myFormList = [];
+//date make list of json............................20-7-26
+  // Currently selected dropdown values, keyed by field name
+  final Map<String, String?> selectedValues = {};
+// Generic form data map (if you're using it elsewhere alongside myFormList)
   final Map<String, dynamic> formData = {};
+  // Max amount allowed, set when a dropdown option is picked
+  double maxAllowedAmount = 0;
+  // final _formKey = GlobalKey<FormState>();
+  GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  // final Map<String, dynamic> formData = {};
+  final TextEditingController dateController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     final controller = Provider.of<Expensecontroller>(context, listen: false);
+
     return PopScope(
         canPop: true, // Allows the system to pop the screen normally
         onPopInvokedWithResult: (didPop, result) {
@@ -98,81 +77,83 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
           }
         },
         child: Scaffold(
-          appBar: AppBar(
-            centerTitle: true,
-            flexibleSpace: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Color.fromARGB(255, 184, 203, 219),
-                    Color.fromARGB(255, 168, 243, 245)
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+            appBar: AppBar(
+              centerTitle: true,
+              flexibleSpace: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Color.fromARGB(255, 184, 203, 219),
+                      Color.fromARGB(255, 168, 243, 245)
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+              ),
+              title: const Text(
+                "EXPENSE CATEGORY",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.3,
                 ),
               ),
             ),
-            title: const Text(
-              "EXPENSE CATEGORY",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.3,
-              ),
-            ),
-          ),
-          body: RefreshIndicator(
-            onRefresh: () async {
-              // await context
-              //     .read<Expensecontroller>()
-              //     .refreshExpenseCategory("2026-07-07");
-            },
-            child: SingleChildScrollView(
-              physics: AlwaysScrollableScrollPhysics(),
-              child: SafeArea(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Consumer<Expensecontroller>(
-                      builder: (context, con, child) {
-                        //return _builDate(con);
-                        return _buildDateBar(con);
-                      },
-                    ),
-                    Center(
-                      child: const Text('Select Category:',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                    ),
-                    //calling method for select list of category top of the screen
-                    Consumer<Expensecontroller>(
-                      builder: (context, controller, child) =>
-                          _buildCategoryItem(controller),
-                    ),
-                    Divider(),
-                    //calling provider method.... dynamic text form field for fill update use expense.....
-                    IntrinsicHeight(
-                      child: Row(
-                        //mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Expanded(
-                            child: Consumer<Expensecontroller>(
-                                builder: (context, controller, child) =>
-                                    buildDynamicExpenseForm(controller)),
-                          ),
-                          const SizedBox(width: 8),
-                          //show item card fill details
-                          //  _buildSelectItemviewCard()
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ));
+            body: RefreshIndicator(
+                onRefresh: () async {
+                  // await context
+                  //     .read<Expensecontroller>()
+                  //     .refreshExpenseCategory("2026-07-07");
+                },
+                child: SingleChildScrollView(
+                    physics: AlwaysScrollableScrollPhysics(),
+                    child: SafeArea(
+                      child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            //INCRESE AND DECRESE DATE COUNTER..............
+                            Consumer<Expensecontroller>(
+                              builder: (context, con, child) {
+                                //return _builDate(con);
+                                return _buildDateBar(con);
+                              },
+                            ),
+                            //CATEGORY NAME
+                            Center(
+                              child: const Text('Select Category:',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                            ),
+
+                            //BUILD CATEGORY LIST
+                            Consumer<Expensecontroller>(
+                              builder: (context, controller, child) =>
+                                  _buildCategoryItem(controller),
+                            ),
+                            Divider(),
+                            //calling provider method.... dynamic text form field for fill update use expense.....
+
+                            IntrinsicHeight(
+                              child: Row(
+                                //mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Expanded(
+                                    child: Consumer<Expensecontroller>(
+                                        builder: (context, controller, child) =>
+                                            buildDynamicExpenseForm(
+                                                controller)),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  //show item card fill details
+                                  // _buildSelectItemviewCard()
+                                ],
+                              ),
+                            ),
+                          ]),
+                    )))));
   }
 
   Future<String?> showDialogBoxForImage(BuildContext context) async {
@@ -205,146 +186,72 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
     );
   }
 
-  Widget _buildCategoryItem(Expensecontroller controller) {
-    if (controller.isLoadExpenseCategory &&
-        controller.expenseCateList.isEmpty) {
-      return Center(child: CircularProgressIndicator());
-    }
-    if (controller.catError != null && controller.expenseCateList.isEmpty) {
-      return Center(child: Text("Failed to load categories"));
-    }
-    if (controller.expenseCateList.isEmpty) {
-      return const SizedBox();
-    }
-
-    return SizedBox(
-      height: SizeConFig.screenHeight * 0.28,
-      child: GridView.builder(
-        padding: const EdgeInsets.all(16),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 5,
-          crossAxisSpacing: 4,
-        ),
-        itemCount: controller.expenseCateList.length,
-        itemBuilder: (context, index) {
-          final data = controller.expenseCateList[index];
-          bool isSelected = selectedCategoryId == data.id;
-          bool locked = data.isLocked == false;
-          return GestureDetector(
-            onTap: () async {
-              // current code always calls API:
-              if (selectedCategoryId == data.id) {
-                return;
-              }
-              // Clear previous form data
-              controllers.forEach((key, controller) {
-                controller.clear();
-              });
-              controllers.clear();
-              selectedValues.clear();
-              formData.clear();
-              //for clear image form provider
-              controller.clearAllAttachments();
-              //TODO HERE IF CATEGORY IS LOCKED NEED TO REMOVE FROM AND SHOW MSG................ DATE WISE
-              await controller.dynamicFormField(data.id);
-              setState(() {
-                selectedCategoryId = data.id;
-                selectedCategoryName = data.categoryName;
-              });
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                color: isSelected
-
-                    // ignore: deprecated_member_use
-                    ? Colors.blue.withOpacity(0.2)
-                    : Colors.grey[100],
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: locked ? Colors.green : Colors.red),
-              ),
-              child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(getCategoryIcon(data.categoryName)),
-                    Text(
-                      data.categoryName,
-                      style:
-                          TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-                    )
-                  ]),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _builDate(Expensecontroller controller) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Container(
-        decoration: BoxDecoration(
-            color: const Color.fromARGB(255, 157, 199, 199),
-            borderRadius: BorderRadius.circular(11)),
-        child: Center(
-            child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _buildIncreseDecrseButton(
-                () => controller.changeDate(-1), Icons.arrow_back),
-            Text("${controller.dateFormat.format(controller.selectedDate)}"),
-            _buildIncreseDecrseButton(
-                () => controller.changeDate(1), Icons.arrow_forward)
-          ],
-        )),
-      ),
-    );
-  }
-
-  Widget _buildIncreseDecrseButton(VoidCallback onTap, IconData icon) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            // ignore: deprecated_member_use
-            color: Colors.blue.withOpacity(0.1),
-            spreadRadius: 2,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: IconButton(
-          color: Colors.blue, iconSize: 20, onPressed: onTap, icon: Icon(icon)),
-    );
-  }
-
-  void submitForm() {
+  void submitForm() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
+
     final expenseController = context.read<Expensecontroller>();
-    final payload = {
-      "expenseCategoryId": selectedCategoryId,
-      "expenseCategoryName": selectedCategoryName,
-      "expenseFields": formData,
-      "attachments": List<String>.from(expenseController.listofImage),
-    };
-    Expensesubmitrequest ovj = new Expensesubmitrequest();
-    ovj.categoryId(selectedCategoryId);
-    ovj.expenseDate(DateTime.now());
-    print(ovj);
-    // debugPrint(payload.toString());
-    ShowTaostMessage.toastMessage(
-      context,
-      "Data Submitted",
+
+    String expenseDate =
+        expenseController.dateFormat.format(expenseController.submitDate);
+    final amountFiled = expenseController.dynamicField.firstWhere(
+        (f) => f.fieldName.toLowerCase() == "amount",
+        orElse: () => throw Exception("amount"));
+
+    final amountEntry = myFormList.firstWhere(
+      (e) => e["fieldId"] == amountFiled.id,
+      orElse: () => {},
     );
+    final doubleAmount =
+        double.tryParse(amountEntry['value']?.toString() ?? "") ?? 0;
+    final dynamicFieldPayload = myFormList
+        .map((e) => {
+              "fieldId": e["fieldId"],
+              "value": e["value"].toString(),
+            })
+        .toList();
+    if (!mounted) return;
+
+    final success = await expenseController.submitExpense(
+      selectedCategoryId!,
+      expenseDate,
+      doubleAmount,
+      dynamicFieldPayload,
+      List<String>.from(expenseController.listofImage),
+    );
+
+    if (!mounted) return;
+    if (success) {
+      ShowTaostMessage.toastMessage(
+        context,
+        "Expense submitted successfully",
+      );
+      for (var ctrl in controllers.values) {
+        ctrl.dispose();
+      }
+      controllers.clear();
+      myFormList.clear();
+      selectedValues.clear();
+      formData.clear();
+      maxAllowedAmount = 0;
+      expenseController.clearAllAttachments();
+       expenseController.clearDynamicField(); 
+      setState(() {
+        selectedCategoryId = null;
+        selectedCategoryName = null;
+        _formKey = GlobalKey<FormState>();
+      });
+    } else {
+      ShowTaostMessage.toastMessage(
+        context,
+        expenseController.submitError ?? "Expense submission failed",
+      );
+    }
   }
 
   //DATE NEW CODE ..............................1=6-26
-  double maxAllowedAmount = 0;
+  //double maxAllowedAmount = 0;
   Widget buildDynamicExpenseForm(Expensecontroller controller) {
     if (controller.showAllField) {
       return const Center(
@@ -386,11 +293,22 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
                 }
               }).toList(),
               ElevatedButton(
-                // onPressed: submitValidation,
-
-                onPressed: submitForm,
-                child: const Text("Submit"),
+                onPressed: controller.isSubmitting ? null : submitForm,
+                child: controller.isSubmitting
+                    ? const SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text("Submit"),
               )
+              // ElevatedButton(
+              //   // onPressed: submitValidation,
+
+              //   onPressed: submitForm,
+              //   child: const Text("Submit"),
+              // )
             ],
           ),
         ),
@@ -736,7 +654,14 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
         child: TextFormField(
           controller: controllers[field.fieldName],
           onChanged: (value) {
-            formData[field.fieldName] = value.trim();
+            // formData[field.fieldName] = value.trim();
+            final exitingIndex = myFormList
+                .indexWhere((element) => element['fieldId'] == field.id);
+            if (exitingIndex != -1) {
+              myFormList[exitingIndex]["value"] = value; // ✅ correct
+            } else {
+              myFormList.add({"fieldId": field.id, "value": value});
+            }
           },
           decoration: InputDecoration(
             labelText: field.fieldLabel,
@@ -785,8 +710,22 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
           }).toList(),
           onChanged: (value) {
             setState(() {
-              selectedValues[field.fieldName] = value;
-              formData[field.fieldName] = value;
+              // selectedValues[field.fieldName] = value;
+              //  formData[field.fieldName] = value;
+              //------------------------------------------
+              // print(field.id);
+              //print(value);
+              // formData["fieldId"] = field.id;
+              // formData["fieldValue"] = value;
+              // myFormList.add({"fieldId": field.id});
+              // myFormList.add({"fieldValue": value});
+              final exitingIndex = myFormList
+                  .indexWhere((element) => element['fieldId'] == field.id);
+              if (exitingIndex != -1) {
+                myFormList[exitingIndex]["value"] = value; // ✅ correct
+              } else {
+                myFormList.add({"fieldId": field.id, "value": value});
+              }
             });
           },
           validator: (value) {
@@ -813,7 +752,16 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
           controller: controllers[field.fieldName],
           keyboardType: TextInputType.number,
           onChanged: (value) {
-            formData[field.fieldName] = int.tryParse(value);
+            //  formData[field.fieldName] = int.tryParse(value);
+            // formData["fieldId"] = field.id;
+            // formData["fieldValue"] = int.tryParse(value);
+            final exitingIndex = myFormList
+                .indexWhere((element) => element['fieldId'] == field.id);
+            if (exitingIndex != -1) {
+              myFormList[exitingIndex]["value"] = value; // ✅ correct
+            } else {
+              myFormList.add({"fieldId": field.id, "value": value});
+            }
           },
           decoration: InputDecoration(
             labelText: field.fieldLabel,
@@ -914,75 +862,6 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
     );
   }
 
-  Widget _buildDateBar(Expensecontroller controller) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-      child: Container(
-        height: 64, // Explicit comfortable sizing constraint
-        decoration: BoxDecoration(
-          color: const Color(
-              0xFF8BB1B1), // Polished slate teal matching your original palette
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Previous Day Action Button
-            Padding(
-              padding: const EdgeInsets.only(left: 8.0),
-              child: _buildNavigationButton(
-                onTap: () => controller.changeDate(-1),
-                icon: Icons.arrow_back_ios_new_rounded,
-              ),
-            ),
-
-            // Current Date Title Header View
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  "SELECTED DATE",
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white70,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  controller.dateFormat.format(controller.selectedDate),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ],
-            ),
-
-            // Next Day Action Button
-            Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: _buildNavigationButton(
-                onTap: () => controller.changeDate(1),
-                icon: Icons.arrow_forward_ios_rounded,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   // Refactored rounded structural button configuration
   Widget _buildNavigationButton(
       {required VoidCallback onTap, required IconData icon}) {
@@ -1016,5 +895,255 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
         ),
       ),
     );
+  }
+
+//method  show slected date top of page({ method 1})
+  Widget _buildDateBar(Expensecontroller controller) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      child: Container(
+        height: 64, // Explicit comfortable sizing constraint
+        decoration: BoxDecoration(
+          color: const Color(
+              0xFF8BB1B1), // Polished slate teal matching your original palette
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              // ignore: deprecated_member_use
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: _buildNavigationButton(
+                onTap: () {
+                  //decrease date by one day
+                  // controller.nextDayAndPreviousDay(-1);
+                  controller.changeCategoryDate(-1);
+                },
+                icon: Icons.arrow_back_ios_new_rounded,
+              ),
+            ),
+
+            // Current Date Title Header View
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  "SELECTED DATE",
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white70,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                //SHOW CURRENT DATE USING PROVIDER
+                Text(
+                  // "${controller.disireDateFormate.format(controller.selectDate)}",
+                  controller.dateFormat.format(controller.categoryDate),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+
+            // Next Day Action Button
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: _buildNavigationButton(
+                onTap: () => {
+                  //increase date by one day
+                  //controller.nextDayAndPreviousDay(1)
+                  controller.changeCategoryDate(1)
+                },
+                icon: Icons.arrow_forward_ios_rounded,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  
+  Widget _buildCategoryItem(Expensecontroller controller) {
+    // Convert current selected date instance to your formatted string key
+    // String currentDateKey =
+    //     controller.formateDate.format(controller.selectDate);
+    String currentDateKey =
+        controller.formateDate.format(controller.categoryDate);
+
+    // Extract list array for this day
+    final categories = controller.getCategoriesForDate(currentDateKey);
+
+    // Loading and error layouts
+    if (controller.isLoadExpenseCategory && categories.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // if (categories.isEmpty) {
+    //   return const SizedBox();
+    // }
+    if (categories.isEmpty) {
+      if (controller.errorMessage != null) {
+        return Center(child: Text(controller.errorMessage!));
+      }
+      return const SizedBox();
+    }
+
+    return SizedBox(
+      height: SizeConFig.screenHeight * 0.28,
+      child: GridView.builder(
+        padding: const EdgeInsets.all(16),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 5,
+          crossAxisSpacing: 4,
+          mainAxisSpacing: 4,
+        ),
+        itemCount: categories.length,
+        itemBuilder: (context, index) {
+          final data = categories[index];
+
+          bool isLocked = data.isLocked == true;
+          bool isSelected = selectedCategoryId == data.id;
+
+          return GestureDetector(
+            onTap: () async {
+              if (isLocked) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content: Text(
+                          data.lockMessage ?? "Category locked for today.")),
+                );
+                return;
+              }
+
+              if (selectedCategoryId == data.id) return;
+
+              // Dispose old text controllers (field names differ per category,
+              // so stale entries would otherwise pile up in the map)
+              for (final ctrl in controllers.values) {
+                ctrl.dispose();
+              }
+              controllers.clear();
+
+              // Clear all previously entered form data
+              myFormList.clear();
+              selectedValues.clear();
+              formData.clear();
+              maxAllowedAmount = 0;
+
+              // Clear selected images/files from the old category
+              controller.clearAllAttachments();
+
+              await controller.dynamicFormField(data.id);
+
+              // Guard against the widget being disposed during the await
+              if (!mounted) return;
+
+              // Don't commit selection if the fetch failed — avoids showing
+              // a category as "selected" with no form loaded underneath
+              if (controller.errorMessage != null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(controller.errorMessage!)),
+                );
+                return;
+              }
+
+              setState(() {
+                selectedCategoryId = data.id;
+                selectedCategoryName = data.categoryName;
+                _formKey =
+                    GlobalKey<FormState>(); // reset validation/error state
+              });
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: isLocked
+                    ? Colors.grey[300]
+                    : (isSelected
+                        // ignore: deprecated_member_use
+                        ? Colors.blue.withOpacity(0.2)
+                        : Colors.grey[100]),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isLocked
+                      ? Colors.red
+                      : (isSelected ? Colors.blue : Colors.green),
+                  width: 1.5,
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    getCategoryIcon(data.categoryName),
+                    color: isLocked ? Colors.grey : Colors.black87,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    data.categoryName,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: isLocked ? Colors.grey : Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  IconData getCategoryIcon(String categoryName) {
+    switch (categoryName.toLowerCase().trim()) {
+      case 'fuel':
+        return Icons.local_gas_station;
+      case 'hotel':
+        return Icons.home;
+      case 'transport':
+        return Icons.local_shipping;
+      case 'site_item':
+        return Icons.construction;
+      case 'breakfast':
+        return Icons.coffee;
+      case 'lunch':
+        return Icons.lunch_dining;
+      case 'dinner':
+        return Icons.restaurant;
+      case 'travel':
+        return Icons.directions_bus;
+      case 'bike':
+        return Icons.pedal_bike;
+      case 'boat':
+        return Icons.directions_boat;
+      case 'labour':
+        return Icons.engineering;
+      case 'water':
+        return Icons.water_drop;
+      case 'stationary':
+        return Icons.edit_note;
+      case 'grocery':
+        return Icons.local_grocery_store;
+
+      default:
+        return Icons.category;
+    }
   }
 }

@@ -7,7 +7,7 @@ class ExpenseDynamicFieldResponseModel {
   factory ExpenseDynamicFieldResponseModel.fromJson(Map<String, dynamic> json) {
     return ExpenseDynamicFieldResponseModel(
       success: json["success"] ?? false,
-      message: json[""] ?? " ",
+   message: json["message"] ?? "",
       data: json["data"] == null
           ? []
           : List<DynamicField>.from(
@@ -51,7 +51,7 @@ class Options {
   final double value;
   Options({required this.label, required this.value});
   factory Options.fromJson(Map<String, dynamic> json) => Options(
-        label: json["label"] ?? "",
-        value: json["value"] ?? 0,
-      );
+      label: json["label"] ?? "",
+      value: (json["value"] as num?)?.toDouble() ?? 0,
+    );
 }

@@ -3,6 +3,7 @@ class Expensesubmitrequest {
   dynamic expenseDate;
   dynamic expenseAmount;
   List<DynamicFieldRequest>? dynamicField;
+ // required List<Map<String, dynamic>> dynamicFields,
   //Expensesubmitrequest(this.categoryId, this.expenseDate, this.expenseAmount);
   Map<String, dynamic> toJson() => {
         "categoryId": categoryId,
