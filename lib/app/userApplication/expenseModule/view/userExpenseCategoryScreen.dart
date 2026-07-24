@@ -26,24 +26,11 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
     });
   }
 
-//date 30-3-26----------------
-  // Map<String, TextEditingController> controllers = {};
-  // Map<String, dynamic> selectedValues = {};
   void initializeControllers(List<DynamicField> fields) {
     for (var field in fields) {
       controllers[field.fieldName] = TextEditingController();
     }
   }
-
-//date 30-3-26----------------
-  // @override
-  // void dispose() {
-  //   controllers.forEach((key, controller) {
-  //     controller.dispose();
-  //   });
-
-  //   super.dispose();
-  // }
 
   // Text controllers keyed by field name (TEXT / NUMBER fields)
   final Map<String, TextEditingController> controllers = {};
@@ -236,7 +223,7 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
       formData.clear();
       maxAllowedAmount = 0;
       expenseController.clearAllAttachments();
-       expenseController.clearDynamicField(); 
+      expenseController.clearDynamicField();
       setState(() {
         selectedCategoryId = null;
         selectedCategoryName = null;
@@ -977,7 +964,6 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
     );
   }
 
-  
   Widget _buildCategoryItem(Expensecontroller controller) {
     // Convert current selected date instance to your formatted string key
     // String currentDateKey =

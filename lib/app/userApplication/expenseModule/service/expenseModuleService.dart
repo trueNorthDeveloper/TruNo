@@ -4,7 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-import 'package:http/http.dart' show StreamedResponse;
+
 import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/model/dailyExpenseReponse.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/model/expenseCategoryResponse.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/model/expenseDynamicFieldResponseModel.dart';
@@ -305,37 +305,37 @@ class Expensemoduleservice {
 
       return Result.failure(
         ApiError.server,
-          message: serverMessage,
+        message: serverMessage,
       );
     } on FormatException {
       return Result.failure(
         ApiError.jsonFormat,
-         message: "Received an unexpected response from the server.",
+        message: "Received an unexpected response from the server.",
       );
     } on SocketException {
       return Result.failure(
         ApiError.network,
-         message: "No internet connection. Please check your network.",
+        message: "No internet connection. Please check your network.",
       );
     } on TimeoutException {
       return Result.failure(
         ApiError.timeout,
-         message: "Request timed out. Please try again.",
+        message: "Request timed out. Please try again.",
       );
     } on http.ClientException {
       return Result.failure(
         ApiError.client,
-         message: "Failed to reach the server. Please try again.",
+        message: "Failed to reach the server. Please try again.",
       );
     } on PlatformException catch (e) {
       return Result.failure(
         ApiError.platform,
-         message: e.message ?? "A platform error occurred.",
+        message: e.message ?? "A platform error occurred.",
       );
     } catch (e) {
       return Result.failure(
         ApiError.unknown,
-         message: e.toString(),
+        message: e.toString(),
       );
     }
   }

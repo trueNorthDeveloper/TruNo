@@ -18,6 +18,7 @@ import 'package:truenorthflutterfrontend/public/config/platform_type.dart';
 import 'package:truenorthflutterfrontend/public/config/themdata.dart';
 import 'package:truenorthflutterfrontend/public/utils/userUtil/size_config.dart';
 
+final RouteObserver<PageRoute> appRouteObserver = RouteObserver<PageRoute>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -59,6 +60,7 @@ class _MyAppState extends State<MyApp> {
     //     home: platform == PlatformType.web
     //         ? AdminSplashScreen()
     //         : SplashScreen());
+
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: MyAppTheme.lightTheme,

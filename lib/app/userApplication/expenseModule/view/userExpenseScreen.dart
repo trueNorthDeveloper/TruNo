@@ -7,6 +7,7 @@ import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/model
 import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/model/myBalanceResponse.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/view/userExpenseCategoryScreen.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/view/userTranscationHistory.dart';
+import 'package:truenorthflutterfrontend/main.dart';
 import 'package:truenorthflutterfrontend/public/utils/userUtil/size_config.dart';
 
 class UserExpenseScreens extends StatefulWidget {
@@ -16,66 +17,85 @@ class UserExpenseScreens extends StatefulWidget {
   State<UserExpenseScreens> createState() => _UserexpensescreenzsState();
 }
 
-class _UserexpensescreenzsState extends State<UserExpenseScreens> {
+class _UserexpensescreenzsState extends State<UserExpenseScreens>
+    with RouteAware {
   @override
   void initState() {
     super.initState();
-    // Fetch and format on page open
-    Provider.of<Expensecontroller>(context, listen: false).resetDate2();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<Expensecontroller>().getMyAccountBalace();
+      if (!mounted) return;
+      final provider = Provider.of<Expensecontroller>(context, listen: false);
+      provider.getMyAccountBalace();
+      provider.callingDailyExpense(); // first-time fresh fetch on screen enter
     });
-    //call daily expense method
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<Expensecontroller>().callingDailyExpense();
-    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Subscribe to the SAME observer instance registered on MaterialApp
+    appRouteObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
+  void dispose() {
+    appRouteObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  // Fires when a route pushed ON TOP of this screen is popped,
+  // i.e. user navigated away and came back.
+  @override
+  void didPopNext() {
+    if (!mounted) return;
+    final provider = Provider.of<Expensecontroller>(context, listen: false);
+    provider.callingDailyExpense(); // forceRefresh:true inside, always hits API
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Color.fromARGB(255, 184, 203, 219),
-                Color.fromARGB(255, 168, 243, 245)
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+        appBar: AppBar(
+          centerTitle: true,
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color.fromARGB(255, 184, 203, 219),
+                  Color.fromARGB(255, 168, 243, 245)
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
             ),
           ),
-        ),
-        title: const Text(
-          "EXPENSE",
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.3,
+          title: const Text(
+            "EXPENSE",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.3,
+            ),
           ),
+          actions: [
+            Row(
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => Usertranscationhistory(),
+                        ));
+                  },
+                  icon: const Icon(Icons.remove_red_eye),
+                  label: const Text('Transcations'),
+                )
+              ],
+            )
+          ],
         ),
-        actions: [
-          Row(
-            children: [
-              ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => Usertranscationhistory(),
-                      ));
-                },
-                icon: const Icon(Icons.remove_red_eye),
-                label: const Text('Transcations'),
-              )
-            ],
-          )
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: SafeArea(
+        body: SafeArea(
             child: Column(
           children: [
             // SizedBox(
@@ -87,225 +107,28 @@ class _UserexpensescreenzsState extends State<UserExpenseScreens> {
               if (prov.showBalance) return CircularProgressIndicator();
               return _buildTotalSummary(prov.myBalanceResponse);
             }),
-
+//------------------------------------------------
             //SHOW CALENDAR WITH AMOUNT
             Consumer<Expensecontroller>(builder: (context, pro, child) {
               return _expenseShowCalendar(pro);
             }),
-
-            // Consumer<Expensecontroller>(
-            //   builder: (context, xpensecontroller, child) {
-            //     if (xpensecontroller.itemAmount.isEmpty) {
-            //       return const Text("empty");
-            //     }
-
-            //     final data = xpensecontroller.itemAmount;
-
-            //     return ExpansionTile(
-            //       // The "Header" showing the total amount
-            //       title: Text(
-            //         "Total Amount: ₹${data["dayTotalAmount"]}",
-            //         style: const TextStyle(fontWeight: FontWeight.bold),
-            //       ),
-            //       subtitle: Text("Date: ${data["date"]}"),
-            //       // The "Expanded" list showing other details
-            //       children: data.entries
-            //           .where((entry) =>
-            //               entry.key != "dayTotalAmount" && entry.key != "date")
-            //           .map((entry) => ListTile(
-            //                 title: Text(entry.key[0].toUpperCase() +
-            //                     entry.key.substring(1)), // Capitalize key
-            //                 trailing: Text("₹${entry.value}"),
-            //               ))
-            //           .toList(),
-            //     );
-            //   },
-            // ),
+            //------------------------------
 
             // _buildCoroseal(),
           ],
         )),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => Userexpensecategory(),
-              ));
-        },
-        child: Icon(Icons.add),
-      ),
-    );
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => Userexpensecategory(),
+                ));
+          },
+          child: Icon(Icons.add),
+        ));
   }
 
-  // Widget _expenseShowCalendar(Expensecontroller expenseProvider) {
-  //   return SingleChildScrollView(
-  //     child: Column(children: [
-  //       TableCalendar(
-  //         holidayPredicate: (day) {
-  //           return day.weekday == DateTime.sunday;
-  //         },
-  //         calendarBuilders: CalendarBuilders(
-  //           holidayBuilder: (context, day, focusedDay) {
-  //             return Container(
-  //               margin: const EdgeInsets.all(4.0),
-  //               alignment: Alignment.center,
-  //               decoration: const BoxDecoration(
-  //                 color: Color.fromARGB(
-  //                     0, 188, 30, 30), // Or a light red if you prefer
-  //                 shape: BoxShape.circle,
-  //               ),
-  //               child: Text(
-  //                 '${day.day}',
-  //                 style: const TextStyle(
-  //                   color: Color.fromARGB(
-  //                       255, 165, 207, 220), // Makes the text red
-  //                   fontWeight: FontWeight.bold,
-  //                 ),
-  //               ),
-  //             );
-  //           },
-  //           // Handles standard cells styles
-  //           defaultBuilder: (context, day, focusedDay) {
-  //             final normalizedDate = DateTime(day.year, day.month, day.day);
-  //             final DailySummary? summary =
-  //                 expenseProvider.summaryByDate[normalizedDate];
-  //             Color? bgColor;
-  //             Color textColor = Colors.black87;
-  //             BoxBorder? border;
-  //             String? amountText;
-  //             if (summary != null) {
-  //               final apiStatus =
-  //                   summary.status?.toString().toUpperCase() ?? '';
-  //               final expenses = summary.totalExpensesPerDay ?? 0;
-  //               if (apiStatus == "PRESENT") {
-  //                 bgColor = Colors.green.shade50;
-  //                 textColor = Colors.green.shade900;
-  //                 border = Border.all(color: Colors.green.shade200, width: 1);
-  //                 if (expenses > 0) amountText = "₹$expenses";
-  //               } else if (apiStatus == "UPCOMING") {
-  //                 bgColor = Colors.grey.shade100;
-  //                 textColor = Colors.grey.shade500;
-  //               }
-  //             }
-
-  //             // return Container(
-  //             //   margin: const EdgeInsets.all(4.0),
-  //             //   alignment: Alignment.center,
-  //             //   decoration: BoxDecoration(
-  //             //     color: bgColor,
-  //             //     shape: BoxShape.circle,
-  //             //     border: border,
-  //             //   ),
-  //             //   child: Text(
-  //             //     '${day.day}',
-  //             //     style: TextStyle(
-  //             //       color: textColor,
-  //             //       // fontWeight: status == "Present"
-  //             //       //   ? FontWeight.bold
-  //             //       // : FontWeight.normal,
-  //             //     ),
-  //             //   ),
-  //             // );
-  //           },
-  //           todayBuilder: (context, day, focusedDay) {
-  //             return Container(
-  //               margin: const EdgeInsets.all(4.0),
-  //               alignment: Alignment.center,
-  //               decoration: const BoxDecoration(
-  //                 color: Colors.blueAccent,
-  //                 shape: BoxShape.circle,
-  //               ),
-  //               child: Text(
-  //                 '${day.day}',
-  //                 style: const TextStyle(
-  //                     color: Colors.white, fontWeight: FontWeight.bold),
-  //               ),
-  //             );
-  //           },
-  //         ),
-  //         headerStyle: HeaderStyle(
-  //           // Title styling
-  //           titleTextStyle: const TextStyle(
-  //             color: Colors.white,
-  //             fontSize: 20.0,
-  //             fontWeight: FontWeight.bold,
-  //           ),
-  //           // Header background decoration
-  //           decoration: BoxDecoration(
-  //             color: const Color.fromARGB(
-  //                 182, 167, 166, 169), // Example background color
-  //             borderRadius: BorderRadius.circular(10.0), // Rounded corners
-  //           ),
-  //           // Center the title
-  //           titleCentered: true,
-  //           // Hide the format button
-  //           formatButtonVisible: false,
-  //           // Custom chevron icons
-  //           leftChevronIcon: const Icon(
-  //             Icons.chevron_left,
-  //             color: Colors.white,
-  //             size: 28,
-  //           ),
-  //           rightChevronIcon: const Icon(
-  //             Icons.chevron_right,
-  //             color: Colors.white,
-  //             size: 28,
-  //           ),
-  //           // Custom title format (e.g., "Month\nYear")
-  //           titleTextFormatter: (date, locale) {
-  //             final month = DateFormat.MMMM(locale).format(date);
-  //             final years = DateFormat.y(locale).format(date);
-  //             return '$month\n$years';
-  //           },
-  //         ),
-  //         // Other
-  //         pageAnimationDuration: Duration(milliseconds: 500),
-  //         weekNumbersVisible: false,
-
-  //         daysOfWeekHeight: 27.0,
-  //         availableGestures: AvailableGestures.none,
-  //         pageAnimationCurve: Curves.easeInCubic,
-  //         daysOfWeekStyle: DaysOfWeekStyle(
-  //             weekdayStyle:
-  //                 TextStyle(color: const Color.fromARGB(255, 54, 79, 244))),
-  //         startingDayOfWeek: StartingDayOfWeek.sunday,
-  //         sixWeekMonthsEnforced: false,
-  //         firstDay: DateTime(2020),
-  //         lastDay: DateTime(2030),
-  //         focusedDay: expenseProvider.curreentDate,
-
-  //         calendarFormat: CalendarFormat.month,
-  //         dayHitTestBehavior: HitTestBehavior.opaque,
-  //         // CRITICAL: Tells the calendar which cell needs the active selection visual ri
-  //         selectedDayPredicate: (day) {
-  //           return isSameDay(expenseProvider.chosenDate, day);
-  //         },
-  //         // Handles day tapping action
-  //         onDaySelected: (selectedDay, focusDay) {
-  //           expenseProvider.curreentDate = focusDay;
-
-  //           expenseProvider.selectDay(selectedDay);
-  //         },
-
-  //         onPageChanged: (focusedDay) {
-  //           expenseProvider.curreentDate = focusedDay;
-  //           expenseProvider.callingDailyExpense();
-  //         },
-  //       ),
-  //       //SHOW TOTAL.................SUMMARY OF MONTHS..........
-  //       Text(
-  //         "${expenseProvider.dailyExpenseRespone?.data?.totalDaysWithExpenses ?? 0}",
-  //         style: TextStyle(fontSize: 15),
-  //       ),
-  //       Text(
-  //         "${expenseProvider.dailyExpenseRespone?.data?.aggregateExpense ?? 0}",
-  //         style: TextStyle(fontSize: 15),
-  //       )
-  //     ]),
-  //   );
-  // }
   Widget _buildMonthSummary(
       {required dynamic totalDays, required dynamic totalAmount}) {
     return Container(
@@ -358,93 +181,115 @@ class _UserexpensescreenzsState extends State<UserExpenseScreens> {
     final totalDays = data?.totalDaysWithExpenses ?? 0;
     final totalAmount = data?.aggregateExpense ?? 0;
 
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          // ---- TOP SUMMARY BAR ----
-          _buildMonthSummary(totalDays: totalDays, totalAmount: totalAmount),
+    return Column(
+      children: [
+        // ---- TOP SUMMARY BAR ----
+        _buildMonthSummary(totalDays: totalDays, totalAmount: totalAmount),
+        // ---- LOADING INDICATOR (thin bar so calendar doesn't jump) ----
 
-          TableCalendar(
-            firstDay: DateTime(2020),
-            lastDay: DateTime(2030),
-            focusedDay: expenseProvider.curreentDate,
-            selectedDayPredicate: (day) {
-              return isSameDay(expenseProvider.chosenDate, day);
-            },
-            onDaySelected: (selectedDay, focusedDay) {
-              expenseProvider.curreentDate = focusedDay;
-              expenseProvider.selectDay(
-                  selectedDay); // sets selectedDaySummary + chosenDate
-            },
-            onPageChanged: (focusedDay) {
-              expenseProvider.curreentDate = focusedDay;
-              expenseProvider.callingDailyExpense();
-            },
-            holidayPredicate: (day) {
-              return day.weekday == DateTime.sunday;
-            },
-            calendarBuilders: CalendarBuilders(
-              holidayBuilder: (context, day, focusedDay) {
-                return _buildCalendarCell(
-                    day: day, textColor: Colors.red.shade300);
-              },
-              defaultBuilder: (context, day, focusedDay) {
-                final normalizedDate = DateTime(day.year, day.month, day.day);
-                final DailySummary? summary =
-                    expenseProvider.summaryByDate[normalizedDate];
-
-                Color? bgColor;
-                Color textColor = Colors.black87;
-                BoxBorder? border;
-                String? amountText;
-
-                if (summary != null) {
-                  final String apiStatus =
-                      summary.status?.toString().toUpperCase() ?? '';
-                  final num expenses = summary.totalExpensesPerDay ?? 0;
-
-                  if (apiStatus == "PRESENT") {
-                    bgColor = Colors.green.shade50;
-                    textColor = Colors.green.shade900;
-                    border = Border.all(color: Colors.green.shade200, width: 1);
-                    if (expenses > 0) amountText = "₹$expenses";
-                  } else if (apiStatus == "UPCOMING") {
-                    bgColor = Colors.grey.shade100;
-                    textColor = Colors.grey.shade500;
-                  }
-                }
-
-                return _buildCalendarCell(
-                  day: day,
-                  bgColor: bgColor,
-                  textColor: textColor,
-                  border: border,
-                  amountText: amountText,
-                );
-              },
-              selectedBuilder: (context, day, focusedDay) {
-                return Container(
-                  margin: const EdgeInsets.all(4.0),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade600,
-                    shape: BoxShape.circle,
-                  ),
+        if (expenseProvider.isLoadDailyExpense)
+          const LinearProgressIndicator(minHeight: 2),
+        //ERROR STATE WITH RETRY------------
+        if (expenseProvider.dailyExpenseError != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            child: Row(
+              children: [
+                Expanded(
                   child: Text(
-                    '${day.day}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    expenseProvider.dailyExpenseError!,
+                    style: const TextStyle(color: Colors.redAccent),
                   ),
-                );
-              },
+                ),
+                TextButton(
+                    onPressed: () => expenseProvider.refreshCurrentMonth(),
+                    child: Text("Retry"))
+              ],
             ),
           ),
+        TableCalendar(
+          //stop scroll via touch screen
+          availableGestures: AvailableGestures.none,
+          headerStyle: HeaderStyle(formatButtonVisible: false),
+          firstDay: DateTime(2020),
+          lastDay: DateTime(2030),
+          focusedDay: expenseProvider.curreentDate,
+          selectedDayPredicate: (day) {
+            return isSameDay(expenseProvider.chosenDate, day);
+          },
+          onDaySelected: (selectedDay, focusedDay) {
+            expenseProvider.curreentDate = focusedDay;
+            expenseProvider
+                .selectDay(selectedDay); // sets selectedDaySummary + chosenDate
+          },
+          onPageChanged: (focusedDay) {
+            
+            expenseProvider.onMonthChanged(focusedDay);
+          },
+          holidayPredicate: (day) {
+            return day.weekday == DateTime.sunday;
+          },
+          calendarBuilders: CalendarBuilders(
+            holidayBuilder: (context, day, focusedDay) {
+              return _buildCalendarCell(
+                  day: day, textColor: Colors.red.shade300);
+            },
+            defaultBuilder: (context, day, focusedDay) {
+              final normalizedDate = DateTime(day.year, day.month, day.day);
+              final DailySummary? summary =
+                  expenseProvider.summaryByDate[normalizedDate];
 
-          _buildExpenseBreakdown(expenseProvider),
-        ],
-      ),
+              Color? bgColor;
+              Color textColor = Colors.black87;
+              BoxBorder? border;
+              String? amountText;
+
+              if (summary != null) {
+                final String apiStatus =
+                    summary.status.toString().toUpperCase();
+                final num expenses = summary.totalExpensesPerDay;
+
+                if (apiStatus == "PRESENT") {
+                  bgColor = Colors.green.shade50;
+                  textColor = Colors.green.shade900;
+                  border = Border.all(color: Colors.green.shade200, width: 1);
+                  if (expenses > 0) amountText = "₹$expenses";
+                } else if (apiStatus == "UPCOMING") {
+                  bgColor = Colors.grey.shade100;
+                  textColor = Colors.grey.shade500;
+                }
+              }
+
+              return _buildCalendarCell(
+                day: day,
+                bgColor: bgColor,
+                textColor: textColor,
+                border: border,
+                amountText: amountText,
+              );
+            },
+            selectedBuilder: (context, day, focusedDay) {
+              return Container(
+                margin: const EdgeInsets.all(4.0),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade600,
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  '${day.day}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+//show list of expense e
+        _buildExpenseBreakdown(expenseProvider),
+      ],
     );
   }
 
@@ -537,37 +382,43 @@ class _UserexpensescreenzsState extends State<UserExpenseScreens> {
                   Text("No individual category expenses logged for this day."),
             )
           else
-            ListView.builder(
-              shrinkWrap: true,
-              physics:
-                  const NeverScrollableScrollPhysics(), // Scroll managed by parent
-              itemCount: categories.length,
-              itemBuilder: (context, index) {
-                final cat = categories[index];
-                return Card(
-                  margin: const EdgeInsets.symmetric(vertical: 6.0),
-                  elevation: 0.5,
-                  child: ListTile(
-                    leading: const CircleAvatar(
-                      backgroundColor: Colors.blueGrey,
-                      child: Icon(Icons.payment, color: Colors.white, size: 20),
-                    ),
-                    title: Text(
-                      cat.categoryName ?? "General Expense",
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    subtitle: Text("Status: ${cat.status ?? 'N/A'}"),
-                    trailing: Text(
-                      "₹${cat.expenseAmount}",
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                        color: Colors.black87,
+            SingleChildScrollView(
+              child: Container(
+                height: SizeConFig.screenHeight * 25 / 100,
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  // physics:
+                  //     const NeverScrollableScrollPhysics(), // Scroll managed by parent
+                  itemCount: categories.length,
+                  itemBuilder: (context, index) {
+                    final cat = categories[index];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 6.0),
+                      elevation: 0.5,
+                      child: ListTile(
+                        leading: const CircleAvatar(
+                          backgroundColor: Colors.blueGrey,
+                          child: Icon(Icons.payment,
+                              color: Colors.white, size: 20),
+                        ),
+                        title: Text(
+                          cat.categoryName ?? "General Expense",
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: Text("Status: ${cat.status ?? 'N/A'}"),
+                        trailing: Text(
+                          "₹${cat.expenseAmount}",
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            color: Colors.black87,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                );
-              },
+                    );
+                  },
+                ),
+              ),
             )
         ],
       ),

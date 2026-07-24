@@ -25,100 +25,6 @@ class Expensecontroller extends ChangeNotifier {
   DateTime get firstDay => _firstDay;
   DateTime _lastDay = new DateTime(2030, 12, 30);
   DateTime get lastDay => _lastDay;
-  final DateTime? _currentDay = DateTime.now();
-  final List<Map<String, dynamic>> monthAmount = [
-    {
-      "date": "01-05-2026",
-      "dayTotalAmount": 10202,
-      "petrol": 120,
-      "rent": 1000,
-      "loading": 500,
-      "siteItem": 120,
-      "breakFast": 80,
-      "luch": 120,
-      "dinner": 120,
-      "travel": 50,
-      "bike": 60,
-      "boat": 150,
-      "labour": 500,
-      "water": 50,
-      "vehical": 600,
-      "stationary": 20,
-      "grocery": 130,
-      "other": 30
-    },
-    {
-      "date": "02-05-2026",
-      "dayTotalAmount": 10201,
-      "petrol": 120,
-      "rent": 1000,
-      "loading": 500,
-      "siteItem": 120,
-      "breakFast": 80,
-      "luch": 120,
-      // "dinner": 120,
-      // "travel": 50,
-      // "bike": 60,
-      // "boat": 150,
-      // "labour": 500,
-      // "water": 50,
-      // "vehical": 600,
-      // "stationary": 20,
-      // "grocery": 130,
-      // "other": 30
-    },
-    {
-      "date": "03-05-2026",
-      "dayTotalAmount": 1020333,
-      "petrol": 120,
-      // "rent": 1000,
-      // "loading": 500,
-      // "siteItem": 120,
-      // "breakFast": 80,
-      // "luch": 120,
-      // "dinner": 120,
-      // "travel": 50,
-      // "bike": 60,
-      // "boat": 150,
-      "labour": 500,
-      "water": 50,
-      "vehical": 600,
-      // "stationary": 20,
-      // "grocery": 130,
-      // "other": 30
-    },
-    {
-      "date": "04-05_2026",
-      "dayTotalAmount": 10202,
-      // "petrol": 120,
-      // "rent": 1000,
-      // "loading": 500,
-      // "siteItem": 120,
-      // "breakFast": 80,
-      // "luch": 120,
-      // "dinner": 120,
-      // "travel": 50,
-      // "bike": 60,
-      // "boat": 150,
-      // "labour": 500,
-      // "water": 50,
-      "vehical": 600,
-      "stationary": 20,
-      "grocery": 130,
-      "other": 30
-    },
-  ];
-  Map<String, dynamic> itemAmount = {};
-  void callexpenseAmountDateWise(dynamic date) {
-    print("------${date}");
-    for (var element in monthAmount) {
-      if (element["date"] == date) {
-        itemAmount = element;
-        break;
-      }
-    }
-    notifyListeners();
-  }
 
   ///change textFiled....................
   int setValue = 0;
@@ -214,9 +120,7 @@ class Expensecontroller extends ChangeNotifier {
   }
 
   DateTime selectedDate = DateTime.now();
-  // final DateFormat dateFormat = DateFormat('dd-MM-yyyy');
 
-  // final DateFormat dateFormat = DateFormat('dd-MM-yyyy'); // UI Display format
   final DateFormat dateFormat = DateFormat('yyyy-MM-dd');
   final DateFormat apiDateFormat = DateFormat('yyyy-MM-dd'); // API format
 
@@ -230,27 +134,6 @@ class Expensecontroller extends ChangeNotifier {
   final Map<int, List<DynamicField>> _dynamicFieldCache = {};
 
   Future<void> dynamicFormField(int categoryId) async {
-    // if (_dynamicFieldCache.containsKey(categoryId)) {
-    //   _dynamicField = _dynamicFieldCache[categoryId]!;
-    //   notifyListeners();
-    //   return;
-    // }
-
-    // _showAllField = true;
-    // _errorMessage = null;
-    // notifyListeners();
-    // try {
-    //   final output = await _service.fatchDynamicFieldReponse(categoryId);
-    //   if (output.isSuccess) {
-    //     _dynamicField = output.data.data;
-    //     _dynamicFieldCache[categoryId] =
-    //         List<DynamicField>.from(output.data.data);
-    //   }
-    // } catch (e) {
-    //   _errorMessage = e.toString();
-    // } finally {
-    //   _showAllField = false;
-    //   notifyListeners();
     if (_dynamicFieldCache.containsKey(categoryId)) {
       _dynamicField = _dynamicFieldCache[categoryId]!;
       _errorMessage = null;
@@ -278,10 +161,6 @@ class Expensecontroller extends ChangeNotifier {
       _showAllField = false;
       notifyListeners();
     }
-  }
-
-  void updateFieldValue(String fieldName, dynamic value) {
-    notifyListeners();
   }
 
   ///fatth user account balance datw 2-7-26
@@ -352,41 +231,72 @@ class Expensecontroller extends ChangeNotifier {
     }
   }
 
-  ///GET USER DAILT EXPENSE MONTH AND DAY WISE.........................
-  //*USED MAIN CLASS......................
-  //CALLING FINAL METHOD
-  DateTime curreentDate = DateTime.now();
-  DateTime? chosenDate;
-  // final DateFormat dateFormat = DateFormat('dd-MM-yyyy');
-
-  // UI Display format
-  final DateFormat dateFormarte = DateFormat('yyyy-MM');
-  Future<void> callingDailyExpense() async {
-    int month = curreentDate.month;
-    int year = curreentDate.year;
-    await dailyExpenseMethod(year, month);
-  }
-
-  void resetDate2() {
-    curreentDate = DateTime.now();
-    chosenDate = DateTime.now();
-    selectedDaySummary = null;
-    //  notifyListeners();
-  }
-
+  //==================================start===show daily expense calendar
   DailyExpenseRespone? dailyExpenseRespone;
   bool isLoadDailyExpense = false;
-  String? _lastFetchedMonth;
+  String? dailyExpenseError;
+  DateTime curreentDate = DateTime.now();
+  DateTime? chosenDate;
   Map<DateTime, DailySummary> _summaryByDate = {};
   DailySummary? selectedDaySummary;
   Map<DateTime, DailySummary> get summaryByDate => _summaryByDate;
-  Future<void> dailyExpenseMethod(dynamic year, dynamic month) async {
-    final key = "$year-$month";
-    if (_lastFetchedMonth == key) {
-      print("⚠️ Already fetched for $key");
-      return;
+ final Map<String, DailyExpenseRespone> _monthCache = {};
+  final Set<String> _fetchedMonths = {};
+  String _monthKey(int year, int month) => "$year-$month";
+  // UI Display format
+  //final DateFormat dateFormarte = DateFormat('yyyy-MM');
+  // -------------------------------------------------------------
+  // Call on screen enter (initState). Always hits the API fresh
+  // for the current month and refreshes that month's cache entry.
+  // -------------------------------------------------------------
+  Future<void> callingDailyExpense() async {
+    await dailyExpenseMethod(curreentDate.year, curreentDate.month,
+        forceRefresh: true);
+    // int month = curreentDate.month;
+    // int year = curreentDate.year;
+    // await dailyExpenseMethod(year, month);
+  }
+
+  //String? _lastFetchedMonth;
+
+// -------------------------------------------------------------
+  // Call on month change (onPageChanged in TableCalendar).
+  // Uses cached data if available; fetches only if missing.
+  // -------------------------------------------------------------
+  Future<void> onMonthChanged(DateTime focusedDay) async {
+    curreentDate = focusedDay;
+    selectedDaySummary = null;
+    chosenDate = null;
+    await dailyExpenseMethod(focusedDay.year, focusedDay.month,
+        forceRefresh: false);
+  }
+
+  // -------------------------------------------------------------
+  // Optional: pull-to-refresh / retry button on the current month
+  // -------------------------------------------------------------
+  Future<void> refreshCurrentMonth() async {
+    await dailyExpenseMethod(curreentDate.year, curreentDate.month,
+        forceRefresh: true);
+  }
+
+  Future<void> dailyExpenseMethod(int year, int month,
+      {bool forceRefresh = false}) async {
+    final key = _monthKey(year, month);
+    if (!forceRefresh && _fetchedMonths.contains(key)) {
+      final cached = _monthCache[key];
+      if (cached != null) {
+        dailyExpenseRespone = cached;
+        dailyExpenseError = null;
+        _buildLookupMap();
+        notifyListeners();
+        return;
+      }
+    
     }
+    
+
     isLoadDailyExpense = true;
+    dailyExpenseError = null;
     notifyListeners();
     try {
       final response = await _service.dailyExpenseService(year, month);
@@ -394,11 +304,16 @@ class Expensecontroller extends ChangeNotifier {
       if (response.isSuccess && response.data != null) {
         //assigned json data into class.....
         dailyExpenseRespone = response.data;
-        _lastFetchedMonth = key;
+        _monthCache[key] = response.data!;
+        _fetchedMonths.add(key);
         _buildLookupMap();
+       
+      } else {
+        dailyExpenseError = "Something went wrong Please try again?";
       }
     } catch (e) {
-      print("❌ API Error: ${e}");
+      //print("❌ API Error: ${e}");
+      dailyExpenseError = "Something went wrong. Please try again.";
     } finally {
       isLoadDailyExpense = false;
       notifyListeners();
@@ -406,13 +321,28 @@ class Expensecontroller extends ChangeNotifier {
   }
 
   void _buildLookupMap() {
-    _summaryByDate = {};
+    // _summaryByDate = {};\
+    final map = <DateTime, DailySummary>{};
     final summaries = dailyExpenseRespone?.data?.dailySummaries ?? [];
     for (final s in summaries) {
-      final date = DateTime.parse(s.expenseDate); // "2026-07-13" -> DateTime
-      final normalized = DateTime(date.year, date.month, date.day);
-      _summaryByDate[normalized] = s;
+      try {
+        final date = DateTime.parse(s.expenseDate); // "2026-07-13" -> DateTime
+        map[DateTime(date.year, date.month, date.day)] = s;
+     
+      } catch (_) {
+        // skip malformed date entries instead of crashing the w
+      }
     }
+    _summaryByDate = map;
+  }
+
+  //clear daily summary when switch month...
+  void clearDailySummary() {
+    //  _summaryByDate.clear();
+    selectedDaySummary = null;
+    chosenDate = null;
+    notifyListeners();
+    print("clear daily summary");
   }
 
   void selectDay(DateTime day) {
@@ -422,7 +352,20 @@ class Expensecontroller extends ChangeNotifier {
     notifyListeners(); // This triggers the UI layout to rebuild and show categories
   }
 
-  //DATE SHOW DATE CONTROLLER...................
+  // Clears ALL cached months — use for logout, pull-to-refresh-everything,
+  // or after an action that could change historical data (e.g. deleting
+  // an expense from a past month).
+  void resetFetchCache() {
+    _monthCache.clear();
+    _fetchedMonths.clear();
+  }
+
+  void invalidateMonth(int year, int month) {
+    final key = _monthKey(year, month);
+    _monthCache.remove(key);
+    _fetchedMonths.remove(key);
+  }
+
 // ======================================================START===================
 // Used for category screen navigation
   DateTime categoryDate = DateTime.now();
@@ -459,12 +402,9 @@ class Expensecontroller extends ChangeNotifier {
         exresponse = response.data;
 
         _mapExCat[date] = exresponse?.data ?? [];
-      }
-      else
-      {
+      } else {
         _errorMessage = response.message ?? "Failed to load categorie";
       }
-      
     } catch (e) {
       print("Error fetching categories: $e");
       _errorMessage = e.toString();
@@ -476,9 +416,6 @@ class Expensecontroller extends ChangeNotifier {
 
 //CALLING CATEGORY DATE WISE...........................
   Future<void> changeCategoryDate(int days) async {
-    // categoryDate = categoryDate.add(Duration(days: days));
-    // if (newDate.isAfter(DateTime.now())) return; // block future dates
-    // submitDate = categoryDate;
     final newDate = categoryDate.add(Duration(days: days));
     if (newDate.isAfter(DateTime.now())) return; // block future dates
 
@@ -492,41 +429,12 @@ class Expensecontroller extends ChangeNotifier {
     notifyListeners();
   }
 
-  //reset categoryList....
-  // void resetListOfCategory() {
-  //   _mapExCat.clear();
-  //   _dynamicField.clear();
-  // }
-  void resetListOfCategory() {
-    _mapExCat.clear();
-    _dynamicField.clear();
-    _dynamicFieldCache.clear();
-    _lastFetchedMonth =
-        null; // if this exists from your calendar caching work — reset that too
-    notifyListeners();
-  }
-//=========================================================END=====================
+//=================================================END=====================
 
   DateTime selectDate = DateTime.now();
   final DateFormat disireDateFormate = DateFormat('yyyy-MM-dd');
   //var formattedDate;
   final DateFormat formateDate = DateFormat('yyyy-MM-dd');
-
-  //NEXT STEP  FIR NEXT DAY AND BACK DATE
-
-  // Future<void> callCategoryFirstTime() async {
-  //   String formattedDate = disireDateFormate.format(selectDate);
-  //   fatchExpenseCategory(formattedDate);
-  // }
-
-  // void nextDayAndPreviousDay(int day) {
-  //   selectDate = selectDate.add(Duration(days: day));
-  //   String formattedDate = .format(selectDate);
-
-  //   // Triggers API call automatically when user taps the arrows
-  //   fatchExpenseCategory(formattedDate);
-  //   notifyListeners();
-  // }
 
   bool _isLoadExpenseCategory = false;
   bool get isLoadExpenseCategory => _isLoadExpenseCategory;
@@ -535,7 +443,7 @@ class Expensecontroller extends ChangeNotifier {
 
   Map<DateTime, ExpenseCategory> _mapExpenseCat = {};
   Map<DateTime, ExpenseCategory> get mapExpenseCat => _mapExpenseCat;
-  String? _lastFetchedDate;
+
   //date category
   ExpenseCategory? expenseCategory;
   ExpenseCategoryResponse? exresponse;
@@ -543,12 +451,6 @@ class Expensecontroller extends ChangeNotifier {
 // 2. Fetch the category list safely using a date string
   List<ExpenseCategory> getCategoriesForDate(String dateString) {
     return _mapExCat[dateString] ?? [];
-  }
-
-// 3. Fix the mapping method to assign the complete list to the date key
-  void _buildDailyLookup(String key) {
-    // Directly attach the full category list to the unique date string key
-    _mapExCat[key] = exresponse?.data ?? [];
   }
 
   Future<void> refreshExpenseCategory(String date) async {
@@ -569,7 +471,7 @@ class Expensecontroller extends ChangeNotifier {
     }
   }
 
-  //EXPENSE SERVICE............................................................
+  //EXPENSE SERVICE............................................................start=----------------submit expense....
 
   bool _isSubmitting = false;
   bool get isSubmitting => _isSubmitting;
@@ -610,8 +512,10 @@ class Expensecontroller extends ChangeNotifier {
       notifyListeners();
     }
   }
+
   void clearDynamicField() {
-  _dynamicField = [];
-  notifyListeners();
-}
+    _dynamicField = [];
+    notifyListeners();
+  }
+  //------------------------------------------------------------end expense submit---------------
 }
