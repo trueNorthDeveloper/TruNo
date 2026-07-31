@@ -52,14 +52,6 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     SizeConFig.init(context);
     final platform = getPlatformType();
-//comment 23-3-26
-    // return MaterialApp(
-    //     debugShowCheckedModeBanner: false,
-    //     theme: MyAppTheme.lightTheme,
-    //     darkTheme: MyAppTheme.darkTheme,
-    //     home: platform == PlatformType.web
-    //         ? AdminSplashScreen()
-    //         : SplashScreen());
 
     return MaterialApp(
         debugShowCheckedModeBanner: false,

@@ -119,9 +119,13 @@ class Expensecontroller extends ChangeNotifier {
     notifyListeners();
   }
 
-  DateTime selectedDate = DateTime.now();
+//clear dynamic form befor fatch data..........................
+  Future<void> clearFormField() async {
+    _dynamicField.clear();
+    _dynamicFieldCache.clear();
+    print("from--------------------------------------------clear");
+  }
 
-  final DateFormat dateFormat = DateFormat('yyyy-MM-dd');
   final DateFormat apiDateFormat = DateFormat('yyyy-MM-dd'); // API format
 
   //RETRIVE DYNAMIC FILED......................................
@@ -240,7 +244,7 @@ class Expensecontroller extends ChangeNotifier {
   Map<DateTime, DailySummary> _summaryByDate = {};
   DailySummary? selectedDaySummary;
   Map<DateTime, DailySummary> get summaryByDate => _summaryByDate;
- final Map<String, DailyExpenseRespone> _monthCache = {};
+  final Map<String, DailyExpenseRespone> _monthCache = {};
   final Set<String> _fetchedMonths = {};
   String _monthKey(int year, int month) => "$year-$month";
   // UI Display format
@@ -291,9 +295,7 @@ class Expensecontroller extends ChangeNotifier {
         notifyListeners();
         return;
       }
-    
     }
-    
 
     isLoadDailyExpense = true;
     dailyExpenseError = null;
@@ -307,7 +309,6 @@ class Expensecontroller extends ChangeNotifier {
         _monthCache[key] = response.data!;
         _fetchedMonths.add(key);
         _buildLookupMap();
-       
       } else {
         dailyExpenseError = "Something went wrong Please try again?";
       }
@@ -328,7 +329,6 @@ class Expensecontroller extends ChangeNotifier {
       try {
         final date = DateTime.parse(s.expenseDate); // "2026-07-13" -> DateTime
         map[DateTime(date.year, date.month, date.day)] = s;
-     
       } catch (_) {
         // skip malformed date entries instead of crashing the w
       }
@@ -366,75 +366,10 @@ class Expensecontroller extends ChangeNotifier {
     _fetchedMonths.remove(key);
   }
 
-// ======================================================START===================
-// Used for category screen navigation
-  DateTime categoryDate = DateTime.now();
-
-// Used while submitting expense form
-  DateTime submitDate = DateTime.now();
-
-// Future: another report/date filter
-  DateTime reportDate = DateTime.now();
-//STEP:1 CALL FISRT API IN INTI STATE USIN CURRENT DATE
-  final DateFormat dateFormat2 = DateFormat('yyyy-MM-dd');
-  Future<void> callCategoryFirstTime() async {
-    await fatchExpenseCategory(
-      dateFormat2.format(categoryDate),
-    );
-  }
-
-//CALL MAIN API USING THIS METHOD.................
-  Map<String, List<ExpenseCategory>> _mapExCat = {};
-  Map<String, List<ExpenseCategory>> get mapExCat => _mapExCat;
-  Future<void> fatchExpenseCategory(String date,
-      {bool forceRefresh = false}) async {
-    if (_mapExCat.containsKey(date) && !forceRefresh) {
-      print("already fetched for this date................");
-      return;
-    }
-
-    _isLoadExpenseCategory = true;
-    notifyListeners();
-
-    try {
-      final response = await _service.fatchExpenseCategory(date);
-      if (response.isSuccess) {
-        exresponse = response.data;
-
-        _mapExCat[date] = exresponse?.data ?? [];
-      } else {
-        _errorMessage = response.message ?? "Failed to load categorie";
-      }
-    } catch (e) {
-      print("Error fetching categories: $e");
-      _errorMessage = e.toString();
-    } finally {
-      _isLoadExpenseCategory = false;
-      notifyListeners();
-    }
-  }
-
-//CALLING CATEGORY DATE WISE...........................
-  Future<void> changeCategoryDate(int days) async {
-    final newDate = categoryDate.add(Duration(days: days));
-    if (newDate.isAfter(DateTime.now())) return; // block future dates
-
-    categoryDate = newDate;
-    submitDate = newDate;
-
-    await fatchExpenseCategory(
-      formateDate.format(categoryDate),
-    );
-
-    notifyListeners();
-  }
-
-//=================================================END=====================
-
   DateTime selectDate = DateTime.now();
   final DateFormat disireDateFormate = DateFormat('yyyy-MM-dd');
   //var formattedDate;
-  final DateFormat formateDate = DateFormat('yyyy-MM-dd');
+  // final DateFormat formateDate = DateFormat('yyyy-MM-dd');
 
   bool _isLoadExpenseCategory = false;
   bool get isLoadExpenseCategory => _isLoadExpenseCategory;
@@ -518,4 +453,86 @@ class Expensecontroller extends ChangeNotifier {
     notifyListeners();
   }
   //------------------------------------------------------------end expense submit---------------
+
+  // ======================================================START===================
+// Used for category screen navigation
+//IT WILL SHOW CURRENT DATE----------------------ON UI------------------
+  final DateFormat formateDate = DateFormat('yyyy-MM-dd');
+  DateTime categoryCurrentDate = DateTime.now();
+  //DateTime selectedDate = DateTime.now();
+
+// Used while submitting expense form
+  DateTime submitDate = DateTime.now();
+
+// Future: another report/date filter
+  // DateTime reportDate = DateTime.now();
+//STEP:1 CALL FISRT API IN INTI STATE USIN CURRENT DATE
+
+//CALLING CATEGORY DATE WISE...........................
+  Future<void> changeCategoryDate(int days) async {
+    final newDate = categoryCurrentDate.add(Duration(days: days));
+    if (newDate.isAfter(DateTime.now())) return; // block future dates
+
+    categoryCurrentDate = newDate;
+    submitDate = newDate;
+
+    await fatchExpenseCategory(
+      formateDate.format(categoryCurrentDate),
+    );
+
+    notifyListeners();
+  }
+
+  Future<void> onRefeshDate({forceRefrsh}) async {
+    categoryCurrentDate = DateTime.now();
+    await fatchExpenseCategory(formateDate.format(categoryCurrentDate),
+        forceRefresh: forceRefrsh);
+    //clear dynamic from............when user refresh screen
+    await clearFormField();
+
+    notifyListeners();
+  }
+
+//=================================================END=====================
+  //EXPENSE CATEGORY SHOW AND DYNAMIC FORM SHOW================START===========================
+
+  final DateFormat dateFormat2 = DateFormat('yyyy-MM-dd');
+  Future<void> callCategoryFirstTime({forceRefresh}) async {
+    await fatchExpenseCategory(dateFormat2.format(categoryCurrentDate),
+        forceRefresh: forceRefresh);
+  }
+
+  //CALL MAIN API USING THIS METHOD.................
+  Map<String, List<ExpenseCategory>> _mapExCat = {};
+  Map<String, List<ExpenseCategory>> get mapExCat => _mapExCat;
+  Future<void> fatchExpenseCategory(String date,
+      {bool forceRefresh = false}) async {
+    if (_mapExCat.containsKey(date) && !forceRefresh) {
+      print("-----------------------------------------------${date}");
+      print("already fetched for this date................");
+      return;
+    }
+    print("------------------------------------catDate${date}");
+    _isLoadExpenseCategory = true;
+    notifyListeners();
+
+    try {
+      final response = await _service.fatchExpenseCategory(date);
+      if (response.isSuccess) {
+        exresponse = response.data;
+
+        _mapExCat[date] = exresponse?.data ?? [];
+      } else {
+        _errorMessage = response.message ?? "Failed to load categorie";
+      }
+    } catch (e) {
+      print("Error fetching categories: $e");
+      _errorMessage = e.toString();
+    } finally {
+      _isLoadExpenseCategory = false;
+      notifyListeners();
+    }
+  }
+
+  //===========================================================END=============================
 }

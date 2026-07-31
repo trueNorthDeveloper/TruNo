@@ -233,46 +233,6 @@ class Expensemoduleservice {
     }
   }
 
-  // Future<Result> submitExpense(
-  //   Map<String, Object> dto,
-  //   List<String> files,
-  // ) async {
-  //   try {
-  //     const endPoint = "expense/expense-submission";
-
-  //     final response = await auth.authorizedPostForTaskWithMultipleFile(
-  //       dto,
-  //       files,
-  //       endPoint,
-  //     );
-
-  //     final body = await response.stream.bytesToString();
-
-  //     if (response.statusCode == 200 || response.statusCode == 201) {
-  //       return Result.success(jsonDecode(body));
-  //     }
-
-  //     return Result.failure(
-  //       ApiError.server,
-  //       //  message: body,
-  //     );
-  //   } on FormatException {
-  //     return Result.failure(ApiError.jsonFormat);
-  //   } on SocketException {
-  //     return Result.failure(ApiError.network);
-  //   } on TimeoutException {
-  //     return Result.failure(ApiError.timeout);
-  //   } on http.ClientException {
-  //     return Result.failure(ApiError.client);
-  //   } on PlatformException {
-  //     return Result.failure(ApiError.platform);
-  //   } catch (e) {
-  //     return Result.failure(
-  //       ApiError.unknown,
-  //       // message: e.toString(),
-  //     );
-  //   }
-  // }
   Future<Result> submitExpense(
     Map<String, Object> dto,
     List<String> files,
@@ -288,7 +248,9 @@ class Expensemoduleservice {
 
       final body = await response.stream.bytesToString();
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
+      if (response.statusCode == 200 ||
+          response.statusCode == 202 ||
+          response.statusCode == 201) {
         return Result.success(jsonDecode(body));
       }
 
