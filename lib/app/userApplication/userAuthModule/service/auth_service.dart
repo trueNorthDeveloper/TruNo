@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -63,8 +64,8 @@ class UserServicesForApi {
   //     return Resultt.systemError(ApiError.server);
   //   }
   // }
-  Future<Resultt> loginWithJwt(
-      Map<String, dynamic> toJson, String filePath) async {
+  Future<Resultt> loginWithJwt(Map<String, dynamic> toJson,
+      [String? filePath]) async {
     try {
       final request =
           http.MultipartRequest("POST", Uri.parse(Apiconstants.login));
@@ -79,7 +80,12 @@ class UserServicesForApi {
       );
 
       // Part 2: Image File
-      request.files.add(await http.MultipartFile.fromPath('file', filePath));
+
+      // Part 2: Image File Payload (Safe optional verification)
+      // 🟢 FIXED: Safely check if filePath is not null and not empty before processing
+      if (filePath != null && filePath.isNotEmpty) {
+        request.files.add(await http.MultipartFile.fromPath('file', filePath));
+      }
 
       final streamedResponse =
           await request.send().timeout(const Duration(seconds: 30));
@@ -143,40 +149,97 @@ class UserServicesForApi {
     }
   }
 
-  Future<Result<UsermeModel>> loginAfterMeService2(String token) async {
+  // Future<Result<UsermeModel>> loginAfterMeService2(String token) async {
+  //   try {
+  //     final url = Uri.parse(Apiconstants.me);
+  //     print("Attempting to call: $url"); // DEBUG PRINT
+  //     print("Using Token: Bearer $token"); // DEBUG PRINT
+
+  //     final response = await http.get(
+  //       url,
+  //       headers: {
+  //         "Authorization": "Bearer $token",
+  //         "Content-Type": "application/json",
+  //       },
+  //     ).timeout(const Duration(seconds: 15));
+
+  //     print("Response Status: ${response.statusCode}"); // DEBUG PRINT
+  //     print("Response Body: ${response.body}"); // DEBUG PRINT
+
+  //     if (response.statusCode == 200) {
+  //       final data = jsonDecode(response.body);
+  //       return Result.success(UsermeModel.fromJson(data));
+  //     } else if (response.statusCode == 401 || response.statusCode == 403) {
+  //       return Result.failure(ApiError.unauthorized);
+  //     } else {
+  //       return Result.failure(ApiError.server);
+  //     }
+  //   } on SocketException {
+  //     return Result.failure(ApiError.network);
+  //   } on TimeoutException {
+  //     return Result.failure(ApiError.timeout);
+  //   } on FormatException {
+  //     print("Error during Me API call: JSON parse error");
+  //     return Result.failure(ApiError.jsonFormat);
+  //   } catch (e) {
+  //     print("Error during Me API call: $e"); // THIS WILL TELL YOU WHY
+  //     return Result.failure(ApiError.unknown);
+  //   }
+  // }
+  Future<Result> loginAfterMeService2(String token) async {
     try {
       final url = Uri.parse(Apiconstants.me);
-      print("Attempting to call: $url"); // DEBUG PRINT
-      print("Using Token: Bearer $token"); // DEBUG PRINT
+
+      //  print("Calling: $url");
+      //print("Token available: ${token.isNotEmpty}");
 
       final response = await http.get(
         url,
         headers: {
           "Authorization": "Bearer $token",
-          "Content-Type": "application/json",
+          "Accept": "application/json",
+
+          // Needed when using an ngrok URL
+          "ngrok-skip-browser-warning": "true",
         },
       ).timeout(const Duration(seconds: 15));
 
-      print("Response Status: ${response.statusCode}"); // DEBUG PRINT
-      print("Response Body: ${response.body}"); // DEBUG PRINT
+      // print("Status: ${response.statusCode}");
+      //print("Content-Type: ${response.headers['content-type']}");
+      //print("Body: ${response.body}");
 
       if (response.statusCode == 200) {
+        final contentType =
+            response.headers['content-type']?.toLowerCase() ?? '';
+
+        if (!contentType.contains('application/json')) {
+          //  print("Expected JSON but received: $contentType");
+          return Result.failure(ApiError.jsonFormat);
+        }
+
         final data = jsonDecode(response.body);
-        return Result.success(UsermeModel.fromJson(data));
-      } else if (response.statusCode == 401 || response.statusCode == 403) {
-        return Result.failure(ApiError.unauthorized);
-      } else {
-        return Result.failure(ApiError.server);
+
+        return Result.success(
+          UsermeModel.fromJson(data),
+        );
       }
-    } on SocketException {
+
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        return Result.failure(ApiError.unauthorized);
+      }
+
+      return Result.failure(ApiError.server);
+    } on SocketException catch (e) {
+      print("Network error: $e");
       return Result.failure(ApiError.network);
-    } on TimeoutException {
+    } on TimeoutException catch (e) {
+      print("Timeout: $e");
       return Result.failure(ApiError.timeout);
-    } on FormatException {
-      print("Error during Me API call: JSON parse error");
+    } on FormatException catch (e) {
+      print("JSON parse error: $e");
       return Result.failure(ApiError.jsonFormat);
     } catch (e) {
-      print("Error during Me API call: $e"); // THIS WILL TELL YOU WHY
+      print("Unknown API error: $e");
       return Result.failure(ApiError.unknown);
     }
   }
@@ -424,13 +487,19 @@ class UserServicesForApi {
       } else {
         return Result.failure(ApiError.server);
       }
-    } on SocketException {
+    } on SocketException catch (e) {
+      debugPrint("Network error occurred: $e");
       return Result.failure(ApiError.network);
-    } on TimeoutException {
+    } on TimeoutException catch (e) {
+      debugPrint("timeout error occurred: $e");
+
       return Result.failure(ApiError.timeout);
-    } on http.ClientException {
+    } on http.ClientException catch (e) {
+      debugPrint("client exception error occurred: $e");
+
       return Result.failure(ApiError.client);
     } catch (e) {
+      debugPrint("fail occurred: $e");
       return Result.failure(ApiError.unknown);
     }
   }

@@ -1,0 +1,23 @@
+import 'package:flutter/material.dart';
+import 'package:truenorthflutterfrontend/public/config/Nav_item.dart';
+
+// ignore: unused_element
+class _WebLayout extends StatelessWidget {
+  final List<NavItem> items;
+  final int selectedIndex;
+  final ValueChanged<int> onSelect;
+  const _WebLayout({
+    required this.items,
+    required this.selectedIndex,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Row(
+        children: [],
+      ),
+    );
+  }
+}

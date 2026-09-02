@@ -16,8 +16,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'package:truenorthflutterfrontend/app/adminApplication/view/admin_dashboard_page.dart';
 import 'package:truenorthflutterfrontend/app/unUsedButImp/user_list_of_screen.dart';
 import 'package:truenorthflutterfrontend/app/unUsedButImp/select_screen.dart';
 
@@ -273,12 +271,12 @@ class LoginProvider extends ChangeNotifier {
       print("User logged in successfully: $userRoles");
 
       if (userRoles == "ADMIN") {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => AdminDashboardPage(),
-          ),
-        );
+        // Navigator.pushReplacement(
+        //   context,
+        //   MaterialPageRoute(
+        //     builder: (context) => AdminDashboardPage(),
+        //   ),
+        // );
       } else if (userRoles == "EMP") {
         _isLoading = true;
         notifyListeners();

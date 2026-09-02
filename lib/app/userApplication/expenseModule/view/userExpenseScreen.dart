@@ -408,6 +408,7 @@ Widget _buildExpenseBreakdown(Expensecontroller provider) {
                 itemCount: categories.length,
                 itemBuilder: (context, index) {
                   final cat = categories[index];
+
                   return Card(
                     margin: const EdgeInsets.symmetric(vertical: 6.0),
                     elevation: 0.5,
@@ -422,13 +423,35 @@ Widget _buildExpenseBreakdown(Expensecontroller provider) {
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                       subtitle: Text("Status: ${cat.status}"),
-                      trailing: Text(
-                        "₹${cat.expenseAmount}",
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                          color: Colors.black87,
-                        ),
+                      // Wrap text and button in a Row with MainAxisSize.min
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            "₹${cat.expenseAmount}",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(
+                              width: 8), // Space between amount and button
+                          IconButton(
+                            icon: const Icon(Icons.edit,
+                                color: Colors.blue, size: 20),
+                            constraints:
+                                const BoxConstraints(), // Removes default padding
+                            padding: EdgeInsets.zero,
+                            onPressed: () {
+                              final transactionId = cat.transactionId;
+                              //update with confirm button..............
+                              _showUpdateDialog(
+                                  context, cat, summary, transactionId);
+                            },
+                            tooltip: 'Update Expense',
+                          ),
+                        ],
                       ),
                     ),
                   );
@@ -438,6 +461,110 @@ Widget _buildExpenseBreakdown(Expensecontroller provider) {
           )
       ],
     ),
+  );
+}
+
+void _showUpdateDialog(
+    BuildContext context, dynamic cat, DailySummary summary, transactionId) {
+  final TextEditingController amountController =
+      TextEditingController(text: cat.expenseAmount.toString());
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('Update ${cat.categoryName}'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Amount Input Field
+              TextField(
+                controller: amountController,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: 'Expense Amount (₹)',
+                  prefixText: '₹ ',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          Consumer<Expensecontroller>(builder: (context, pro, child) {
+            if (pro.isUpdate) {
+              return const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                ),
+              );
+            }
+            return ElevatedButton(
+              onPressed: () async {
+                final String enteredAmount = amountController.text.trim();
+               // final String date = summary.expenseDate;
+                if (enteredAmount.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please enter an amount'),
+                    ),
+                  );
+                  return;
+                }
+                final double? amount = double.tryParse(enteredAmount);
+                if (amount == null || amount < 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Enter a valid amount'),
+                    ),
+                  );
+                  return;
+                }
+
+                final Map<String, dynamic> toJson = {
+                  "expenseAmount": amount,
+                  "expenseDate": summary.expenseDate,
+                  "transcationId": transactionId,
+                };
+                bool success = await pro.expenseUpdate(toJson);
+
+                if (!context.mounted) return;
+                if (success) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      backgroundColor: Colors.green,
+                      content: Text(
+                        pro.tomap["message"] ?? "Expense updated successfully",
+                      ),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      backgroundColor: Colors.red,
+                      content: Text(
+                        pro.updateError ?? "Unable to update expense",
+                      ),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Save'),
+            );
+          })
+        ],
+      );
+    },
   );
 }
 
@@ -484,16 +611,15 @@ Widget _buildTotalSummary(MyBalanceRespone? myBalanceResponse) {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          // _buildTextAndAmount("Paid", "2,000", Colors.green),
-          // _divider(),
-          // _buildTextAndAmount("Balance", "900", Colors.blueGrey),
-          // _divider(),
-          // _buildTextAndAmount("Total", "100", Colors.redAccent),
           _buildTextAndAmount(
               "Paid", myBalanceResponse?.data?.totalCreditAmount, Colors.green),
           _divider(),
-          _buildTextAndAmount("Balance",
-              myBalanceResponse?.data?.availableAmount, Colors.blueGrey),
+          _buildTextAndAmount(
+              "Balance",
+              myBalanceResponse?.data?.availableAmount,
+              (myBalanceResponse?.data?.availableAmount ?? 0) > 0
+                  ? Colors.blueGrey
+                  : Colors.red),
           _divider(),
           _buildTextAndAmount("Expense",
               myBalanceResponse?.data?.totalExpenseAmount, Colors.redAccent),

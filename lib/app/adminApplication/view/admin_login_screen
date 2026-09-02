@@ -3,6 +3,7 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:provider/provider.dart';
 
 import 'package:truenorthflutterfrontend/app/adminApplication/controller/admin_dashBoard_provider.dart';
+import 'package:truenorthflutterfrontend/app/adminApplication/view/admin_dashboard_page.dart';
 
 import 'package:truenorthflutterfrontend/public/utils/adminUtil/custom_form_layout.dart';
 import 'package:truenorthflutterfrontend/public/utils/adminUtil/custom_textForm_Field.dart';
@@ -72,15 +73,15 @@ class _AdminLoginUiScreenState extends State<AdminLoginScreenUi> {
                           formKey: _formKey,
                           onSubmit: () {
                             if (_formKey.currentState!.validate()) {
-                              // Navigator.push(
-                              //   context,
-                              //   MaterialPageRoute(
-                              //       builder: (context) => AdminDashboardPage()),
-                              // );
-                              adminContro.adminLoginWithIdAndPassword(
-                                  _loginIdController.text.trim(),
-                                  _passwordController.text.trim(),
-                                  context);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => AdminDashboardPage()),
+                              );
+                              // adminContro.adminLoginWithIdAndPassword(
+                              //     _loginIdController.text.trim(),
+                              //     _passwordController.text.trim(),
+                              //     context);
                             }
                           },
                           children: [

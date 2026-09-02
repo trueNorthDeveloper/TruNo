@@ -77,7 +77,8 @@ class DailySummary {
     return DailySummary(
       expenseDate: json['expenseDate'] ?? '',
       status: json['status'] ?? '',
-      totalExpensesPerDay: json['totalExpenesPerDay'] ?? 0, // backend typo, kept as-is
+      totalExpensesPerDay:
+          json['totalExpenesPerDay'] ?? 0, // backend typo, kept as-is
       categories: json['categories'] != null
           ? List<Categories>.from(
               json['categories'].map((x) => Categories.fromJson(x)),
@@ -98,12 +99,16 @@ class DailySummary {
 
 class Categories {
   final int id;
+  final dynamic transactionId;
+  final dynamic expenseId;
   final String categoryName;
   final num expenseAmount;
   final String status;
 
   Categories({
     required this.id,
+    required this.transactionId,
+    required this.expenseId,
     required this.categoryName,
     required this.expenseAmount,
     required this.status,
@@ -112,6 +117,8 @@ class Categories {
   factory Categories.fromJson(Map<String, dynamic> json) {
     return Categories(
       id: json['id'] ?? 0,
+      transactionId: json["transactionId"],
+      expenseId: json["expenseId"],
       categoryName: json['categoryName'] ?? '',
       expenseAmount: json['expenseAmount'] ?? 0,
       status: json['status'] ?? '',

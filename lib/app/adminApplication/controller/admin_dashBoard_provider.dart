@@ -9,10 +9,8 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:truenorthflutterfrontend/app/adminApplication/view/admin_dashboard_page.dart';
 import 'package:truenorthflutterfrontend/app/adminApplication/model/admin_login_response_model.dart';
 import 'package:truenorthflutterfrontend/app/adminApplication/model/admin_all_users_detail_model.dart';
-import 'package:truenorthflutterfrontend/public/config/api_const.dart';
 
 import 'package:truenorthflutterfrontend/public/utils/userUtil/mesage_snack_bar.dart';
 
@@ -44,7 +42,7 @@ class AdminDashboardProvider extends ChangeNotifier {
     _isLogin = true;
     notifyListeners();
 
-    final url = Uri.parse(Apiconstants.adminlog); // Make sure this is correct
+    final url = Uri.parse(""); // Make sure this is correct
     final headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Basic ' + base64Encode(utf8.encode('admin:admin123')),
@@ -74,10 +72,10 @@ class AdminDashboardProvider extends ChangeNotifier {
         prefs.setString('role', loginResponse.data.role);
         prefs.setInt('uuid', loginResponse.data.uuid);
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => AdminDashboardPage()),
-        );
+        // Navigator.pushReplacement(
+        //   context,
+        //   MaterialPageRoute(builder: (context) => AdminDashboardPage()),
+        // );
       } else {
         ShowTaostMessage.toastMessage(
             context, "Login failed: ${response.statusCode}");
@@ -137,50 +135,48 @@ class AdminDashboardProvider extends ChangeNotifier {
   //   // return [];
   // }
   Future<void> allUsers(BuildContext context) async {
-  final url = Uri.parse(Apiconstants.fatchAllUser);
-  final headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Basic ' + base64Encode(utf8.encode('admin:admin123')),
-  };
+    final url = Uri.parse("");
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Basic ' + base64Encode(utf8.encode('admin:admin123')),
+    };
 
-  try {
-    final allUserResponse = await http
-        .get(url, headers: headers)
-        .timeout(const Duration(seconds: 30));
+    try {
+      final allUserResponse = await http
+          .get(url, headers: headers)
+          .timeout(const Duration(seconds: 30));
 
-    final statusCode = allUserResponse.statusCode;
-    final contentType = allUserResponse.headers['content-type'] ?? '';
+      final statusCode = allUserResponse.statusCode;
+      final contentType = allUserResponse.headers['content-type'] ?? '';
 
-    if (statusCode == 200 || statusCode == 201) {
-      if (contentType.contains('application/json')) {
-        final List<dynamic> data = jsonDecode(allUserResponse.body);
-        // Parse users (if you have User.fromJson):
-        final users = data.map((user) => User.fromJson(user)).toList();
-        // Do something with users
-        debugPrint('Fetched ${users.length} users.');
+      if (statusCode == 200 || statusCode == 201) {
+        if (contentType.contains('application/json')) {
+          final List<dynamic> data = jsonDecode(allUserResponse.body);
+          // Parse users (if you have User.fromJson):
+          final users = data.map((user) => User.fromJson(user)).toList();
+          // Do something with users
+          debugPrint('Fetched ${users.length} users.');
+        } else {
+          debugPrint("Unexpected content-type: $contentType");
+          ShowTaostMessage.toastMessage(
+              context, "Unexpected response format (not JSON).");
+        }
       } else {
-        debugPrint("Unexpected content-type: $contentType");
+        debugPrint("API Error: $statusCode");
         ShowTaostMessage.toastMessage(
-            context, "Unexpected response format (not JSON).");
+          context,
+          "API error: $statusCode",
+        );
       }
-    } else {
-      debugPrint("API Error: $statusCode");
-      ShowTaostMessage.toastMessage(
-        context,
-        "API error: $statusCode",
-      );
+    } on SocketException {
+      ShowTaostMessage.toastMessage(context, "No Internet connection");
+    } on TimeoutException {
+      ShowTaostMessage.toastMessage(context, "Request timed out");
+    } on FormatException {
+      ShowTaostMessage.toastMessage(context, "Invalid response format");
+    } catch (e) {
+      debugPrint("Unexpected error: $e");
+      ShowTaostMessage.toastMessage(context, "Something went wrong");
     }
-  } on SocketException {
-    ShowTaostMessage.toastMessage(context, "No Internet connection");
-  } on TimeoutException {
-    ShowTaostMessage.toastMessage(context, "Request timed out");
-  } on FormatException {
-    ShowTaostMessage.toastMessage(context, "Invalid response format");
-  } catch (e) {
-    debugPrint("Unexpected error: $e");
-    ShowTaostMessage.toastMessage(context, "Something went wrong");
   }
-}
-
-
 }

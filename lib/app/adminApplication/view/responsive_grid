@@ -1,0 +1,46 @@
+import 'package:flutter/material.dart';
+import 'package:truenorthflutterfrontend/public/config/break_points.dart';
+
+class ResponsiveGrid extends StatelessWidget {
+  final List<Widget> children;
+
+  const ResponsiveGrid({
+    super.key,
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+         final bool isWebLayout = BreakPoint.isWeb(SizeConFig.screenWidth);
+
+        int crossAxisCount;
+
+        if (BreakPoint.isMobile(width)) {
+          crossAxisCount = 1;
+        } else if (width < BreakPoint.isWeb(isWebLayout)) {
+          crossAxisCount = 2;
+        } else {
+          crossAxisCount = 4;
+        }
+
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: children.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+            childAspectRatio: 1.8,
+          ),
+          itemBuilder: (context, index) {
+            return children[index];
+          },
+        );
+      },
+    );
+  }
+}

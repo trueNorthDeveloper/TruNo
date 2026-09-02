@@ -1,12 +1,7 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:truenorthflutterfrontend/app/adminApplication/controller/admin_dashBoard_provider.dart';
-import 'package:truenorthflutterfrontend/app/adminApplication/view/admin_all_users_screen.dart';
-import 'package:truenorthflutterfrontend/app/adminApplication/view/admin_dashboad_content.dart';
-import 'package:truenorthflutterfrontend/app/adminApplication/view/admin_login_screen.dart';
-import 'package:truenorthflutterfrontend/app/adminApplication/view/aside_bar.dart';
-import 'package:truenorthflutterfrontend/app/adminApplication/view/atop_bar.dart';
+
 import 'package:truenorthflutterfrontend/public/utils/adminUtil/formLayout_reuseable.dart';
 
 class AdminDashboardPage extends StatelessWidget {
@@ -16,10 +11,10 @@ class AdminDashboardPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final adpro = Provider.of<AdminDashboardProvider>(context);
     final List<Widget> pages = [
-      const AdminDashboardContent(),
+      AdminDashboardContent(),
       AdminAllUsers(),
       FormlayoutReuseable(),
-      const AdminLoginScreenUi(),
+      AdminLoginScreenUi(),
     ];
 
     return Scaffold(

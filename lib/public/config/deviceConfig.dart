@@ -3,21 +3,70 @@ import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class Deviceconfig {
   //check internet connection..............date 21-6-2025.......................
   static Future<bool> checkInternetConnection() async {
-    final connectivityResult = await Connectivity().checkConnectivity();
+    // final connectivityResult = await Connectivity().checkConnectivity();
 
-    if (connectivityResult == ConnectivityResult.none) {
+    // if (connectivityResult == ConnectivityResult.none) {
+    //   return false;
+    // }
+
+    // try {
+    //    final result = await InternetAddress.lookup('google.com');
+
+    //   return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+    // } catch (_) {
+    //   return false;
+    // }
+    final List<ConnectivityResult> connectivityResult =
+        await Connectivity().checkConnectivity();
+    if (connectivityResult.contains(ConnectivityResult.none)) {
       return false;
     }
+    // 2. Perform live routing validation to guarantee external data access
+    if (kIsWeb) {
+      return await _checkWebInternet();
+    } else {
+      return await _checkNativeInternet();
+    }
+  }
+// Safe approach for Web Chrome
+static Future<bool> _checkWebInternet() async {
+  try {
+    // 🟢 Using a public, CORS-enabled echoing endpoint instead of Google
+    final response = await http.get(Uri.parse('https://ipify.org')).timeout(
+      const Duration(seconds: 4),
+    );
+    return response.statusCode == 200;
+  } catch (_) {
+    return false;
+  }
+}
 
+  // Safe approach for Web Chrome (Checks actual data availability via HTTP request)
+  // static Future<bool> _checkWebInternet() async {
+  //   try {
+  //     // Fetch a small head-only request from a stable global domain to bypass CORS
+  //     final response = await http.head(Uri.parse('https://google.com')).timeout(
+  //           const Duration(seconds: 4),
+  //         );
+  //     return response.statusCode >= 200 && response.statusCode < 400;
+  //   } catch (_) {
+  //     return false;
+  //   }
+  // }
+
+  // Standard approach for Native iOS/Android apps
+  static Future<bool> _checkNativeInternet() async {
     try {
       final result = await InternetAddress.lookup('google.com');
       return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
@@ -48,6 +97,7 @@ class Deviceconfig {
       return [];
     }
   }
+
 //Position
   static Future<Position?> deteminPosition() async {
     try {
@@ -55,7 +105,6 @@ class Deviceconfig {
       if (!serviceEnabled) {
         //  _showLocationDialog(context, true);
         return null;
-       
       }
 
       LocationPermission permission = await Geolocator.checkPermission();
@@ -64,15 +113,15 @@ class Deviceconfig {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
           //  _showLocationDialog(context, false);
-           return null;
-         // return false;
+          return null;
+          // return false;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
         //  _showLocationDialog(context, false);
         return null;
-       // return false;
+        // return false;
       }
 
       // Safe to get location now
@@ -84,11 +133,11 @@ class Deviceconfig {
     } on PlatformException catch (e) {
       print("❌ PlatformException in _deteminPosition: ${e.message}");
       return null;
-     // return false;
+      // return false;
     } catch (e) {
       print("❌ Unexpected error in _deteminPosition: $e");
       return null;
-     // return false;
+      // return false;
     }
   }
 

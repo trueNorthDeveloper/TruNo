@@ -2,20 +2,27 @@ import 'package:flutter/material.dart';
 
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:truenorthflutterfrontend/app/adminApplication/view/admin_shell.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userAuthModule/model/uesr_logout_request_model.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userAuthModule/model/user_login_model.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userAuthModule/model/user_me_model.dart';
-import 'package:truenorthflutterfrontend/app/unUsedButImp/select_screen.dart';
+
 import 'package:truenorthflutterfrontend/app/userApplication/userHomePageModule/view/footer_screen.dart';
 import 'package:truenorthflutterfrontend/public/config/deviceConfig.dart';
+import 'package:truenorthflutterfrontend/public/config/platform_type.dart';
 
 import 'package:truenorthflutterfrontend/public/utils/userUtil/mesage_snack_bar.dart';
 import 'package:truenorthflutterfrontend/service/token/tokenService.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userAuthModule/service/auth_service.dart';
+import 'package:truenorthflutterfrontend/service/token/token_factory_storage.dart';
+import 'package:truenorthflutterfrontend/service/token/web_token_service.dart';
 
 class LoginControll extends ChangeNotifier {
   UserServicesForApi userServicesForApi = UserServicesForApi();
+  //store class for web store
+  final WebTokenService _webTokenService = WebTokenService();
   bool _isLoading = false;
   get isLoading => _isLoading;
   // / Resultt resultt;
@@ -24,125 +31,252 @@ class LoginControll extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> userloginWithJwtController(
-    String userId,
-    String password,
-    BuildContext context,
-  ) async {
-    if (userId.isEmpty || password.isEmpty) {
-      ShowTaostMessage.toastMessage(context, "Enter login ID and password");
+  bool _isLogin = false;
+  bool get isLogin => _isLogin;
+
+  void setLoading(bool value) {
+    _isLogin = value;
+    notifyListeners();
+  }
+
+//USER AND ADMIN LOGIN START---------------------------------------
+  Future<void> loginCrentail(
+      String loginId, String password, BuildContext context) async {
+    //?step1: 🔒 Prevent multiple clicks on login button.........................
+    if (_isLogin) return;
+
+    //?step2 Basic validation FIRST.............................
+    if (loginId.trim().isEmpty || password.trim().isEmpty) {
+      ShowTaostMessage.toastMessage(context, "Please enter ID and password");
       return;
     }
-
-    _setLoading(true);
+    //?step3: Start loading AFTER validation
+    _isLogin = true;
+    notifyListeners();
 
     try {
-      /// 1️⃣ Internet check
+      //?step4: check internet connection before login.......................
       final hasInternet = await Deviceconfig.checkInternetConnection();
+      //?if internet ok move next otherwise show toast message
       if (!hasInternet) {
         ShowTaostMessage.toastMessage(context, "No internet connection");
         return;
       }
+      //?step4: check use login credentail means loginid and password...........
+      final response = await userServicesForApi.checkUserCredentailService(
+          loginId, password);
+      if (!context.mounted) return; // guard before any further context use
 
-      /// 2️⃣ Device info
-      final deviceInfo = await Deviceconfig.getDeviceInfo();
-      if (deviceInfo.isEmpty) {
-        ShowTaostMessage.toastMessage(context, "Failed to get device info");
-        return;
-      }
+      if (response.isSuccess) {
+        //?step5: "IMP METHOD FOR USE AND ADMIN...IF ADMIN LOGIN IN WEB/CHROME NO NEED TO IMAGE AND DEVICE INFO SO LOCALLLY SET INFFO"
+        final platform = getPlatformType();
+        //?check platform
+        if (platform == PlatformType.web) {
+          //?set info for web......locallly using map<String,dynamic>
+          final Map<String, dynamic> status = {
+            "device": "web",
+            "deviceId": "web1",
+            "deviceBrand": "Brand",
+            "model": "model1",
+            "latitude": "0.01.1.1",
+            "longitude": "0.0.11.1",
+            "address": "admin manully address",
+          };
+          //?step:6 call login api using callloginApi funcation if  admin on web/chrome
 
-      /// 3️⃣ Location
-      final position = await Deviceconfig.deteminPosition();
-      if (position == null) {
-        _setLoading(false);
-        _showLocationDialog(context, false);
-        ShowTaostMessage.toastMessage(context, "Location permission required");
-        return;
-      }
+          await callLoginApi(context, loginId, password, status, null);
+        } else {
+//step:7 here reqruied device_info_and_user_location before login_its_compulsary....
+          final status = await fatchDeviceAndLocation(context);
+          if (!context.mounted) return;
+//return false.............not provided info
 
-      final address = await Deviceconfig.getAddressFromLatLng(
-        position.latitude,
-        position.longitude,
-      );
-
-      /// 4️⃣ Image capture
-      final image = await Deviceconfig.pickImage(ImageSource.camera);
-      if (image == null) {
-        _setLoading(false);
-        ShowTaostMessage.toastMessage(context, "Image capture failed");
-        return;
-      }
-
-      /// 5️⃣ Create request model
-      final loginRequest = LoginRequestModel(
-        empLoginId: userId,
-        empPassword: password,
-        device: deviceInfo[0],
-        deviceId: deviceInfo[1],
-        deviceBrand: deviceInfo[2],
-        model: deviceInfo[3],
-        latitude: position.latitude.toString(),
-        longitude: position.longitude.toString(),
-        address: address,
-      );
-      //  print(loginRequest.toJson());
-
-      /// 6️⃣ API call
-      final result = await userServicesForApi.loginWithJwt(
-        loginRequest.toJson(),
-        image.path,
-      );
-
-      // if (!context.mounted) return;
-
-      if (result.isSuccess && result.data != null) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString("access_token", result.data["Access-Token"]);
-        await prefs.setString("refresh_token", result.data["Refresh-Token"]);
-
-        ShowTaostMessage.toastMessage(context, "Login Successfull");
-        final user = await iamUser();
-
-        if (user == null) {
-          ShowTaostMessage.toastMessage(context, "Failed to load user");
-          return;
+          if (status == null) return;
+//set image for map method
+          String? imagePath = status["imagePath"];
+// call same after all info getting
+          await callLoginApi(context, loginId, password, status, imagePath);
         }
+      } else if (response.isProcess) {
+//?step 8: after get login response checked user already login or new lofin
+        final inProcessdata = response.data;
 
-        // 🔹 Save role for app restart
-        await prefs.setString("user_role", user.role);
-        await prefs.setInt("user_id", user.id);
-        await prefs.setString("eid", user.email);
-
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (_) => FooterScreen()));
-      }
-
-      if (result.message == "User already logged in on another device") {
-        ShowTaostMessage.toastMessage(context, result.message!);
-        final logoutRequest = LogoutRequestModel(
-          logoutAddress: address,
-          logoutDeviceBrand: deviceInfo[2],
-          logoutDeviceId: deviceInfo[1],
-          logoutLatitude: position.latitude.toString(),
-          logoutLongitude: position.longitude.toString(),
-          logoutDeviceModel: deviceInfo[3],
-          logoutModel: deviceInfo[0],
-          empEid: userId,
-          logOutExcuse: "New device login",
-        );
-
-        await Future.delayed(const Duration(milliseconds: 100));
-
-        showLogoutBox(context, result.message, logoutRequest.toJson(),
-            image.path, loginRequest.toJson());
-
-        return;
+//?step:9  Already logged in case show box for logout...........and loutand continue
+        if (inProcessdata["statusCode"] == 409 ||
+            inProcessdata["message"]
+                .toString()
+                .toLowerCase()
+                .contains("already")) {
+          //?call method for open box
+          await showBox(context, loginId, password);
+          return;
+        } else {
+          if (context.mounted) {
+            ShowTaostMessage.toastMessage(
+                context, "${inProcessdata["message"]}");
+          }
+        }
+      } else {
+        if (context.mounted) {
+          ShowTaostMessage.toastMessage(
+              context, "Login failed. Please try again.");
+        }
       }
     } catch (e) {
-      ShowTaostMessage.toastMessage(context, "Unexpected error occurred");
+      debugPrint("Login error: $e");
+
+      if (context.mounted) {
+        ShowTaostMessage.toastMessage(context, "An unexpected error occurred.");
+      }
     } finally {
-      _setLoading(false);
+      // ✅ ALWAYS stop loader
+      _isLogin = false;
+
+      notifyListeners();
     }
+  }
+
+//? this funcation used to child funcation for calling final login api integration..........
+  Future<void> callLoginApi(BuildContext context, String loginId,
+      String password, Map<String, dynamic> status,
+      [String? imagePath]) async {
+//?step:1 set all  variable in loginmodel classs..
+    final loginRequest = LoginRequestModel(
+      empLoginId: loginId,
+      empPassword: password,
+      device: status["device"],
+      deviceId: status["deviceId"],
+      deviceBrand: status["deviceBrand"],
+      model: status["model"],
+      latitude: status["latitude"],
+      longitude: status["longitude"],
+      address: status['address'],
+    );
+//?step2:  final login method integration...............
+    final loginResonse =
+        await userServicesForApi.loginWithJwt(loginRequest.toJson(), imagePath);
+//?receive sucessfully response............
+    if (!context.mounted) return;
+    if (loginResonse.isSuccess) {
+      final responseMap = loginResonse.data;
+      final innerData = responseMap["data"];
+      if (innerData == null) {
+        ShowTaostMessage.toastMessage(
+            context, "Data object missing in response");
+        return;
+      }
+//?step3: set acess token for call api............
+
+      final String? accessToken = innerData["Access-Token"];
+      final String? refreshToken = innerData["Refresh-Token"];
+      if (accessToken == null || refreshToken == null) {
+        ShowTaostMessage.toastMessage(context, "Token not found in response");
+        return;
+      }
+//?step:4 save token in sharredpreffence
+
+      await TokenFactoryStorage.instance
+          .saveTokens(access: accessToken, refresh: refreshToken);
+//?step:5 call another api for indentify user some information just like user role and name
+      final UsermeModel? model = await callmeApi(accessToken);
+      if (!context.mounted) return;
+
+      if (model == null) {
+        ShowTaostMessage.toastMessage(
+            context, "Login succeeded, but user profile failed to load.");
+        return;
+      }
+      //print("USER ROLE: '${model.role}'");
+      // Step 6: Unified Navigation logic according to user roles
+      final userRole = model.role.trim().toUpperCase();
+      await TokenFactoryStorage.instance.saveUserRole(userRole);
+      if (userRole == "ADMIN") {
+        ShowTaostMessage.toastMessage(context, "Admin Login Successful");
+
+        Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => AdminShell()), (route) => false);
+        return; // Stop execution
+      }
+      //show success message
+      // Default User Navigation (Non-Admin)
+      ShowTaostMessage.toastMessage(context, "Login Successfull");
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => FooterScreen()),
+        (route) => false,
+      );
+    } else {
+      // Handle global API network error response
+      if (!context.mounted) return;
+      ShowTaostMessage.toastMessage(context, "JWT Login Failed");
+    }
+  }
+
+  //=========================
+  Future<void> showBox(
+      BuildContext context, String loginId, String password) async {
+    final result = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text("Session Active"),
+        content: const Text(
+          "Your previous session is still active. Logout from other devices?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, "cancel"),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, "logout"),
+            child: const Text("Logout"),
+          ),
+        ],
+      ),
+    );
+    if (!context.mounted) return;
+
+    /// 🔥 HANDLE ALL CASES HERE (INCLUDING BACK BUTTON)
+    if (result == null || result == "cancel") {
+      // 👈 User pressed BACK button
+      _isLogin = false;
+      notifyListeners();
+      return;
+    }
+    // Only fetch device/location/camera info once we know the user
+    // actually wants to proceed with logout or logout+login.
+    final platform = getPlatformType();
+    Map<String, dynamic>? status;
+    if (platform == PlatformType.web) {
+      status = {
+        "device": "web",
+        "deviceId": "web1",
+        "deviceBrand": "Brand",
+        "model": "model1",
+        "latitude": "0.0",
+        "longitude": "0.0",
+        "address": "local address",
+        "imagePath": null,
+      };
+    } else {
+      status = await fatchDeviceAndLocation(context);
+      if (!context.mounted) {
+        return;
+      }
+      if (status == null) {
+        _isLogin = false;
+        notifyListeners();
+        return;
+      }
+    }
+
+    if (result == "logout") {
+      await callLogOutApi(context, loginId, password, status);
+    }
+
+    _isLogin = false;
+    notifyListeners();
   }
 
   Future<UsermeModel?> iamUser() async {
@@ -254,91 +388,6 @@ class LoginControll extends ChangeNotifier {
     }
   }
 
-  // ///logout service for alll............................. when user try to log another device account............
-  // Future<void> forceLogoutAndLogin(
-  //     BuildContext context,
-  //     String? message,
-  //     Map<String, dynamic> logout,
-  //     String path,
-  //     Map<String, dynamic> login) async {
-  //   print("1-------------------------------");
-  //   _setLoading(true);
-
-  //   try {
-  //     final result =
-  //         await userServicesForApi.automaticLogoutService(logout, path, true);
-  //     print("2------------------------------------------");
-
-  //     if (!result.isSuccess) {
-  //     ShowTaostMessage.toastMessage(
-  //       context,
-  //       result.message ?? "Force logout failed",
-  //     );
-  //     return;
-  //   }
-  //     ShowTaostMessage.toastMessage(
-  //     context,
-  //     "Logged out from other device",
-  //   );
-
-  //      final loginResult =
-  //       await userServicesForApi.loginWithJwt(login, path);
-
-  //       if (!context.mounted) return;
-
-  //       if (loginResult.isSuccess && loginResult.data != null) {
-  //         final prefs = await SharedPreferences.getInstance();
-  //         await prefs.setString(
-  //             "access-token", loginResult.data["Access-Token"]);
-  //         await prefs.setString(
-  //             "refresh-token", loginResult.data["Refresh-Token"]);
-
-  //         ShowTaostMessage.toastMessage(context, "Login Successfull");
-  //         final user = await iamUser();
-
-  //         if (user == null) {
-  //           ShowTaostMessage.toastMessage(context, "Failed to load user");
-  //           return;
-  //         }
-
-  //         // 🔹 Save role for app restart
-  //         await prefs.setString("user_role", user.role);
-  //         await prefs.setInt("user_id", user.id);
-  //         await prefs.setString("eid", user.email);
-
-  //         // 🔹 Navigate based on role
-  //         // Widget nextScreen;
-
-  //         // switch (user.role) {
-  //         //   case "TEAM_LEADER":
-  //         //     nextScreen = TeamLeaderHomeScreen();
-  //         //     break;
-
-  //         //   case "MEMBER":
-  //         //     nextScreen = MemberHomeScreen();
-  //         //     break;
-
-  //         //   default:
-  //         //     nextScreen = ListOfUiScreen();
-  //         // }
-  //           _setLoading(false);
-
-  //         // Navigator.pushReplacement(
-  //         //     context, MaterialPageRoute(builder: (_) => ListOfUiScreen()));
-  //          Navigator.of(context).pushAndRemoveUntil(
-  //       MaterialPageRoute(builder: (_) => ListOfUiScreen()),
-  //       (route) => false,
-  //     );
-  //       }
-  //     } catch (e) {
-  //   ShowTaostMessage.toastMessage(context, "Unexpected error occurred");
-  // }
-
-  //   } finally {
-  //     _setLoading(false);
-  //   }
-  // }
-
   void _showLocationDialog(BuildContext context, bool isServiceDialog) {
     showDialog(
       context: context,
@@ -390,94 +439,244 @@ class LoginControll extends ChangeNotifier {
   }
 
   //-------------------------logout manually---------------------
-  bool _isLoggingOut = false;
+  // bool _isLoggingOut = false;
 
-  bool get isLoggingOut => _isLoggingOut;
-  void _setLogout(bool value) {
-    _isLoggingOut = value;
-    notifyListeners();
-  }
+  // bool get isLoggingOut => _isLoggingOut;
+  // void _setLogout(bool value) {
+  //   _isLoggingOut = value;
+  //   notifyListeners();
+  // }
 
-  Future<void> logout(
-    BuildContext context,
-  ) async {
-    try {
-      _setLogout(true);
+  // Future<void> logout(
+  //   BuildContext context,
+  // ) async {
+  //   try {
+  //     _setLogout(true);
 
-      /// 1️⃣ Internet check
-      final hasInternet = await Deviceconfig.checkInternetConnection();
-      if (!hasInternet) {
-        _setLogout(false);
-        ShowTaostMessage.toastMessage(context, "No internet connection");
-        return;
-      }
+  //     /// 1️⃣ Internet check
+  //     final hasInternet = await Deviceconfig.checkInternetConnection();
+  //     if (!hasInternet) {
+  //       // _setLogout(false);
+  //       // ShowTaostMessage.toastMessage(context, "No internet connection");
+  //       if (context.mounted) {
+  //         ShowTaostMessage.toastMessage(context, "No internet connection");
+  //       }
+  //       return;
+  //     }
+  //     final platform = getPlatformType();
+  //     LogoutRequestModel logoutRequest;
+  //     String? imagePath;
+  //     if (platform == PlatformType.web) {
+  //       // Web admin: skip device/location/camera — same pattern as login.
+  //       logoutRequest = LogoutRequestModel(
+  //         logoutAddress: "local address",
+  //         logoutDeviceBrand: "Brand",
+  //         logoutDeviceId: "web1",
+  //         logoutLatitude: "0.0",
+  //         logoutLongitude: "0.0",
+  //         logoutDeviceModel: "model1",
+  //         logoutModel: "web",
+  //         logOutExcuse: "New device login",
+  //       );
+  //       imagePath = null;
+  //     } else {
+  //       /// 2️⃣ Device info
+  //       final deviceInfo = await Deviceconfig.getDeviceInfo();
+  //       if (deviceInfo.isEmpty) {
+  //         if (context.mounted) {
+  //           ShowTaostMessage.toastMessage(context, "Failed to get device info");
+  //         }
+  //         return;
+  //       }
 
-      /// 2️⃣ Device info
-      final deviceInfo = await Deviceconfig.getDeviceInfo();
-      if (deviceInfo.isEmpty) {
-        _setLogout(false);
-        ShowTaostMessage.toastMessage(context, "Failed to get device info");
-        return;
-      }
+  //       /// 3️⃣ Location
+  //       final position = await Deviceconfig.deteminPosition();
+  //       if (!context.mounted) return;
+  //       if (position == null) {
+  //         // _setLogout(false);
+  //         _showLocationDialog(context, false);
+  //         ShowTaostMessage.toastMessage(
+  //             context, "Location permission required");
+  //         return;
+  //       }
+  //       final address = await Deviceconfig.getAddressFromLatLng(
+  //         position.latitude,
+  //         position.longitude,
+  //       );
 
-      /// 3️⃣ Location
-      final position = await Deviceconfig.deteminPosition();
-      if (position == null) {
-        _setLogout(false);
-        _showLocationDialog(context, false);
-        ShowTaostMessage.toastMessage(context, "Location permission required");
-        return;
-      }
+  //       /// 4️⃣ Image capture
+  //       final image = await Deviceconfig.pickImage(ImageSource.camera);
+  //       if (!context.mounted) return;
+  //       if (image == null) {
+  //         ShowTaostMessage.toastMessage(context, "Image capture failed");
+  //         return; // finally resets loader — no need to set it manually here
+  //       }
+  //       logoutRequest = LogoutRequestModel(
+  //         logoutAddress: address,
+  //         logoutDeviceBrand: deviceInfo[2],
+  //         logoutDeviceId: deviceInfo[1],
+  //         logoutLatitude: position.latitude.toString(),
+  //         logoutLongitude: position.longitude.toString(),
+  //         logoutDeviceModel: deviceInfo[3],
+  //         logoutModel: deviceInfo[0],
+  //         logOutExcuse: "New device login",
+  //       );
+  //       imagePath = image.path;
+  //       final out = await TokenService.authorizedPostForLogout(
+  //           logoutRequest.toJson(), imagePath, true);
+  //       if (!context.mounted) return;
 
-      final address = await Deviceconfig.getAddressFromLatLng(
-        position.latitude,
-        position.longitude,
-      );
+  //       if (out.statusCode == 200) {
+  //         // Unified clear — works for both mobile (SharedPreferences)
+  //         // and web (FlutterSecureStorage) through the factory.
 
-      /// 4️⃣ Image capture
-      final image = await Deviceconfig.pickImage(ImageSource.camera);
-      if (image == null) {
-        _setLogout(true);
-        ShowTaostMessage.toastMessage(context, "Image capture failed");
-        return;
-      }
+  //         await TokenFactoryStorage.instance.clearTokens();
 
-      final logoutRequest = LogoutRequestModel(
-        logoutAddress: address,
-        logoutDeviceBrand: deviceInfo[2],
-        logoutDeviceId: deviceInfo[1],
-        logoutLatitude: position.latitude.toString(),
-        logoutLongitude: position.longitude.toString(),
-        logoutDeviceModel: deviceInfo[3],
-        logoutModel: deviceInfo[0],
-        logOutExcuse: "New device login",
-      );
-      final out = await TokenService.authorizedPostForLogout(
-          logoutRequest.toJson(), image.path, true);
-      if (out.statusCode == 200) {
-        await TokenService.clearSharredPrefrance();
-        Future.delayed(Duration(seconds: 3));
-        ShowTaostMessage.toastMessage(context, "LogOut successfully");
-        // Navigator.pushReplacement(
-        //   context,
-        //   MaterialPageRoute(builder: (_) => const SelectScreenForService()),
-        // );
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (_) => const SelectScreenForService(),
-          ),
-          (route) => false,
-        );
-      }
-      _setLogout(false);
+  //         ShowTaostMessage.toastMessage(context, "LogOut successfully");
 
-      return;
-    } catch (e) {
-      ShowTaostMessage.toastMessage(context, "Unexpected error occurred");
-    } finally {
-      _setLogout(false);
-    }
-  }
+  //         Navigator.of(context).pushAndRemoveUntil(
+  //           MaterialPageRoute(
+  //             builder: (_) => const SelectScreenForService(),
+  //           ),
+  //           (route) => false,
+  //         );
+  //       } else {
+  //         // Previously silent — now surfaces the failure
+  //         ShowTaostMessage.toastMessage(
+  //           context,
+  //           "Logout failed (status ${out.statusCode}). Please try again.",
+  //         );
+  //       }
+  //     }
+  //   } catch (e) {
+  //     debugPrint("Logout error: $e");
+  //     if (context.mounted) {
+  //       ShowTaostMessage.toastMessage(context, "Unexpected error occurred");
+  //     }
+  //   } finally {
+  //     _setLogout(false);
+  //   }
+  // }
+  // bool _isLoggingOut = false;
+  // bool get isLoggingOut => _isLoggingOut;
+
+  // void _setLogout(bool value) {
+  //   _isLoggingOut = value;
+  //   notifyListeners();
+  // }
+
+  // Future<void> logout(BuildContext context) async {
+  //   try {
+  //     _setLogout(true);
+
+  //     /// 1️⃣ Internet check
+  //     final hasInternet = await Deviceconfig.checkInternetConnection();
+  //     if (!hasInternet) {
+  //       if (context.mounted) {
+  //         ShowTaostMessage.toastMessage(context, "No internet connection");
+  //       }
+  //       return;
+  //     }
+
+  //     final platform = getPlatformType();
+
+  //     LogoutRequestModel logoutRequest;
+  //     String? imagePath;
+
+  //     if (platform == PlatformType.web) {
+  //       // Web admin: skip device/location/camera — same pattern as login.
+  //       logoutRequest = LogoutRequestModel(
+  //         logoutAddress: "local address",
+  //         logoutDeviceBrand: "Brand",
+  //         logoutDeviceId: "web1",
+  //         logoutLatitude: "0.0",
+  //         logoutLongitude: "0.0",
+  //         logoutDeviceModel: "model1",
+  //         logoutModel: "web",
+  //         logOutExcuse: "New device login",
+  //       );
+  //       imagePath = null;
+  //     } else {
+  //       /// 2️⃣ Device info
+  //       final deviceInfo = await Deviceconfig.getDeviceInfo();
+  //       if (deviceInfo.isEmpty) {
+  //         if (context.mounted) {
+  //           ShowTaostMessage.toastMessage(context, "Failed to get device info");
+  //         }
+  //         return;
+  //       }
+
+  //       /// 3️⃣ Location
+  //       final position = await Deviceconfig.deteminPosition();
+  //       if (!context.mounted) return;
+  //       if (position == null) {
+  //         _showLocationDialog(context, false);
+  //         ShowTaostMessage.toastMessage(
+  //             context, "Location permission required");
+  //         return;
+  //       }
+
+  //       final address = await Deviceconfig.getAddressFromLatLng(
+  //         position.latitude,
+  //         position.longitude,
+  //       );
+
+  //       /// 4️⃣ Image capture
+  //       final image = await Deviceconfig.pickImage(ImageSource.camera);
+  //       if (!context.mounted) return;
+  //       if (image == null) {
+  //         ShowTaostMessage.toastMessage(context, "Image capture failed");
+  //         return; // finally resets loader — no need to set it manually here
+  //       }
+
+  //       logoutRequest = LogoutRequestModel(
+  //         logoutAddress: address,
+  //         logoutDeviceBrand: deviceInfo[2],
+  //         logoutDeviceId: deviceInfo[1],
+  //         logoutLatitude: position.latitude.toString(),
+  //         logoutLongitude: position.longitude.toString(),
+  //         logoutDeviceModel: deviceInfo[3],
+  //         logoutModel: deviceInfo[0],
+  //         logOutExcuse: "New device login",
+  //       );
+  //       imagePath = image.path;
+  //     }
+
+  //     final out = await TokenService.authorizedPostForLogout(
+  //       logoutRequest.toJson(),
+  //       imagePath,
+  //       true,
+  //     );
+
+  //     if (!context.mounted) return;
+
+  //     if (out.statusCode == 200) {
+  //       // Unified clear — works for both mobile (SharedPreferences)
+  //       // and web (FlutterSecureStorage) through the factory.
+  //       await TokenFactoryStorage.instance.clearTokens();
+
+  //       ShowTaostMessage.toastMessage(context, "Logged out successfully");
+
+  //       Navigator.of(context).pushAndRemoveUntil(
+  //         MaterialPageRoute(builder: (_) => const SelectScreenForService()),
+  //         (route) => false,
+  //       );
+  //     } else {
+  //       // Previously silent — now surfaces the failure
+  //       ShowTaostMessage.toastMessage(
+  //         context,
+  //         "Logout failed (status ${out.statusCode}). Please try again.",
+  //       );
+  //     }
+  //   } catch (e) {
+  //     debugPrint("Logout error: $e");
+  //     if (context.mounted) {
+  //       ShowTaostMessage.toastMessage(context, "Unexpected error occurred");
+  //     }
+  //   } finally {
+  //     _setLogout(false);
+  //   }
+  // }
 
 //----------------------------------------------------who is user..........................
   bool _isRole = false;
@@ -487,183 +686,6 @@ class LoginControll extends ChangeNotifier {
     if (role == "TEAMLEADER") {
       _isRole = true;
       notifyListeners();
-    }
-  }
-
-  //date 9-4-25 new login implemetted
-  bool _isLogin = false;
-  bool get isLogin => _isLogin;
-  void setLoading(bool value) {
-    _isLogin = value;
-    notifyListeners();
-  }
-
-  // Future<void> loginPerformance(
-  //     String loginId, String password, BuildContext context) async {
-  //   try {
-  //     // Basic validation
-  //     if (loginId.isEmpty || password.isEmpty) {
-  //       ShowTaostMessage.toastMessage(context, "Please enter ID and password");
-  //       return;
-  //     }
-
-  //     _isLogin = true;
-  //     notifyListeners();
-
-  //     final hasInternet = await Deviceconfig.checkInternetConnection();
-  //     if (!hasInternet) {
-  //       ShowTaostMessage.toastMessage(context, "No internet connection");
-  //       return; // 'finally' will set _isLogin = false
-  //     }
-
-  //     final response = await userServicesForApi.checkUserCredentailService(
-  //         loginId, password);
-
-  //     if (response.isSuccess) {
-  //       // ONLY call this for successful credentials (200/201)
-  //       final status = await fatchDeviceAndLocation(context);
-
-  //       if (status == null) return;
-
-  //       // calling here login api
-  //       await callLoginApi(context, loginId, password, status);
-  //       // _isLogin = false;
-  //       // notifyListeners();
-  //     } else if (response.isProcess) {
-  //       final inProcessdata = response.data;
-
-  //       // Check for 409 Conflict (Already Logged In)
-  //       if (inProcessdata["statusCode"] == 409 ||
-  //           inProcessdata["message"].toString().contains("already")) {
-  //         await showBox(context, loginId, password);
-  //       } else {
-  //         ShowTaostMessage.toastMessage(context, "${inProcessdata["message"]}");
-  //       }
-  //     } else {
-  //       ShowTaostMessage.toastMessage(
-  //           context, "Login failed. Please try again.");
-  //     }
-  //   } catch (e) {
-  //     debugPrint("Login error: $e");
-  //     ShowTaostMessage.toastMessage(context, "An unexpected error occurred.");
-  //   } finally {
-  //     // This runs no matter what happens (Success, Failure, or Error)
-  //     // _isLogin = false;
-  //     // notifyListeners();
-  //     if (_isLogin) {
-  //       _isLogin = false;
-  //       notifyListeners();
-  //     }
-  //   }
-  // }
-  Future<void> loginPerformance(
-      String loginId, String password, BuildContext context) async {
-    // 🔒 Prevent multiple clicks
-    if (_isLogin) return;
-
-    _isLogin = true;
-    notifyListeners();
-
-    try {
-      // Basic validation
-      if (loginId.isEmpty || password.isEmpty) {
-        ShowTaostMessage.toastMessage(context, "Please enter ID and password");
-        return;
-      }
-
-      final hasInternet = await Deviceconfig.checkInternetConnection();
-      if (!hasInternet) {
-        ShowTaostMessage.toastMessage(context, "No internet connection");
-        return;
-      }
-
-      final response = await userServicesForApi.checkUserCredentailService(
-          loginId, password);
-
-      if (response.isSuccess) {
-        final status = await fatchDeviceAndLocation(context);
-        if (status == null) return;
-
-        await callLoginApi(context, loginId, password, status);
-      } else if (response.isProcess) {
-        final inProcessdata = response.data;
-
-        // 🔥 Already logged in case
-        if (inProcessdata["statusCode"] == 409 ||
-            inProcessdata["message"].toString().contains("already")) {
-          // ⚠️ IMPORTANT: DO NOT reset loading here
-          await showBox(context, loginId, password);
-          return;
-        } else {
-          ShowTaostMessage.toastMessage(context, "${inProcessdata["message"]}");
-        }
-      } else {
-        ShowTaostMessage.toastMessage(
-            context, "Login failed. Please try again.");
-      }
-    } catch (e) {
-      debugPrint("Login error: $e");
-      ShowTaostMessage.toastMessage(context, "An unexpected error occurred.");
-    }
-
-    // ✅ SINGLE EXIT POINT (VERY IMPORTANT)
-    _isLogin = false;
-    notifyListeners();
-  }
-
-  Future<void> callLoginApi(BuildContext context, String loginId,
-      String password, Map<String, dynamic> status) async {
-    final loginRequest = LoginRequestModel(
-      empLoginId: loginId,
-      empPassword: password,
-      device: status["device"],
-      deviceId: status["deviceId"],
-      deviceBrand: status["deviceBrand"],
-      model: status["model"],
-      latitude: status["latitude"],
-      longitude: status["longitude"],
-      address: status['address'],
-    );
-//calling api
-    final loginResonse = await userServicesForApi.loginWithJwt(
-        loginRequest.toJson(), status["imagePath"]);
-    if (loginResonse.isSuccess) {
-      //calling me api after successfulll
-      final responseMap = loginResonse.data;
-      final innerData = responseMap["data"];
-      if (innerData == null) {
-        ShowTaostMessage.toastMessage(
-            context, "Data object missing in response");
-        return;
-      }
-      //save token in sharredPreffrance
-
-      final String? freshToken = innerData["Access-Token"];
-      if (freshToken == null) {
-        ShowTaostMessage.toastMessage(context, "Token not found in response");
-        return;
-      }
-      await saveTokenInSharredPreffrance(innerData);
-      UsermeModel? model = await callmeApi(freshToken);
-      if (!context.mounted) return;
-
-      if (model == null) {
-        ShowTaostMessage.toastMessage(
-            context, "Login succeeded, but user profile failed to load.");
-        return;
-      }
-      //show success message
-      ShowTaostMessage.toastMessage(context, "Login Successfull");
-      //navigate to home page after sucessfully
-      // Navigator.pushReplacement(
-      //     context, MaterialPageRoute(builder: (_) => FooterScreen()));
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => FooterScreen()),
-        (route) => false,
-      );
-    } else {
-      if (!context.mounted) return;
-      ShowTaostMessage.toastMessage(context, "JWT Login Failed");
     }
   }
 
@@ -678,12 +700,20 @@ class LoginControll extends ChangeNotifier {
     final userOutput = await UserServicesForApi().loginAfterMeService2(token);
 
     if (userOutput.isSuccess) {
-      final userData = userOutput.data; // Local variable for safety
+      final userData = userOutput.data;
 
       if (userData != null) {
-        _user = userData;
-        // Save directly using the local variable instead of the bang operator (!)
-        await saveUserInfoInSharredPreffrance(userData);
+        final platform = getPlatformType();
+
+        if (platform == PlatformType.web) {
+          //' to ensure Web execution finishes
+          await _webTokenService.saveUserInfoInWebStore(userData);
+          print("store user info web if platfrom web");
+        } else {
+          //'else' so mobile storage never triggers on Web
+          await saveUserInfoInSharredPreffrance(userData);
+        }
+
         notifyListeners(); // Ensure the UI updates with the new user data
         return userData;
       }
@@ -701,7 +731,7 @@ class LoginControll extends ChangeNotifier {
 
   Future<bool> callLogOutApi(BuildContext context, String loginId,
       String password, Map<String, dynamic> status) async {
-    print("calling logout api---------------------------------------");
+    debugPrint("calling logout api");
     final logoutRequest = LogoutRequestModel(
         logoutAddress: status['address'],
         logoutDeviceBrand: status["deviceBrand"],
@@ -715,13 +745,21 @@ class LoginControll extends ChangeNotifier {
 
     final response = await userServicesForApi.userLogOut(
         logoutRequest.toJson(), status["imagePath"]);
+    if (!context.mounted) return false;
     if (response.isSuccess) {
-      ShowTaostMessage.toastMessage(context, "Previous session cleared.");
-      clearSharredPrefrance();
+      // Unified, awaited clear — works correctly on both mobile and web.
+      //await TokenFactoryStorage.instance.clearTokens();
+      if (context.mounted) {
+        ShowTaostMessage.toastMessage(context, "Previous session cleared.");
+      }
+
       return true;
     } else {
-      ShowTaostMessage.toastMessage(
-          context, "Logout failed. Please try again.");
+      if (context.mounted) {
+        ShowTaostMessage.toastMessage(
+            context, "Logout failed. Please try again.");
+      }
+
       return false;
     }
   }
@@ -730,267 +768,6 @@ class LoginControll extends ChangeNotifier {
     print("after log out clear sharred preffrance------------");
     await TokenService.clearTokens();
   }
-
-  // Future<void> showBox(
-  //     BuildContext context, String loginId, String password) async {
-  //   return showDialog(
-  //     context: context,
-  //     barrierDismissible: false,
-  //     builder: (dialogContext) => AlertDialog(
-  //       // Use dialogContext for the UI
-  //       title: const Text("Session Active"),
-  //       content: const Text(
-  //         "Your previous session is still active. Would you like to logout from other devices?",
-  //       ),
-  //       actions: [
-  //         TextButton(
-  //           onPressed: () {
-  //             Navigator.pop(dialogContext);
-
-  //             // ❗ reset state on cancel
-  //             _isLogin = false;
-  //             notifyListeners();
-  //           },
-  //           child: const Text("Cancel"),
-  //         ),
-  //         ElevatedButton(
-  //           onPressed: () async {
-  //             Navigator.pop(dialogContext);
-  //             // 1. Fetch data
-  //             // _isLogin = true;
-  //             // notifyListeners();
-
-  //             // setLoading(true);
-  //             final status = await fatchDeviceAndLocation(context);
-  //             if (status == null) {
-  //               //  setLoading(false);
-  //               _isLogin = false;
-  //               notifyListeners();
-  //               return;
-  //             }
-  //             // fatchDeviceAndLocation already showed the toast
-
-  //             // 2. Close dialog and call Logout
-  //             // Navigator.pop(dialogContext);
-  //             await callLogOutApi(context, loginId, password, status);
-  //             // setLoading(false);
-  //             _isLogin = false;
-  //             notifyListeners();
-  //           },
-  //           child: const Text("Logout"),
-  //         ),
-  //         ElevatedButton(
-  //           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-  //           onPressed: () async {
-  //             Navigator.pop(dialogContext);
-  //             // _isLogin = true;
-  //             // notifyListeners();
-  //             // 1. Fetch data
-  //             final status = await fatchDeviceAndLocation(context);
-  //             if (status == null) {
-  //               _isLogin = false;
-  //               notifyListeners();
-  //               return;
-  //             }
-
-  //             // 2. Close dialog
-
-  //             // 3. First logout, then login
-  //             bool logoutSuccess =
-  //                 await callLogOutApi(context, loginId, password, status);
-  //             if (logoutSuccess) {
-  //               await callLoginApi(context, loginId, password, status);
-  //             }
-  //             //setLoading(false);
-  //             _isLogin = false;
-  //             notifyListeners();
-  //           },
-  //           child: const Text("Logout & Login"),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-  ////============================================
-
-  // Future<void> showBox(
-  //     BuildContext context, String loginId, String password) async {
-  //   return showDialog(
-  //     context: context,
-  //     barrierDismissible: false,
-  //     builder: (dialogContext) => AlertDialog(
-  //       title: const Text("Session Active"),
-  //       content: const Text(
-  //         "Your previous session is still active. Logout from other devices?",
-  //       ),
-  //       actions: [
-  //         TextButton(
-  //           onPressed: () {
-  //             Navigator.pop(dialogContext);
-
-  //             // ❗ reset state on cancel
-  //             _isLogin = false;
-  //             notifyListeners();
-  //           },
-  //           child: const Text("Cancel"),
-  //         ),
-
-  //         /// 🔴 Logout only
-  //         ElevatedButton(
-  //           onPressed: () async {
-  //             Navigator.pop(dialogContext);
-
-  //             final status = await fatchDeviceAndLocation(context);
-  //             if (status == null) {
-  //               _isLogin = false;
-  //               notifyListeners();
-  //               return;
-  //             }
-
-  //             await callLogOutApi(context, loginId, password, status);
-
-  //             // ✅ DONE → reset state
-  //             _isLogin = false;
-  //             notifyListeners();
-  //           },
-  //           child: const Text("Logout"),
-  //         ),
-
-  //         /// 🟢 Logout + Login
-  //         ElevatedButton(
-  //           onPressed: () async {
-  //             Navigator.pop(dialogContext);
-
-  //             final status = await fatchDeviceAndLocation(context);
-  //             if (status == null) {
-  //               _isLogin = false;
-  //               notifyListeners();
-  //               return;
-  //             }
-
-  //             bool logoutSuccess =
-  //                 await callLogOutApi(context, loginId, password, status);
-
-  //             if (logoutSuccess) {
-  //               await callLoginApi(context, loginId, password, status);
-  //             }
-
-  //             // ✅ FINAL RESET
-  //             _isLogin = false;
-  //             notifyListeners();
-  //           },
-  //           child: const Text("Logout & Login"),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-  //=========================
-  Future<void> showBox(
-      BuildContext context, String loginId, String password) async {
-    final result = await showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text("Session Active"),
-        content: const Text(
-          "Your previous session is still active. Logout from other devices?",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, "cancel"),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(dialogContext, "logout"),
-            child: const Text("Logout"),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(dialogContext, "logout_login"),
-            child: const Text("Logout & Login"),
-          ),
-        ],
-      ),
-    );
-
-    /// 🔥 HANDLE ALL CASES HERE (INCLUDING BACK BUTTON)
-    if (result == null) {
-      // 👈 User pressed BACK button
-      _isLogin = false;
-      notifyListeners();
-      return;
-    }
-
-    final status = await fatchDeviceAndLocation(context);
-    if (status == null) {
-      _isLogin = false;
-      notifyListeners();
-      return;
-    }
-
-    if (result == "logout") {
-      await callLogOutApi(context, loginId, password, status);
-    } else if (result == "logout_login") {
-      bool success = await callLogOutApi(context, loginId, password, status);
-
-      if (success) {
-        await callLoginApi(context, loginId, password, status);
-      }
-    }
-
-    /// ✅ FINAL RESET
-    _isLogin = false;
-    notifyListeners();
-  }
-  // Future<void> showBox(
-  //     BuildContext context, String loginId, String password) async {
-  //   return showDialog(
-  //     context: Navigator.of(context, rootNavigator: true).context,
-  //     barrierDismissible: false,
-  //     builder: (_) => AlertDialog(
-  //       title: const Text("Already Logged In"),
-  //       content: Text(
-  //         "your prevoius session  is active do you want to logout?",
-  //       ),
-  //       actions: [
-  //         Row(
-  //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //           children: [
-  //             TextButton(
-  //               onPressed: () => Navigator.pop(context),
-  //               child: const Text("Cancel"),
-  //               //user cancel
-  //             ),
-  //             ElevatedButton(
-  //               onPressed: () async {
-  //                 final status = await fatchDeviceAndLocation(context);
-  //                 if (status == null) return Navigator.pop(context);
-  //                 callLogOutApi(context, loginId, password, status);
-  //               },
-  //               child: const Text("Logout"),
-  //             ),
-  //             ElevatedButton(
-  //               style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-  //               onPressed: () async {
-  //                 final status = await fatchDeviceAndLocation(context);
-  //                 if (status == null) return;
-  //                 Navigator.pop(context);
-  //                 //before calling login need call logout function....
-  //                 //call logout api....
-  //                 bool logoutSuccess =
-  //                     await callLogOutApi(context, loginId, password, status);
-  //                 if (logoutSuccess) {
-  //                   await callLoginApi(context, loginId, password, status);
-  //                 }
-  //               },
-  //               child: const Text("Logout & login"),
-  //             ),
-  //           ],
-  //         )
-  //       ],
-  //     ),
-  //   );
-  // }
 
   Future<Map<String, dynamic>?> fatchDeviceAndLocation(
       BuildContext context) async {

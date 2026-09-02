@@ -7,13 +7,32 @@ import 'package:http/http.dart' as http_parser;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:truenorthflutterfrontend/public/config/api_const.dart';
 import 'package:truenorthflutterfrontend/public/config/deviceConfig.dart';
+import 'package:truenorthflutterfrontend/public/config/platform_type.dart';
+import 'package:truenorthflutterfrontend/public/utils/userUtil/api_result.dart';
+import 'package:truenorthflutterfrontend/service/token/token_factory_storage.dart';
 
 class TokenService {
   static String url = "";
   static String baseUrl = url + "/auth/api/";
   static String projectBaseUrl = url + "/api/";
+  static Future<String?> getRefreshToken() =>
+      TokenFactoryStorage.instance.getRefreshToken();
+  static Future<String?> getUserRole() =>
+      TokenFactoryStorage.instance.getUserRole();
+  static Future<void> clearTokens() =>
+      TokenFactoryStorage.instance.clearTokens();
+//commeted this method this right now
+  // static Future<String?> getAccessToken() async {
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   String? accessToken = await prefs.getString("access_token");
+  //   return accessToken;
+  // }
+  static Future<String?> getAccessToken() =>
+      TokenFactoryStorage.instance.getAccessToken();
+
   // static String attendance = url+"/api/attendance/";
 //saved user token
+
   static Future<void> saveToken(String accessToken, String refreshToken) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString("access_token", accessToken);
@@ -26,42 +45,35 @@ class TokenService {
     await prefs.clear();
   }
 
-  static Future<void> clearTokens() async {
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
+  // static Future<void> clearTokens() async {
+  //   try {
+  //     final SharedPreferences prefs = await SharedPreferences.getInstance();
 
-      // Option A: Wipe EVERYTHING (Safest for logout)
-      bool success = await prefs.clear();
+  //     // Option A: Wipe EVERYTHING (Safest for logout)
+  //     bool success = await prefs.clear();
 
- 
+  //     if (success) {
+  //       print("All local storage cleared successfully.");
+  //     }
+  //   } catch (e) {
+  //     print("Error clearing tokens: $e");
+  //   }
+  // }
 
-      if (success) {
-        print("All local storage cleared successfully.");
-      }
-    } catch (e) {
-      print("Error clearing tokens: $e");
-    }
-  }
+  // static Future<String?> getRefreshToken() async {
+  //   print("refresh token funcation");
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   String? refreshToken = await prefs.getString("refresh_token");
 
-  static Future<String?> getAccessToken() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? accessToken = await prefs.getString("access_token");
-    return accessToken;
-  }
-
-  static Future<String?> getRefreshToken() async {
-    print("refresh token funcation working============");
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? refreshToken = await prefs.getString("refresh_token");
-  
-    return refreshToken;
-  }
+  //   return refreshToken;
+  // }
 
 //get user role..............
-  static Future<String?> getUserRole() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('user_role');
-  }
+  // static Future<String?> getUserRole() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   String? role = await prefs.getString("user_role");
+  //   return role;
+  // }
 //get team leader role
 
   static Future<bool> getLeaderRole() async {
@@ -89,13 +101,63 @@ class TokenService {
   }
 //GET REFRESH TOKEN----------------------------------------------------------------------------------
 
-  static Future<bool> getRefreshAccessToken() async {
+  // static Future<bool> getRefreshAccessToken() async {
+  //   try {
+  //     final refreshToken = await getRefreshToken();
+  //     if (refreshToken == null) return false;
+
+  //     final hasInternet = await Deviceconfig.checkInternetConnection();
+  //     if (!hasInternet) return false;
+
+  //     final url = Uri.parse(Apiconstants.refreshTokenAcess);
+
+  //     final response = await http
+  //         .post(
+  //           url,
+  //           headers: {
+  //             'Content-Type':
+  //                 'application/json', // CRITICAL: Tell the server it's JSON
+  //             'Accept': 'application/json',
+  //           },
+  //           body: jsonEncode({"refreshToken": refreshToken}),
+  //         )
+  //         .timeout(
+  //             const Duration(seconds: 15)); // Good practice to add a timeout
+
+  //     if (response.statusCode == 200) {
+  //       final json = jsonDecode(response.body);
+
+  //       // Safety check: only update refresh token if the API actually sent a new one
+  //       final newAccessToken = json['access_token'];
+  //       final newRefreshToken = json['refresh_token'] ?? refreshToken;
+
+  //       await saveToken(newAccessToken, newRefreshToken);
+  //       return true;
+  //     }
+
+  //     // If status is 401 or 403, the refresh token itself might be expired
+  //     return false;
+  //   } catch (e) {
+  //     print("Refresh Token Error: $e");
+  //     return false;
+  //   }
+  // }
+  //-------------------------------------------------
+  static Future<Result<String>> getRefreshAccessToken() async {
+    //  String? refreshToken;
     try {
-      final refreshToken = await getRefreshToken();
-      if (refreshToken == null) return false;
+      // refreshToken = await getRefreshToken();
+      final refreshToken = await TokenFactoryStorage.instance.getRefreshToken();
+      if (refreshToken == null || refreshToken.trim().isEmpty) {
+        return Result.failure(
+            ApiError.emptyResponse); // nothing to refresh with
+      }
 
       final hasInternet = await Deviceconfig.checkInternetConnection();
-      if (!hasInternet) return false;
+      if (!hasInternet) {
+        return Result.failure(
+            ApiError.network); // don't punish the user for being offline
+      }
 
       final url = Uri.parse(Apiconstants.refreshTokenAcess);
 
@@ -113,24 +175,129 @@ class TokenService {
               const Duration(seconds: 15)); // Good practice to add a timeout
 
       if (response.statusCode == 200) {
-        final json = jsonDecode(response.body);
+        Map<String, dynamic> json;
+        try {
+          json = jsonDecode(response.body);
+        } catch (e) {
+          print("Refresh token: failed to parse response body: $e");
+          // A 200 with unparseable body is a server/client contract issue,
+          // not proof the token is invalid — treat as a network/server error.
+          return Result.failure(ApiError.network);
+        }
 
         // Safety check: only update refresh token if the API actually sent a new one
-        final newAccessToken = json['access_token'];
-        final newRefreshToken = json['refresh_token'] ?? refreshToken;
+        final String? newAccessToken = json['access_token'];
+        final String newRefreshToken = json['refresh_token'] ?? refreshToken;
+        if (newAccessToken == null || newAccessToken.trim().isEmpty) {
+          print("Refresh token: response missing access_token");
+          return Result.failure(
+              ApiError.network); // server-side issue, not an expired token
+        }
 
-        await saveToken(newAccessToken, newRefreshToken);
-        return true;
+        // await saveToken(newAccessToken, newRefreshToken);
+        await TokenFactoryStorage.instance
+            .saveTokens(access: newAccessToken, refresh: newRefreshToken);
+        return Result.success(newAccessToken);
+      }
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        print("Refresh token rejected by server (${response.statusCode})");
+        //  await clearTokens();
+        await TokenFactoryStorage.instance.clearTokens();
+        return Result.failure(ApiError.invalidData);
       }
 
-      // If status is 401 or 403, the refresh token itself might be expired
-      return false;
+      /// Any other status (500, 502, 503, etc.) is a server/network problem,
+      // not evidence the token is bad — don't log the user out for it.
+      print("Refresh token: unexpected status ${response.statusCode}");
+      return Result.failure(ApiError.network);
+    } on TimeoutException catch (e) {
+      print("Refresh token timed out: $e");
+      return Result.failure(ApiError.network);
+    } on SocketException catch (e) {
+      print("Refresh token network error: $e");
+      return Result.failure(ApiError.network);
     } catch (e) {
       print("Refresh Token Error: $e");
-      return false;
+      // wipe a possibly-valid session over an unrelated bug.
+      return Result.failure(ApiError.network);
     }
   }
+  // static Future<Result> getRefreshAccessToken() async {
+  //   String? refreshToken;
+  //   try {
+  //     refreshToken = await getRefreshToken();
+  //     if (refreshToken == null || refreshToken.trim().isEmpty) {
+  //       return Result.failure(
+  //           ApiError.emptyResponse); // nothing to refresh with
+  //     }
 
+  //     final hasInternet = await Deviceconfig.checkInternetConnection();
+  //     if (!hasInternet) {
+  //       return Result.failure(
+  //           ApiError.network); // don't punish the user for being offline
+  //     }
+
+  //     final url = Uri.parse(Apiconstants.refreshTokenAcess);
+
+  //     final response = await http
+  //         .post(
+  //           url,
+  //           headers: {
+  //             'Content-Type':
+  //                 'application/json', // CRITICAL: Tell the server it's JSON
+  //             'Accept': 'application/json',
+  //           },
+  //           body: jsonEncode({"refreshToken": refreshToken}),
+  //         )
+  //         .timeout(
+  //             const Duration(seconds: 15)); // Good practice to add a timeout
+
+  //     if (response.statusCode == 200) {
+  //       Map<String, dynamic> json;
+  //       try {
+  //         json = jsonDecode(response.body);
+  //       } catch (e) {
+  //         print("Refresh token: failed to parse response body: $e");
+  //         // A 200 with unparseable body is a server/client contract issue,
+  //         // not proof the token is invalid — treat as a network/server error.
+  //         return Result.failure(ApiError.network);
+  //       }
+
+  //       // Safety check: only update refresh token if the API actually sent a new one
+  //       final String? newAccessToken = json['access_token'];
+  //       final String newRefreshToken = json['refresh_token'] ?? refreshToken;
+  //       if (newAccessToken == null || newAccessToken.trim().isEmpty) {
+  //         print("Refresh token: response missing access_token");
+  //         return Result.failure(
+  //             ApiError.network); // server-side issue, not an expired token
+  //       }
+
+  //       await saveToken(newAccessToken, newRefreshToken);
+  //       return Result.success("success");
+  //     }
+  //     if (response.statusCode == 401 || response.statusCode == 403) {
+  //       print("Refresh token rejected by server (${response.statusCode})");
+  //       await clearTokens();
+  //       return Result.failure(ApiError.invalidData);
+  //     }
+
+  //     /// Any other status (500, 502, 503, etc.) is a server/network problem,
+  //     // not evidence the token is bad — don't log the user out for it.
+  //     print("Refresh token: unexpected status ${response.statusCode}");
+  //     return Result.failure(ApiError.network);
+  //   } on TimeoutException catch (e) {
+  //     print("Refresh token timed out: $e");
+  //     return Result.failure(ApiError.network);
+  //   } on SocketException catch (e) {
+  //     print("Refresh token network error: $e");
+  //     return Result.failure(ApiError.network);
+  //   } catch (e) {
+  //     print("Refresh Token Error: $e");
+  //     // wipe a possibly-valid session over an unrelated bug.
+  //     return Result.failure(ApiError.network);
+  //   }
+  // }
+//-----------------------------------------
 //ALL ERROR STATUS CODE IT WILLL RETURN TRUE AND FALSE ALL STATUS CODE------------------------COMMAN
   bool _isAuthError(int code) {
     return code == 400 || code == 401 || code == 403 || code == 419;
@@ -147,9 +314,9 @@ class TokenService {
 
       // 🔐 Handle 401 / 403
       if (_isAuthError(res.statusCode)) {
-        final bool refreshed = await getRefreshAccessToken();
+        final refreshed = await getRefreshAccessToken();
 
-        if (!refreshed) {
+        if (refreshed.isFailure) {
           throw const HttpException("Unauthorized");
         }
 
@@ -203,8 +370,8 @@ class TokenService {
     }
     http.Response responsePost = await _sendPostRequest(endpoint, token, json);
     if (_isAuthError(responsePost.statusCode)) {
-      bool refreshed = await getRefreshAccessToken();
-      if (!refreshed) {
+      final refreshed = await getRefreshAccessToken();
+      if (refreshed.isFailure) {
         throw Exception("Session expired. Please login again.");
       }
 
@@ -266,9 +433,9 @@ class TokenService {
 
     // 🔁 HANDLE TOKEN EXPIRED
     if (response.statusCode == 400 || response.statusCode == 403) {
-      bool refreshed = await getRefreshAccessToken();
+      final refreshed = await getRefreshAccessToken();
 
-      if (refreshed) {
+      if (refreshed.isSuccess) {
         String? newToken = await getAccessToken();
 
         final retryRequest = http.MultipartRequest("POST", url);
@@ -313,8 +480,8 @@ class TokenService {
         await _sendRequestMultiplefile(endPoint, token, json, files);
 
     if (_isAuthError(response.statusCode)) {
-      bool refreshed = await getRefreshAccessToken();
-      if (refreshed) {
+      final refreshed = await getRefreshAccessToken();
+      if (refreshed.isSuccess) {
         String? newToken = await getAccessToken();
         response =
             await _sendRequestMultiplefile(endPoint, newToken, json, files);
@@ -369,8 +536,8 @@ class TokenService {
         headers: {"Authorization": "Bearer $token"}, body: jsonEncode(body));
     if (res.statusCode == 400 || res.statusCode == 403) {
       //acess token token exprire....................
-      bool refreshed = await getRefreshAccessToken();
-      if (refreshed) {
+      final refreshed = await getRefreshAccessToken();
+      if (refreshed.isSuccess) {
         String? newToken = await getAccessToken();
         return await http.post(Uri.parse("$baseUrl$endPoint"),
             headers: {"Authorization": "Bearer $newToken"},
@@ -389,8 +556,8 @@ class TokenService {
     }
     http.Response response = await _sendGetRequest(endPoint, token);
     if (response.statusCode == 401 || response.statusCode == 403) {
-      bool refreshed = await getRefreshAccessToken();
-      if (!refreshed) {
+      final refreshed = await getRefreshAccessToken();
+      if (refreshed.isFailure) {
         throw Exception("Session expired. Please login again.");
       }
 
@@ -425,8 +592,8 @@ class TokenService {
     }
     http.Response responsePost = await _sendPutRequest(endpoint, token, json);
     if (_isAuthError(responsePost.statusCode)) {
-      bool refreshed = await getRefreshAccessToken();
-      if (!refreshed) {
+      final refreshed = await getRefreshAccessToken();
+      if (refreshed.isFailure) {
         throw Exception("Session expired. Please login again.");
       }
 
@@ -461,8 +628,8 @@ class TokenService {
     http.StreamedResponse responsePost =
         await _sendPutRequestForMultiplefile(endpoint, token, json, files);
     if (_isAuthError(responsePost.statusCode)) {
-      bool refreshed = await getRefreshAccessToken();
-      if (!refreshed) {
+      final refreshed = await getRefreshAccessToken();
+      if (refreshed.isFailure) {
         throw Exception("Session expired. Please login again.");
       }
 
@@ -520,7 +687,7 @@ class TokenService {
     if (_isAuthError(res.statusCode)) {
       final refreshed = await getRefreshAccessToken();
 
-      if (refreshed) {
+      if (refreshed.isSuccess) {
         final newToken = await getAccessToken();
 
         res = await _sendDeleteRequestForWork(endPoint, newToken);
@@ -552,7 +719,7 @@ class TokenService {
     if (_isAuthError(res.statusCode)) {
       final refreshed = await getRefreshAccessToken();
 
-      if (refreshed) {
+      if (refreshed.isSuccess) {
         final newToken = await getAccessToken();
 
         res = await _sendPatchRequestChild(endPoint, newToken, tojson);
@@ -564,6 +731,37 @@ class TokenService {
   Future<http.Response> _sendPatchRequestChild(
       String endPoint, String? token, Map<String, dynamic> body) async {
     return await http.patch(
+        body: jsonEncode(body),
+        Uri.parse("$projectBaseUrl$endPoint"),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json"
+        });
+  }
+
+  ////////////////////put request...............
+  Future<http.Response> putRequest(
+      String endPoint, Map<String, dynamic> tojson) async {
+    String? token = await getAccessToken();
+    if (token == null) {
+      throw Exception("Access token not found");
+    }
+    http.Response res = await _sendPutRequestChild(endPoint, token, tojson);
+    if (_isAuthError(res.statusCode)) {
+      final refreshed = await getRefreshAccessToken();
+
+      if (refreshed.isSuccess) {
+        final newToken = await getAccessToken();
+
+        res = await _sendPutRequestChild(endPoint, newToken, tojson);
+      }
+    }
+    return res;
+  }
+
+  Future<http.Response> _sendPutRequestChild(
+      String endPoint, String? token, Map<String, dynamic> body) async {
+    return await http.put(
         body: jsonEncode(body),
         Uri.parse("$projectBaseUrl$endPoint"),
         headers: {

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'package:truenorthflutterfrontend/app/adminApplication/view/admin_createProject_screen.dart';
 import 'package:truenorthflutterfrontend/app/adminApplication/model/admin_registration_for_user_account_model.dart';
 
 class AdminDashboardContent extends StatefulWidget {
@@ -155,13 +153,11 @@ class _AdminDashboardContentState extends State<AdminDashboardContent> {
 
   Widget allUserCustomBox() {
     return GestureDetector(
-      onTap: ()async{
-              SharedPreferences prefs = await SharedPreferences.getInstance();
-              String? id=prefs.getString("empId");
-              String? pass=prefs.getString("empName");
-              print("${id}"+"${pass}");
-
-       
+      onTap: () async {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        String? id = prefs.getString("empId");
+        String? pass = prefs.getString("empName");
+        print("${id}" + "${pass}");
       },
       child: Container(
         padding: const EdgeInsets.all(8),
@@ -176,10 +172,10 @@ class _AdminDashboardContentState extends State<AdminDashboardContent> {
   Widget createProject(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => const AdminCreateprojectScreen()));
+        // Navigator.push(
+        //     context,
+        //     MaterialPageRoute(
+        //         builder: (context) => const AdminCreateprojectScreen()));
       },
       child: Container(
         color: Colors.orange.shade100,

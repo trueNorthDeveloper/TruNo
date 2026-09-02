@@ -204,14 +204,20 @@ class Expensecontroller extends ChangeNotifier {
   int _currentPage = 0;
   final int _size = 10;
   bool _isLastPage = false;
+  bool get isLastPage => _isLastPage;
   ApiError? error;
 
-  Future<void> fatchTranscationHistory() async {
-    if (_isLoadTranscation || _isLastPage) return;
+  Future<void> fatchTranscationHistory({bool onRefresh = false}) async {
+    if (_isLoadTranscation || _isLastPage && !onRefresh) return;
 
     _isLoadTranscation = true;
     error = null;
     notifyListeners();
+    if (onRefresh) {
+      _currentPage = 0;
+      _isLastPage = false;
+      _transcationHistory.clear();
+    }
 
     try {
       final transcationResponse =
@@ -305,6 +311,7 @@ class Expensecontroller extends ChangeNotifier {
 
       if (response.isSuccess && response.data != null) {
         //assigned json data into class.....
+
         dailyExpenseRespone = response.data;
         _monthCache[key] = response.data!;
         _fetchedMonths.add(key);
@@ -535,4 +542,43 @@ class Expensecontroller extends ChangeNotifier {
   }
 
   //===========================================================END=============================
+
+  //-----------------------------------UPDATE EXPENSE 2-9-26
+  bool _isUpdate = false;
+  bool get isUpdate => _isUpdate;
+
+  Map<String, dynamic> tomap = {};
+
+  String? _updateError;
+  String? get updateError => _updateError;
+
+  Future<bool> expenseUpdate(Map<String, dynamic> toJson) async {
+    _isUpdate = true;
+    _updateError = null;
+    tomap = {};
+
+    notifyListeners();
+
+    try {
+      final response = await _service.expenseUpdateService(toJson);
+
+      if (response.isSuccess) {
+        tomap = response.data ?? {};
+        return true;
+      }
+
+      _updateError = response.message ?? "Unable to update expense.";
+
+      return false;
+    } catch (e) {
+      debugPrint("Expense update error: $e");
+
+      _updateError = e.toString();
+
+      return false;
+    } finally {
+      _isUpdate = false;
+      notifyListeners();
+    }
+  }
 }

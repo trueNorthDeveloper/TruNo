@@ -1,0 +1,114 @@
+import 'package:flutter/material.dart';
+
+
+
+class AdminExpenseModule extends StatefulWidget {
+  const AdminExpenseModule({super.key});
+
+  @override
+  State<AdminExpenseModule> createState() =>_AdminExpenseModuleState ();
+}
+
+class _AdminExpenseModuleState extends State<AdminExpenseModule> {
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: ResponsiveGrid(
+        children: [
+          _card(
+            context,
+            "Total Credit",
+            "₹12,50,000",
+            Icons.account_balance_wallet,
+            Colors.blue,
+          ),
+          _card(
+            context,
+            "Total Expense",
+            "₹8,72,500",
+            Icons.money_off,
+            Colors.red,
+          ),
+          _card(
+            context,
+            "Available",
+            "₹3,77,500",
+            Icons.account_balance,
+            Colors.green,
+          ),
+          _card(
+            context,
+            "Pending",
+            "24",
+            Icons.pending_actions,
+            Colors.orange,
+          ),
+          _card(
+            context,
+            "Low Balance",
+            "18",
+            Icons.warning,
+            Colors.amber,
+          ),
+          _card(
+            context,
+            "Inactive",
+            "5",
+            Icons.person_off,
+            Colors.grey,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _card(
+    BuildContext context,
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
+    return Card(
+      elevation: 0,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: color.withValues(alpha: 0.12),
+              child: Icon(
+                icon,
+                color: color,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    value,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

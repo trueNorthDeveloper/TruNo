@@ -31,12 +31,11 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     //BOTH COMMENTED
-   
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkAutoLogin();
     });
   }
-  
 
   void _goToLogin() {
     Future.delayed(const Duration(seconds: 2), () {
@@ -127,11 +126,10 @@ class _SplashScreenState extends State<SplashScreen> {
       }
 
       // 6️⃣ Refresh token if exists
-      if (refreshToken != null &&
-          refreshToken.isNotEmpty) {
-        bool refreshed = await TokenService.getRefreshAccessToken();
+      if (refreshToken != null && refreshToken.isNotEmpty) {
+        final refreshed = await TokenService.getRefreshAccessToken();
 
-        if (refreshed) {
+        if (refreshed.isSuccess) {
           Provider.of<UserDashboardProvider>(context, listen: false)
               .changePostion(0);
 

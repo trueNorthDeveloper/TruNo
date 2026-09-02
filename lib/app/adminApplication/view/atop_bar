@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:truenorthflutterfrontend/app/adminApplication/view/admin_login_screen.dart';
+import 'package:truenorthflutterfrontend/app/adminApplication/view/admin_login_screen';
 
 class TopBar extends StatelessWidget {
   final bool isMobile;

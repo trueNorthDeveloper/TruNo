@@ -56,7 +56,7 @@ class TransactionContent {
   final dynamic type;
   final dynamic category;
   final dynamic description;
-  final dynamic createdAt;
+  final dynamic transcationDate;
   final dynamic amount;
 
   TransactionContent({
@@ -64,7 +64,7 @@ class TransactionContent {
     required this.type,
     required this.category,
     required this.description,
-    required this.createdAt,
+    required this.transcationDate,
     required this.amount,
   });
 
@@ -74,9 +74,9 @@ class TransactionContent {
         type: json["type"]?.toString(),
         category: json["category"]?.toString(),
         description: json["description"]?.toString(),
-        createdAt: json["createdAt"] != null
-            ? DateTime.tryParse(json["createdAt"].toString())
-            : null,
+        transcationDate: json["transcationDate"].toString(),
+            // ? DateTime.tryParse(json["transcationDate"].toString())
+            // : null,
         // Safely parse dynamic numbers into doubles to prevent subtype errors
         amount: json["amount"] != null
             ? double.tryParse(json["amount"].toString())

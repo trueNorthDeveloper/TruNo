@@ -200,7 +200,7 @@ class Expensemoduleservice {
   Future<Result<DailyExpenseRespone>> dailyExpenseService(year, month) async {
     try {
       // FIXED: Corrected the query parameters string format
-      String endPoint = "expense/show-daily-expense?year=$year&month=$month";
+      String endPoint = "expense/showExpense?year=$year&month=$month";
       final respones = await auth.authorizedGetForWork(endPoint);
 
       if (respones.statusCode == 200 || respones.statusCode == 202) {
@@ -238,7 +238,7 @@ class Expensemoduleservice {
     List<String> files,
   ) async {
     try {
-      const endPoint = "expense/expense-submission";
+      const endPoint = "expense/createExpense";
 
       final response = await auth.authorizedPostForTaskWithMultipleFile(
         dto,
@@ -268,6 +268,125 @@ class Expensemoduleservice {
       return Result.failure(
         ApiError.server,
         message: serverMessage,
+      );
+    } on FormatException {
+      return Result.failure(
+        ApiError.jsonFormat,
+        message: "Received an unexpected response from the server.",
+      );
+    } on SocketException {
+      return Result.failure(
+        ApiError.network,
+        message: "No internet connection. Please check your network.",
+      );
+    } on TimeoutException {
+      return Result.failure(
+        ApiError.timeout,
+        message: "Request timed out. Please try again.",
+      );
+    } on http.ClientException {
+      return Result.failure(
+        ApiError.client,
+        message: "Failed to reach the server. Please try again.",
+      );
+    } on PlatformException catch (e) {
+      return Result.failure(
+        ApiError.platform,
+        message: e.message ?? "A platform error occurred.",
+      );
+    } catch (e) {
+      return Result.failure(
+        ApiError.unknown,
+        message: e.toString(),
+      );
+    }
+  }
+
+//update exopense service
+  Future<Result> expenseUpdateService(Map<String, dynamic> toJson) async {
+    try {
+      const endPoint = "expense/updateExpense";
+
+      final response = await auth.putRequest(
+        endPoint,
+        toJson,
+      );
+
+      print("STATUS CODE: ${response.statusCode}");
+      print("RESPONSE BODY: ${response.body}");
+
+      Map<String, dynamic> body = {};
+
+      try {
+        body = jsonDecode(response.body) as Map<String, dynamic>;
+      } catch (_) {
+        return Result.failure(
+          ApiError.jsonFormat,
+          message: "Invalid response from server.",
+        );
+      }
+
+      final bool serverSuccess = body["success"] == true;
+
+      final String message =
+          body["message"]?.toString() ?? "Something went wrong.";
+
+      // --------------------------------
+      // HTTP SUCCESS
+      // --------------------------------
+      if (response.statusCode == 200 ||
+          response.statusCode == 201 ||
+          response.statusCode == 202) {
+        if (serverSuccess) {
+          return Result.success(body);
+        }
+
+        return Result.failure(
+          ApiError.client,
+          message: message,
+        );
+      }
+
+      // --------------------------------
+      // 400
+      // --------------------------------
+      if (response.statusCode == 400) {
+        return Result.failure(
+          ApiError.client,
+          message: message,
+        );
+      }
+
+      // --------------------------------
+      // 409
+      // --------------------------------
+      if (response.statusCode == 409) {
+        return Result.failure(
+          ApiError.client,
+          message: message,
+        );
+      }
+
+      // --------------------------------
+      // 422
+      // --------------------------------
+      if (response.statusCode == 422) {
+        // IMPORTANT:
+        // Never treat 422 as successful,
+        // even if response JSON says success:true.
+
+        return Result.failure(
+          ApiError.client,
+          message: message,
+        );
+      }
+
+      // --------------------------------
+      // OTHER STATUS CODES
+      // --------------------------------
+      return Result.failure(
+        ApiError.client,
+        message: message,
       );
     } on FormatException {
       return Result.failure(

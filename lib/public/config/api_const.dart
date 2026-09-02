@@ -1,9 +1,6 @@
 class Apiconstants {
 // //   static const String baseUrl ="https://fe5f-106-222-214-87.ngrok-free.app/auth/api";
-//   static const String baseUrl = "https://306011160ec5.ngrok-free.app/auth/api";
 
-//   // static const String imageBaseUrl="https://fe5f-106-222-214-87.ngrok-free.app/api";
-//   static const String imageBaseUrl = "https://306011160ec5.ngrok-free.app/api";
 //   // ignore: unnecessary_string_interpolations
 //   static const String login = "$baseUrl/login";
 //   static const String logout = "$baseUrl/logout";
@@ -89,13 +86,13 @@ class Apiconstants {
   static String deleteFile = '$projectbaseUrl/deletefile/';
 
   //here all admin api...........................start..........................
-  static String adminBaseUrl =
-      "https://306011160ec5.ngrok-free.app/auth/adminApi";
+  // static String adminBaseUrl =
+  //     "https://306011160ec5.ngrok-free.app/auth/adminApi";
 
-  static String adminlog = "$adminBaseUrl/adminLogin";
-  static String fatchAllUser = "$adminBaseUrl/allUser";
-  //-----------------collection of user project api...........
-  static String userProjectById = "$adminBaseUrl/projects/";
+  // static String adminlog = "$adminBaseUrl/adminLogin";
+  // static String fatchAllUser = "$adminBaseUrl/allUser";
+  // //-----------------collection of user project api...........
+  // static String userProjectById = "$adminBaseUrl/projects/";
 
 //date wise projet 10-12-25
 

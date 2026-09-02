@@ -1,0 +1,34 @@
+import 'package:flutter/material.dart';
+import 'package:truenorthflutterfrontend/public/config/Nav_item.dart';
+
+class _MobileLayout extends StatelessWidget {
+  final List<NavItem> items;
+  final int selectedIndex;
+  final ValueChanged<int> onSelect;
+  const _MobileLayout({
+    required this.items,
+    required this.selectedIndex,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(items[selectedIndex].label)),
+      drawer: Drawer(
+          child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+              decoration:
+                  BoxDecoration(color: Theme.of(context).colorScheme.primary),
+              child: const Align(
+                alignment: Alignment.bottomLeft,
+                child: Text('Admin Portal',
+                    style: TextStyle(color: Colors.white, fontSize: 20)),
+              ))
+        ],
+      )),
+    );
+  }
+}

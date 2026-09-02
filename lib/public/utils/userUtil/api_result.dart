@@ -2,23 +2,7 @@ import 'package:truenorthflutterfrontend/public/config/platform_type.dart'
     show ApiError;
 
 class Result<T> {
-
-  // final T? data;
-  // final ApiError? error;
-  // final bool _isUnprocessed;
-
-  // // Logic: Success is only true if data exists AND it's not marked as 'unprocessed'
-  // bool get isSuccess => data != null && error == null && !_isUnprocessed;
-  
-  // // Logic: Process is true only if data exists AND it is marked as 'unprocessed'
-  // bool get isProcess => data != null && error == null && _isUnprocessed;
-  
-  // bool get isFailure => error != null;
-
-  // Result.success(this.data) : error = null, _isUnprocessed = false;
-  // Result.unProcess(this.data) : error = null, _isUnprocessed = true;
-  // Result.failure(this.error) : data = null, _isUnprocessed = false;
-   final T? data;
+  final T? data;
   final ApiError? error;
   final String? message;
   final bool _isUnprocessed;
