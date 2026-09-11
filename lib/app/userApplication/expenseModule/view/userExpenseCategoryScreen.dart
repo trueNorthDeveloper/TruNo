@@ -4,6 +4,7 @@ import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/controller/expenseController.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/model/expenseDynamicFieldResponseModel.dart';
 import 'package:truenorthflutterfrontend/public/utils/userUtil/mesage_snack_bar.dart';
@@ -27,6 +28,7 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
       final provider = Provider.of<Expensecontroller>(context, listen: false);
       provider.callCategoryFirstTime(forceRefresh: true);
       provider.clearFormField(); // first-time fresh fetch on screen enter
+      provider.getExpenseDateController();
     });
   }
 
@@ -706,6 +708,71 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
     );
   }
 
+  // Widget buildDropdown(DynamicField field) {
+  //   return SizedBox(
+  //     height: SizeConFig.screenHeight * 0.08,
+  //     child: Padding(
+  //       padding: const EdgeInsets.all(16),
+  //       child: DropdownButtonFormField<String>(
+  //         menuMaxHeight: 250,
+  //         itemHeight: 50,
+  //         isDense: true,
+  //         isExpanded: true,
+  //         borderRadius: BorderRadius.circular(12),
+  //         // Selected value
+  //         value: selectedValues[field.fieldName],
+  //         decoration: InputDecoration(
+  //             labelText: field.fieldLabel,
+  //             border: OutlineInputBorder(
+  //                 borderRadius: BorderRadius.circular(14),
+  //                 borderSide: BorderSide(
+  //                   color: Colors.grey.shade400,
+  //                   width: 1.2,
+  //                 )),
+  //             filled: true),
+  //         items: field.optionss.map((option) {
+  //           return DropdownMenuItem(
+  //             value: option.label,
+  //             child: Text(option.label),
+  //             onTap: () {
+  //               maxAllowedAmount = option.value;
+  //             },
+  //           );
+  //         }).toList(),
+  //         onChanged: (value) {
+  //           if (value == null) return;
+  //           setState(() {
+  //             // IMPORTANT: update selected value
+  //             selectedValues[field.fieldName] = value;
+  //             // Find selected option
+  //             final selectedOption = field.optionss.firstWhere(
+  //               (option) => option.label == value,
+  //             );
+  //             // Update max amount if required
+  //             if (field.fieldName.toLowerCase() == "amount") {
+  //               maxAllowedAmount = selectedOption.value;
+  //             }
+  //             final exitingIndex = myFormList
+  //                 .indexWhere((element) => element['fieldId'] == field.id);
+
+  //             if (exitingIndex != -1) {
+  //               //  myFormList[exitingIndex]["value"] = value;
+  //               selectedValues[field.fieldName] = value;
+  //             } else {
+  //               myFormList.add({"fieldId": field.id, "value": value});
+  //             }
+  //           });
+  //         },
+  //         validator: (value) {
+  //           if (field.isRequired && (value == null || value.isEmpty)) {
+  //             return "${field.fieldLabel} is required";
+  //           }
+  //           return null;
+  //         },
+  //       ),
+  //     ),
+  //   );
+  // }
   Widget buildDropdown(DynamicField field) {
     return SizedBox(
       height: SizeConFig.screenHeight * 0.08,
@@ -719,31 +786,51 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
           borderRadius: BorderRadius.circular(12),
           value: selectedValues[field.fieldName],
           decoration: InputDecoration(
-              labelText: field.fieldLabel,
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(
-                    color: Colors.grey.shade400,
-                    width: 1.2,
-                  )),
-              filled: true),
+            labelText: field.fieldLabel,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(
+                color: Colors.grey.shade400,
+                width: 1.2,
+              ),
+            ),
+            filled: true,
+          ),
           items: field.optionss.map((option) {
-            return DropdownMenuItem(
+            return DropdownMenuItem<String>(
               value: option.label,
               child: Text(option.label),
-              onTap: () {
-                maxAllowedAmount = option.value;
-              },
             );
           }).toList(),
           onChanged: (value) {
+            if (value == null) return;
+
             setState(() {
-              final exitingIndex = myFormList
-                  .indexWhere((element) => element['fieldId'] == field.id);
-              if (exitingIndex != -1) {
-                myFormList[exitingIndex]["value"] = value; // ✅ correct
+              // 1. Update dropdown UI value
+              selectedValues[field.fieldName] = value;
+
+              // 2. Find selected option
+              final selectedOption = field.optionss.firstWhere(
+                (option) => option.label == value,
+              );
+
+              // 3. Update max allowed amount
+              if (field.fieldName.toLowerCase() == "amount") {
+                maxAllowedAmount = selectedOption.value;
+              }
+
+              // 4. Update myFormList
+              final existingIndex = myFormList.indexWhere(
+                (element) => element['fieldId'] == field.id,
+              );
+
+              if (existingIndex != -1) {
+                myFormList[existingIndex]["value"] = value;
               } else {
-                myFormList.add({"fieldId": field.id, "value": value});
+                myFormList.add({
+                  "fieldId": field.id,
+                  "value": value,
+                });
               }
             });
           },
@@ -751,6 +838,7 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
             if (field.isRequired && (value == null || value.isEmpty)) {
               return "${field.fieldLabel} is required";
             }
+
             return null;
           },
         ),
@@ -768,74 +856,39 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: TextFormField(
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-          ],
-          controller: controllers[field.fieldName],
-          keyboardType: TextInputType.number,
-          onChanged: (value) {
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+            ],
+            controller: controllers[field.fieldName],
+            keyboardType: TextInputType.number,
+            onChanged: (value) {
+              setState(() {
+                maxAllowedAmount = double.tryParse(value) ?? 0;
+              });
+              final exitingIndex = myFormList
+                  .indexWhere((element) => element['fieldId'] == field.id);
+              if (exitingIndex != -1) {
+                myFormList[exitingIndex]["value"] = value; // ✅ correct
+              } else {
+                myFormList.add({"fieldId": field.id, "value": value});
+              }
+            },
+            decoration: InputDecoration(
+              labelText: field.fieldLabel,
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            validator: (value) {
+              final dynamicLimit = field.fieldName.toLowerCase() == "amount"
+                  ? maxAllowedAmount
+                  : null;
 
-            setState(() {
-              maxAllowedAmount=double.parse(value);
-            });
-            final exitingIndex = myFormList
-                .indexWhere((element) => element['fieldId'] == field.id);
-            if (exitingIndex != -1) {
-              myFormList[exitingIndex]["value"] = value; // ✅ correct
-            } else {
-              myFormList.add({"fieldId": field.id, "value": value});
-            }
-          },
-          decoration: InputDecoration(
-            labelText: field.fieldLabel,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-          //here used VAlIDATION CLASS USING STATIC METHOD
-          //   validator: Validation.validateNumber,
-          //  validator: Validation.dynamicNumberValidation(min: 10, max: 100),
-          validator: (value) {
-            final dynamicLimit = field.fieldName.toLowerCase() == "amount"
-                ? maxAllowedAmount
-                : null;
-
-            return Validation.validateDynamicNumber(
-                value: value,
-                fieldLabel: field.fieldLabel,
-                isRequired: field.isRequired,
-                maxLimit: dynamicLimit);
-          },
-
-          // validator: (value)
-          // validator: (value) {
-          //  if (Validation.validateNumber(value) != null)
-          // if (field.isRequired && (value == null || value.trim().isEmpty)) {
-          //   return "${field.fieldLabel} is required";
-          // }
-          // if(Validation.validateNumber(value)!=null)
-
-          // final amount = int.tryParse(value ?? "");
-
-          // if (amount == null) return "Enter valid amount";
-          // if (amount>0) return "Maximum ₹$amount allowed";
-
-          // if()
-
-          // if (maxAllowedAmount != null && amount > maxAllowedAmount) {
-          //   return "Maximum ₹$maxAllowedAmount allowed";
-          // }
-
-          // if (field.fieldName.toLowerCase() == "amount") {
-          //   // if (amount > maxAllowedAmount) {
-          //   //   return "Maximum ₹$maxAllowedAmount allowed";
-          //   // }
-          //   if (amount > maxAllowedAmount) {
-          //     return "Maximum ₹$maxAllowedAmount allowed";
-          //   }
-          // }
-
-          // return null;
-          //},
-        ),
+              return Validation.validateDynamicNumber(
+                  value: value,
+                  fieldLabel: field.fieldLabel,
+                  isRequired: field.isRequired,
+                  maxLimit: dynamicLimit);
+            }),
       ),
     );
   }
@@ -947,15 +1000,16 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
     );
   }
 
-//method  show slected date top of page({ method 1})
   Widget _buildDateBar(Expensecontroller controller) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16.0,
+        vertical: 12.0,
+      ),
       child: Container(
-        height: 64, // Explicit comfortable sizing constraint
+        height: 64,
         decoration: BoxDecoration(
-          color: const Color(
-              0xFF8BB1B1), // Polished slate teal matching your original palette
+          color: const Color(0xFF8BB1B1),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -963,64 +1017,132 @@ class _UserexpensescreenzsState extends State<Userexpensecategory> {
               color: Colors.black.withOpacity(0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 8.0),
-              child: _buildNavigationButton(
-                onTap: () {
-                  //decrease date by one day
-                  // controller.nextDayAndPreviousDay(-1);
-                  controller.changeCategoryDate(-1);
-                },
-                icon: Icons.arrow_back_ios_new_rounded,
-              ),
-            ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () async {
+            final DateTime now = DateTime.now();
+            final DateTime today = DateTime(now.year, now.month, now.day);
+            final SharedPreferences pref =
+                await SharedPreferences.getInstance();
 
-            // Current Date Title Header View
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  "SELECTED DATE",
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white70,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                //SHOW CURRENT DATE USING PROVIDER
-                Text(
-                  controller.formateDate.format(controller.categoryCurrentDate),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ],
-            ),
+            final String? lockDaysString = await pref.getString("expenseDays");
+            dynamic lockDays = int.tryParse(lockDaysString ?? "0") ?? 0;
+            final DateTime fifteenDaysAgo =
+                today.subtract(Duration(days: lockDays));
+            final DateTime futureLimit = today.add(Duration(days: lockDays));
 
-            // Next Day Action Button
-            Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: _buildNavigationButton(
-                onTap: () => {
-                  //increase date by one day
-                  //controller.nextDayAndPreviousDay(1)
-                  controller.changeCategoryDate(1)
-                },
-                icon: Icons.arrow_forward_ios_rounded,
+            final DateTime? pickedDate = await showDatePicker(
+              context: context,
+              initialDate: controller.categoryCurrentDate,
+              // firstDate: DateTime(2000),
+              //   lastDate: DateTime.now(),
+              firstDate: fifteenDaysAgo,
+              lastDate: futureLimit,
+              //lastDate: now.add(Duration(days: lockDays)),
+              helpText: 'SELECT EXPENSE DATE',
+              selectableDayPredicate: (DateTime date) {
+                return !date.isAfter(today);
+              },
+              builder: (context, child) {
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                      colorScheme: const ColorScheme.light(
+                        //primary: Color(0xFF8BB1B1),
+                        primary: Colors.blue, // Selected day & header color
+                        onSurface: Colors.black,
+                      ),
+                      textButtonTheme: TextButtonThemeData(
+                        style: TextButton.styleFrom(
+                          foregroundColor:
+                              Colors.blue, // Color of OK/Cancel buttons
+                        ),
+                      )),
+                  child: child!,
+                );
+              },
+            );
+            if (pickedDate == null) return;
+
+            // final SharedPreferences pref =
+            //     await SharedPreferences.getInstance();
+
+            // final String? lockDaysString = await pref.getString("expenseDays");
+            // final int lockDays = int.tryParse(lockDaysString ?? "0") ?? 0;
+            // //
+            // final DateTime today = DateTime(
+            //   DateTime.now().year,
+            //   DateTime.now().month,
+            //   DateTime.now().day,
+            // );
+
+            // final DateTime selectedDate = DateTime(
+            //   pickedDate.year,
+            //   pickedDate.month,
+            //   pickedDate.day,
+            // );
+            // final int daysAgo = today.difference(selectedDate).inDays;
+            // //check future date
+            // if (daysAgo < 0) {
+            //   ShowTaostMessage.toastMessage(
+            //     context,
+            //     "You cannot add an expense for a future date.",
+            //   );
+            //   return;
+            // }
+            // //check older date
+            // if (daysAgo > lockDays) {
+            //   ShowTaostMessage.toastMessage(
+            //     context,
+            //     "You cannot add an expense more than $lockDays days back.",
+            //   );
+            //   return;
+            // }
+            // //when date is valid
+            await controller.changeCategoryDate(
+              pickedDate,
+            );
+          },
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.calendar_month_rounded,
+                color: Colors.white,
+                size: 25,
               ),
-            ),
-          ],
+              const SizedBox(width: 12),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "SELECTED DATE",
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white70,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    controller.formateDate.format(
+                      controller.categoryCurrentDate,
+                    ),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -40,5 +40,12 @@ class MobileTokenStorage implements TokenStorage {
     await prefs.remove('access_token');
     await prefs.remove('refresh_token');
     await prefs.remove('user_role');
+    await prefs.remove('expenseDays');
   }
+
+  // @override
+  // Future<String?> getExpenseLockDate() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   return prefs.getString("expenseDays");
+  // }
 }

@@ -53,6 +53,10 @@ class Validation {
     }
     if (value == null || value.trim().isEmpty) return null;
 
+    final numberRegex = RegExp(r'^\d+(\.\d+)?$');
+    if (!numberRegex.hasMatch(value.trim())) {
+      return "Enter a valid amount";
+    }
     // 2. Check if valid number
     final amount = num.tryParse(value);
     if (amount == null) {
@@ -62,6 +66,10 @@ class Validation {
     // 3. Dynamic maximum amount check (if present)
     if (maxLimit != null && amount > maxLimit) {
       return "Maximum ₹$maxLimit allowed";
+    }
+    // 4. Amount must be greater than zero
+    if (amount <= 0) {
+      return "Enter an amount more than zero";
     }
 
     return null;

@@ -420,4 +420,33 @@ class Expensemoduleservice {
       );
     }
   }
+
+  //service method for expense date contoller
+  Future<Result> fatchExpenseDatecontrolService() async {
+    try {
+      String endPoint = "expense/lockExpense";
+      final respones = await auth.authorizedGetForWork(endPoint);
+      if (respones.statusCode == 200) {
+        try {
+          final data = jsonDecode(respones.body);
+
+          return Result.success(data);
+        } on FormatException catch (_) {
+          return Result.failure(ApiError.jsonFormat);
+        }
+      } else {
+        return Result.failure(ApiError.server);
+      }
+    } on SocketException catch (_) {
+      return Result.failure(ApiError.network);
+    } on TimeoutException catch (_) {
+      return Result.failure(ApiError.timeout);
+    } on http.ClientException catch (_) {
+      return Result.failure(ApiError.client);
+    } on PlatformException catch (_) {
+      return Result.failure(ApiError.platform);
+    } catch (_) {
+      return Result.failure(ApiError.unknown);
+    }
+  }
 }

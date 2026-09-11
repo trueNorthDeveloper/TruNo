@@ -408,6 +408,25 @@ Widget _buildExpenseBreakdown(Expensecontroller provider) {
                 itemCount: categories.length,
                 itemBuilder: (context, index) {
                   final cat = categories[index];
+                  dynamic status = cat.status.toUpperCase();
+                  Color statusColor;
+                  switch (status) {
+                    case "PENDING":
+                      statusColor = Colors.orange;
+                      break;
+                    case "APPROVED":
+                      statusColor = Color(0xFF16A34A);
+                      break;
+                    case "HOLD":
+                      statusColor = Color(0xFF6366F1);
+                      break;
+                    case "REJECTED":
+                      statusColor = Colors.red;
+                      break;
+                    default:
+                      statusColor = const Color(0xFF6B7280);
+                      break;
+                  }
 
                   return Card(
                     margin: const EdgeInsets.symmetric(vertical: 6.0),
@@ -422,18 +441,20 @@ Widget _buildExpenseBreakdown(Expensecontroller provider) {
                         cat.categoryName,
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
-                      subtitle: Text("Status: ${cat.status}"),
+                      subtitle: Text(
+                        "Status: ${cat.status.toLowerCase()}",
+                        style: TextStyle(color: statusColor),
+                      ),
                       // Wrap text and button in a Row with MainAxisSize.min
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
                             "₹${cat.expenseAmount}",
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                              color: Colors.black87,
-                            ),
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: statusColor),
                           ),
                           const SizedBox(
                               width: 8), // Space between amount and button
@@ -511,7 +532,7 @@ void _showUpdateDialog(
             return ElevatedButton(
               onPressed: () async {
                 final String enteredAmount = amountController.text.trim();
-               // final String date = summary.expenseDate;
+                // final String date = summary.expenseDate;
                 if (enteredAmount.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(

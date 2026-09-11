@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/model/dailyExpenseReponse.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/model/expenseCategoryResponse.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/model/expenseDynamicFieldResponseModel.dart';
@@ -466,7 +467,6 @@ class Expensecontroller extends ChangeNotifier {
 //IT WILL SHOW CURRENT DATE----------------------ON UI------------------
   final DateFormat formateDate = DateFormat('yyyy-MM-dd');
   DateTime categoryCurrentDate = DateTime.now();
-  //DateTime selectedDate = DateTime.now();
 
 // Used while submitting expense form
   DateTime submitDate = DateTime.now();
@@ -476,12 +476,42 @@ class Expensecontroller extends ChangeNotifier {
 //STEP:1 CALL FISRT API IN INTI STATE USIN CURRENT DATE
 
 //CALLING CATEGORY DATE WISE...........................
-  Future<void> changeCategoryDate(int days) async {
-    final newDate = categoryCurrentDate.add(Duration(days: days));
-    if (newDate.isAfter(DateTime.now())) return; // block future dates
+  // Future<void> changeCategoryDate(int days) async {
+  //   final newDate = categoryCurrentDate.add(Duration(days: days));
+  //   if (newDate.isAfter(DateTime.now())) return; // block future dates
 
-    categoryCurrentDate = newDate;
-    submitDate = newDate;
+  //   categoryCurrentDate = newDate;
+  //   submitDate = newDate;
+
+  //   await fatchExpenseCategory(
+  //     formateDate.format(categoryCurrentDate),
+  //   );
+
+  //   notifyListeners();
+  // }
+  Future<void> changeCategoryDate(DateTime selectedDate) async {
+    final today = DateTime.now();
+
+    // Remove time part for comparison
+    final selected = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+    );
+
+    final currentToday = DateTime(
+      today.year,
+      today.month,
+      today.day,
+    );
+
+    // Don't allow future dates
+    if (selected.isAfter(currentToday)) {
+      return;
+    }
+
+    categoryCurrentDate = selected;
+    submitDate = selected;
 
     await fatchExpenseCategory(
       formateDate.format(categoryCurrentDate),
@@ -578,6 +608,43 @@ class Expensecontroller extends ChangeNotifier {
       return false;
     } finally {
       _isUpdate = false;
+      notifyListeners();
+    }
+  }
+
+  //EXPENSE DATE CONTROL IN DAYS.................................
+  bool _isDateShow = false;
+  bool get isDateShow => _isDateShow;
+  String expenseDaysKey = 'expense_days';
+  dynamic days;
+  Future<void> getExpenseDateController({bool forceRefresh = false}) async {
+    final pref = await SharedPreferences.getInstance();
+
+    final date = pref.getString("expenseDays");
+
+    if (date != null && date.isNotEmpty) {
+      expenseDaysKey = date;
+      days = int.tryParse(date);
+      return;
+    }
+    _isDateShow = true;
+    notifyListeners();
+
+    try {
+      final response = await _service.fatchExpenseDatecontrolService();
+
+      if (response.isSuccess) {
+        days = response.data['days'];
+        expenseDaysKey = days.toString();
+
+        await pref.setString("expenseDays", days.toString());
+
+        print("total days ================== $days");
+      }
+    } catch (e) {
+      print("Error: $e");
+    } finally {
+      _isDateShow = false;
       notifyListeners();
     }
   }
