@@ -8,9 +8,8 @@ import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/view/
 import 'package:truenorthflutterfrontend/app/userApplication/userAttendanceAndLeaveModule/view/leaveScreen.dart';
 
 import 'package:truenorthflutterfrontend/app/userApplication/userAttendanceAndLeaveModule/view/user_attendance_screen.dart';
+import 'package:truenorthflutterfrontend/app/userApplication/userAuthModule/controller/login_provider.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userAuthModule/view/user_logout_screen.dart';
-
-import 'package:truenorthflutterfrontend/app/unUsedButImp/login_controller_provider.dart';
 
 import 'package:truenorthflutterfrontend/app/userApplication/userWorkModule/view/user_work_module_screen.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userWorkModule/view/project_team_and_task_screen.dart';
@@ -36,7 +35,7 @@ class _MyUserhomePage extends State<UserHomePage> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<LoginProvider>(context, listen: false).loadUserSession2();
+      Provider.of<LoginControll>(context, listen: false).loadUserSession2();
     });
 
     Future.microtask(() =>
@@ -617,7 +616,7 @@ class _MyUserhomePage extends State<UserHomePage> {
   }
 
   Widget buildUserLoginSession() {
-    return Consumer<LoginProvider>(
+    return Consumer<LoginControll>(
       builder: (context, provider, _) {
         if (provider.isLoadingSession) {
           return Center(

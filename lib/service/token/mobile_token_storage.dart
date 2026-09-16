@@ -41,6 +41,8 @@ class MobileTokenStorage implements TokenStorage {
     await prefs.remove('refresh_token');
     await prefs.remove('user_role');
     await prefs.remove('expenseDays');
+    await prefs.remove("loginSession");
+    await prefs.remove("userProfile");
   }
 
   // @override

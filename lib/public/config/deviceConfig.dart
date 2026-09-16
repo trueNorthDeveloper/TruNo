@@ -14,19 +14,6 @@ import 'package:permission_handler/permission_handler.dart';
 class Deviceconfig {
   //check internet connection..............date 21-6-2025.......................
   static Future<bool> checkInternetConnection() async {
-    // final connectivityResult = await Connectivity().checkConnectivity();
-
-    // if (connectivityResult == ConnectivityResult.none) {
-    //   return false;
-    // }
-
-    // try {
-    //    final result = await InternetAddress.lookup('google.com');
-
-    //   return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-    // } catch (_) {
-    //   return false;
-    // }
     final List<ConnectivityResult> connectivityResult =
         await Connectivity().checkConnectivity();
     if (connectivityResult.contains(ConnectivityResult.none)) {
@@ -39,18 +26,19 @@ class Deviceconfig {
       return await _checkNativeInternet();
     }
   }
+
 // Safe approach for Web Chrome
-static Future<bool> _checkWebInternet() async {
-  try {
-    // 🟢 Using a public, CORS-enabled echoing endpoint instead of Google
-    final response = await http.get(Uri.parse('https://ipify.org')).timeout(
-      const Duration(seconds: 4),
-    );
-    return response.statusCode == 200;
-  } catch (_) {
-    return false;
+  static Future<bool> _checkWebInternet() async {
+    try {
+      // 🟢 Using a public, CORS-enabled echoing endpoint instead of Google
+      final response = await http.get(Uri.parse('https://ipify.org')).timeout(
+            const Duration(seconds: 4),
+          );
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
   }
-}
 
   // Safe approach for Web Chrome (Checks actual data availability via HTTP request)
   // static Future<bool> _checkWebInternet() async {

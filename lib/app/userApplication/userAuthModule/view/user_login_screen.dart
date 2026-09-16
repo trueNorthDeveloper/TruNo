@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
-
-import 'package:truenorthflutterfrontend/app/unUsedButImp/login_controller_provider.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userAuthModule/controller/login_provider.dart';
 import 'package:truenorthflutterfrontend/public/config/break_points.dart';
 
@@ -453,7 +451,7 @@ class _LoginUiState extends State<LoginUi> {
     bool isWebLayout, {
     bool isPasswordHideShow = false,
   }) {
-    final passwordProvide = Provider.of<LoginProvider>(context);
+    final passwordProvide = Provider.of<LoginControll>(context);
 
     final double fieldHeight =
         isWebLayout ? 44 : (SizeConFig.screenHeight * 5 / 100);

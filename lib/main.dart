@@ -8,7 +8,7 @@ import 'package:truenorthflutterfrontend/app/userApplication/userAuthModule/cont
 import 'package:truenorthflutterfrontend/app/userApplication/userHomePageModule/controller/homeLayoutController.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userAttendanceAndLeaveModule/controller/attendanceController.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userAuthModule/view/loading_screen.dart';
-import 'package:truenorthflutterfrontend/app/unUsedButImp/login_controller_provider.dart';
+
 import 'package:truenorthflutterfrontend/app/userApplication/userHomePageModule/controller/user_dashboard_provider.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userWorkModule/controller/user_project_provider.dart';
 import 'package:truenorthflutterfrontend/public/config/themdata.dart';
@@ -31,7 +31,6 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => LoginProvider()),
         ChangeNotifierProvider(create: (_) => UserDashboardProvider()),
         ChangeNotifierProvider(create: (_) => AdminDashboardProvider()),
         ChangeNotifierProvider(create: (_) => UserProjectProvider()),
@@ -47,7 +46,7 @@ void main() async {
   );
 }
 
-class MyApp extends StatefulWidget {
+ class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override

@@ -17,53 +17,7 @@ import 'package:truenorthflutterfrontend/service/token/tokenService.dart';
 
 class UserServicesForApi {
   final auth = TokenService();
-  //user login service.....................................................with jwt......
-  // Future<Resultt> loginWithJwt(
-  //   Map<String, dynamic> toJson,
-  //   String filePath,
-  // ) async {
-  //   try {
-  //     final request = http.MultipartRequest(
-  //       "POST",
-  //       Uri.parse(Apiconstants.login),
-  //     );
 
-  //     request.files.add(
-  //       http.MultipartFile.fromString(
-  //         'dto',
-  //         jsonEncode(toJson),
-  //         contentType: http.MediaType('application', 'json'),
-  //       ),
-  //     );
-
-  //     request.files.add(
-  //       await http.MultipartFile.fromPath('file', filePath),
-  //     );
-
-  //     final response = await request.send().timeout(
-  //           const Duration(seconds: 30),
-  //         );
-
-  //     // final body = await response.stream.bytesToString();
-  //     final responseBody = await http.Response.fromStream(response);
-
-  //     if (responseBody.statusCode == 200) {
-  //       return Resultt.success(jsonDecode(responseBody.body));
-  //     } else {
-  //       try {
-  //         return Resultt.apiError(jsonDecode(responseBody.body));
-  //       } catch (e) {
-  //         return Resultt.systemError(ApiError.server);
-  //       }
-  //     }
-  //   } on SocketException {
-  //     return Resultt.systemError(ApiError.network);
-  //   } on TimeoutException {
-  //     return Resultt.systemError(ApiError.timeout);
-  //   } catch (_) {
-  //     return Resultt.systemError(ApiError.server);
-  //   }
-  // }
   Future<Resultt> loginWithJwt(Map<String, dynamic> toJson,
       [String? filePath]) async {
     try {
@@ -203,10 +157,6 @@ class UserServicesForApi {
           "ngrok-skip-browser-warning": "true",
         },
       ).timeout(const Duration(seconds: 15));
-
-      // print("Status: ${response.statusCode}");
-      //print("Content-Type: ${response.headers['content-type']}");
-      //print("Body: ${response.body}");
 
       if (response.statusCode == 200) {
         final contentType =

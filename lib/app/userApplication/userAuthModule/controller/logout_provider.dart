@@ -113,7 +113,7 @@ class LogoutProvider extends ChangeNotifier {
         // Unified clear — works for both mobile (SharedPreferences)
         // and web (FlutterSecureStorage) through the factory.
         await TokenFactoryStorage.instance.clearTokens();
-
+        print("sharred preffreance  has cleared");
         ShowTaostMessage.toastMessage(context, "Logged out successfully");
 
         Navigator.of(context).pushAndRemoveUntil(

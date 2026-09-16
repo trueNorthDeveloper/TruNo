@@ -556,6 +556,7 @@ void _showUpdateDialog(
                   "expenseDate": summary.expenseDate,
                   "transcationId": transactionId,
                 };
+                // print(toJson.toString());
                 bool success = await pro.expenseUpdate(toJson);
 
                 if (!context.mounted) return;

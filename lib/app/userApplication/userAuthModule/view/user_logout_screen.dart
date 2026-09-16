@@ -13,44 +13,6 @@ class Logoutui extends StatefulWidget {
 }
 
 class _Logoutscreenui extends State<Logoutui> {
-  // @override
-  // void dispose() {
-  //   super.dispose();
-  // }
-
-  // @override
-  // Widget build(BuildContext context) {
-  //   return PopScope(
-  //       canPop: !context.watch<LoginControll>().isLoggingOut,
-  //       // ignore: deprecated_member_use
-  //       onPopInvoked: (didPop) {
-  //         if (!didPop) {
-  //           ShowTaostMessage.toastMessage(
-  //             context,
-  //             "Please wait, logging out...",
-  //           );
-  //         }
-  //       },
-  //       child: Scaffold(
-  //           appBar: AppBar(),
-  //           body: Center(
-  //               child: Consumer<LoginControll>(builder: (context, log, child) {
-  //             return ElevatedButton(
-  //               onPressed: () async {
-  //                 log.logout(context);
-  //               },
-  //               child: log.isLoggingOut
-  //                   ? Center(
-  //                       child: LoadingAnimationWidget.inkDrop(
-  //                         color: Color(0xfffb934d),
-  //                         size: 50,
-  //                       ),
-  //                     )
-  //                   : Icon(Icons.logout),
-  //             );
-  //           }))));
-  // }
-
   @override
   Widget build(BuildContext context) {
     // final loginProvider = context.watch<LoginControll>();
@@ -190,37 +152,6 @@ class _Logoutscreenui extends State<Logoutui> {
                                       ),
                               ),
                             ),
-                            // SizedBox(
-                            //   width: double.infinity,
-                            //   height: 52,
-                            //   child: ElevatedButton(
-                            //     onPressed: log.isLoggingOut
-                            //         ? null // Disables interaction while loading
-                            //         : () async => await log.logout(context),
-                            //     style: ElevatedButton.styleFrom(
-                            //       backgroundColor: const Color(0xfffb934d),
-                            //       foregroundColor: Colors.white,
-                            //       elevation: 0,
-                            //       disabledBackgroundColor: Colors.grey.shade200,
-                            //       shape: RoundedRectangleBorder(
-                            //         borderRadius: BorderRadius.circular(12),
-                            //       ),
-                            //     ),
-                            //     child: log.isLoggingOut
-                            //         ? Text(
-                            //             'Processing...',
-                            //             style: TextStyle(
-                            //                 color: Colors.grey.shade500,
-                            //                 fontWeight: FontWeight.w600),
-                            //           )
-                            //         : const Text(
-                            //             'Log Out',
-                            //             style: TextStyle(
-                            //                 fontSize: 16,
-                            //                 fontWeight: FontWeight.bold),
-                            //           ),
-                            //   ),
-                            // ),
                           ],
                         );
                       },
