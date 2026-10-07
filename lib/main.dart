@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:truenorthflutterfrontend/app/adminApplication/controller/admin_analytic_controller.dart';
 import 'package:truenorthflutterfrontend/app/adminApplication/controller/admin_dashBoard_provider.dart';
+import 'package:truenorthflutterfrontend/app/adminApplication/view/admin_shell.dart';
 import 'package:truenorthflutterfrontend/app/managerApplication/controller/teamLeaderCon.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/expenseModule/controller/expenseController.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userAuthModule/controller/login_provider.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userAuthModule/controller/logout_provider.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userHomePageModule/controller/homeLayoutController.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userAttendanceAndLeaveModule/controller/attendanceController.dart';
-import 'package:truenorthflutterfrontend/app/userApplication/userAuthModule/view/loading_screen.dart';
-
 import 'package:truenorthflutterfrontend/app/userApplication/userHomePageModule/controller/user_dashboard_provider.dart';
 import 'package:truenorthflutterfrontend/app/userApplication/userWorkModule/controller/user_project_provider.dart';
 import 'package:truenorthflutterfrontend/public/config/themdata.dart';
@@ -39,14 +39,17 @@ void main() async {
         ChangeNotifierProvider(create: (_) => Homelayoutcontroller()),
         ChangeNotifierProvider(create: (_) => Attendancecontroller()),
         ChangeNotifierProvider(create: (_) => Expensecontroller()),
-        ChangeNotifierProvider(create: (_) => LogoutProvider())
+        ChangeNotifierProvider(create: (_) => LogoutProvider()),
+
+        ///ADMIN DASH BOARD CONTROLLER
+        ChangeNotifierProvider(create: (_) => AdminAnalyticController())
       ],
       child: const MyApp(),
     ),
   );
 }
-
- class MyApp extends StatefulWidget {
+ 
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
@@ -76,7 +79,7 @@ class _MyAppState extends State<MyApp> {
         //     ? AdminSplashScreen()
         //     : LoadingScreen());
         // home: AdminShell());
-         home: LoadingScreen());
-       // home: AdminShell());
+        // home: LoadingScreen());
+        home: AdminShell());
   }
 }

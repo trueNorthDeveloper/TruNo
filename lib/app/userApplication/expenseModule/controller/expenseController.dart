@@ -263,9 +263,7 @@ class Expensecontroller extends ChangeNotifier {
   Future<void> callingDailyExpense() async {
     await dailyExpenseMethod(curreentDate.year, curreentDate.month,
         forceRefresh: true);
-    // int month = curreentDate.month;
-    // int year = curreentDate.year;
-    // await dailyExpenseMethod(year, month);
+   
   }
 
   //String? _lastFetchedMonth;

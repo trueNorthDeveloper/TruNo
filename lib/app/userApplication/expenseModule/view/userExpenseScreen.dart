@@ -251,7 +251,41 @@ Widget _expenseShowCalendar(Expensecontroller expenseProvider) {
         },
         calendarBuilders: CalendarBuilders(
           holidayBuilder: (context, day, focusedDay) {
-            return _buildCalendarCell(day: day, textColor: Colors.red.shade300);
+            final normalizedDate = DateTime(day.year, day.month, day.day);
+            final DailySummary? summary =
+                expenseProvider.summaryByDate[normalizedDate];
+
+            // Default style for Holiday (e.g., Sunday)
+            Color bgColor = Colors.transparent;
+            Color textColor = Colors.red.shade300;
+            BoxBorder? border;
+            String? amountText;
+            BoxShape shape = BoxShape.circle;
+
+            if (summary != null) {
+              final String apiStatus = summary.status.toString().toUpperCase();
+              final num expenses = summary.totalExpensesPerDay;
+
+              // If Sunday is a holiday but status is PRESENT, change background to a red circle
+              if (apiStatus == "PRESENT") {
+                bgColor = Colors.red.shade50; // Soft red background circle
+                textColor = Colors.red.shade900;
+                border = Border.all(color: Colors.red.shade200, width: 1);
+                if (expenses > 0) amountText = "₹$expenses";
+              } else if (apiStatus == "UPCOMING") {
+                bgColor = Colors.grey.shade100;
+                textColor = Colors.grey.shade500;
+              }
+            }
+
+            return _buildCalendarCell(
+              day: day,
+              bgColor: bgColor,
+              textColor: textColor,
+              border: border,
+              amountText: amountText,
+              shape: shape, // Passes shape down to maintain circles
+            );
           },
           defaultBuilder: (context, day, focusedDay) {
             final normalizedDate = DateTime(day.year, day.month, day.day);
@@ -305,6 +339,61 @@ Widget _expenseShowCalendar(Expensecontroller expenseProvider) {
           },
         ),
       ),
+      //     holidayBuilder: (context, day, focusedDay) {
+      //       return _buildCalendarCell(day: day, textColor: Colors.red.shade300);
+      //     },
+      //     defaultBuilder: (context, day, focusedDay) {
+      //       final normalizedDate = DateTime(day.year, day.month, day.day);
+      //       final DailySummary? summary =
+      //           expenseProvider.summaryByDate[normalizedDate];
+
+      //       Color? bgColor;
+      //       Color textColor = Colors.black87;
+      //       BoxBorder? border;
+      //       String? amountText;
+
+      //       if (summary != null) {
+      //         final String apiStatus = summary.status.toString().toUpperCase();
+      //         final num expenses = summary.totalExpensesPerDay;
+
+      //         if (apiStatus == "PRESENT") {
+      //           bgColor = Colors.green.shade50;
+      //           textColor = Colors.green.shade900;
+      //           border = Border.all(color: Colors.green.shade200, width: 1);
+      //           if (expenses > 0) amountText = "₹$expenses";
+      //         } else if (apiStatus == "UPCOMING") {
+      //           bgColor = Colors.grey.shade100;
+      //           textColor = Colors.grey.shade500;
+      //         }
+      //       }
+
+      //       return _buildCalendarCell(
+      //         day: day,
+      //         bgColor: bgColor,
+      //         textColor: textColor,
+      //         border: border,
+      //         amountText: amountText,
+      //       );
+      //     },
+      //     selectedBuilder: (context, day, focusedDay) {
+      //       return Container(
+      //         margin: const EdgeInsets.all(4.0),
+      //         alignment: Alignment.center,
+      //         decoration: BoxDecoration(
+      //           color: Colors.blue.shade600,
+      //           shape: BoxShape.circle,
+      //         ),
+      //         child: Text(
+      //           '${day.day}',
+      //           style: const TextStyle(
+      //             color: Colors.white,
+      //             fontWeight: FontWeight.bold,
+      //           ),
+      //         ),
+      //       );
+      //     },
+      //   ),
+      // ),
 //show list of expense e
       _buildExpenseBreakdown(expenseProvider),
     ],
@@ -317,13 +406,14 @@ Widget _buildCalendarCell({
   required Color textColor,
   BoxBorder? border,
   String? amountText,
+  BoxShape shape = BoxShape.circle,
 }) {
   return Container(
     margin: const EdgeInsets.all(4.0),
     alignment: Alignment.center,
     decoration: BoxDecoration(
       color: bgColor,
-      shape: BoxShape.circle,
+      shape: shape,
       border: border,
     ),
     child: Column(
@@ -570,6 +660,13 @@ void _showUpdateDialog(
                       ),
                     ),
                   );
+                  //CALLING AGAIN SAME  EXPENSE METHOD SAME MONTH EXPENSE IF EXPENSE UPDATE SUCCESSS
+
+                  DateTime parseDate = DateTime.parse(summary.expenseDate);
+                  int year = parseDate.year;
+                  int month = parseDate.month;
+                  pro.getMyAccountBalace();
+                  pro.dailyExpenseMethod(year, month, forceRefresh: true);
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
