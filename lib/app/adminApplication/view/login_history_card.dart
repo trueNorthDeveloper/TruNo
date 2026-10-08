@@ -374,20 +374,50 @@ class _RecordTableState extends State<_RecordTable> {
               width: tableWidth,
               child: Column(
                 children: [
-                  // ---------- FIXED header (never scrolls vertically) ----------
                   Container(
-                    height: 40,
-                    color: const Color(0xffF5F7FB),
+                    height: 35,
+                    decoration: BoxDecoration(
+                      // borderRadius: BorderRadius.circular(10),
+                      color: const Color.fromARGB(255, 128, 176, 223),
+                      border: const Border(
+                        top: BorderSide(
+                          color: Color(0xFFE5E7EB),
+                          width: 1,
+                        ),
+                        bottom: BorderSide(
+                          color: Color(0xFFDDE3EA),
+                          width: 1,
+                        ),
+                      ),
+                    ),
                     child: Row(
                       children: [
                         for (int i = 0; i < _cols.length; i++)
                           _cell(
                             w(i),
-                            Text(
-                              _cols[i].$1,
-                              style: TextStyle(
+                            Container(
+                              alignment: Alignment.centerLeft,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  right: BorderSide(
+                                    color: const Color(0xFFE5E7EB),
+                                    width: i == _cols.length - 1 ? 0 : 1,
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                _cols[i].$1,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
                                   fontSize: s.text,
-                                  fontWeight: FontWeight.bold),
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF374151),
+                                  letterSpacing: 0.2,
+                                ),
+                              ),
                             ),
                           ),
                       ],
@@ -474,8 +504,8 @@ class DataColumnclass extends StatelessWidget {
   final List<String> columnsList = const [
     'Employee',
     'ID',
-    'Role',
-    'Date',
+    'Role'
+        'Date',
     'Time',
     'Address',
     'Longitude',

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:truenorthflutterfrontend/app/adminApplication/model/admin_all_employee.dart';
 
 class AllUserCard extends StatefulWidget {
-  const AllUserCard({super.key,required this.users});
+  const AllUserCard({super.key, required this.users});
   final List<Employee> users;
   @override
   State<AllUserCard> createState() => _AllUserContentState();
@@ -11,16 +11,17 @@ class AllUserCard extends StatefulWidget {
 class _AllUserContentState extends State<AllUserCard> {
   final _search = TextEditingController();
   String _query = '';
-  
+
   List<Employee> get _filtered => _query.isEmpty
       ? widget.users
       : widget.users.where((r) => r.matches(_query)).toList();
-   @override
+  @override
   void dispose() {
     _search.dispose();
     super.dispose();
   }
-@override
+
+  @override
   Widget build(BuildContext context) {
     // One Card only (original had two nested boxes with double shadows)
     return Card(
@@ -38,25 +39,85 @@ class _AllUserContentState extends State<AllUserCard> {
               children: [
                 _Header(s: s, total: widget.users.length),
                 SizedBox(height: s.gap),
+                //search bar with filtering data............
+                // SizedBox(
+                //   height: s.compact ? 36 : 40,
+                //   child: TextField(
+                //     controller: _search,
+                //     onChanged: (v) => setState(() => _query = v.trim()),
+                //     style: TextStyle(fontSize: s.text),
+                //     decoration: InputDecoration(
+                //       hintText:
+                //           s.compact ? 'Search' : 'Search employee, ID or role',
+                //       hintStyle: TextStyle(fontSize: s.text),
+                //       prefixIcon: Icon(Icons.search, size: s.compact ? 16 : 20),
+                //       contentPadding: EdgeInsets.zero,
+                //       filled: true,
+                //       fillColor: const Color(0xffF5F7FB),
+                //       border: OutlineInputBorder(
+                //         borderRadius: BorderRadius.circular(8),
+                //         borderSide: BorderSide.none,
+                //       ),
+                //     ),
+                //   ),
+                // ),
                 SizedBox(
                   height: s.compact ? 36 : 40,
-                  child: TextField(
-                    controller: _search,
-                    onChanged: (v) => setState(() => _query = v.trim()),
-                    style: TextStyle(fontSize: s.text),
-                    decoration: InputDecoration(
-                      hintText:
-                          s.compact ? 'Search' : 'Search employee, ID or role',
-                      hintStyle: TextStyle(fontSize: s.text),
-                      prefixIcon: Icon(Icons.search, size: s.compact ? 16 : 20),
-                      contentPadding: EdgeInsets.zero,
-                      filled: true,
-                      fillColor: const Color(0xffF5F7FB),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
+
+                  //color: Colors.amber,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      SizedBox(
+                        width: s.compact ? 200 : 180,
+                        child: TextField(
+                          controller: _search,
+                          onChanged: (v) => setState(() => _query = v.trim()),
+                          style: TextStyle(fontSize: s.text),
+                          decoration: InputDecoration(
+                            hintText: s.compact
+                                ? 'Search'
+                                : 'Search employee, ID or role',
+                            hintStyle: TextStyle(fontSize: s.text),
+                            prefixIcon:
+                                Icon(Icons.search, size: s.compact ? 16 : 20),
+                            contentPadding: EdgeInsets.zero,
+                            filled: true,
+                            fillColor: const Color(0xffF5F7FB),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              //borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                      SizedBox(
+                          child: TextButton.icon(
+                              icon: Icon(
+                                Icons.add,
+                                size: s.compact ? 16 : 20,
+                              ),
+                              onPressed: () {},
+                              label: Text("Add User")))
+                      // TextField(
+                      //   controller: _search,
+                      //   onChanged: (v) => setState(() => _query = v.trim()),
+                      //   style: TextStyle(fontSize: s.text),
+                      //   decoration: InputDecoration(
+                      //     hintText:
+                      //         s.compact ? 'Search' : 'Search employee, ID or role',
+                      //     hintStyle: TextStyle(fontSize: s.text),
+                      //     prefixIcon: Icon(Icons.search, size: s.compact ? 2 : 3),
+                      //     contentPadding: EdgeInsets.zero,
+                      //     filled: true,
+                      //     fillColor: const Color(0xffF5F7FB),
+                      //     border: OutlineInputBorder(
+                      //       borderRadius: BorderRadius.circular(8),
+                      //       borderSide: BorderSide.none,
+                      //     ),
+                      //   ),
+                      // ),
+                    ],
                   ),
                 ),
                 SizedBox(height: s.gap),
@@ -232,7 +293,6 @@ class _RoleChip extends StatelessWidget {
   }
 }
 
-// ---------- tablet/web: table ----------
 class _RecordTable extends StatefulWidget {
   const _RecordTable({required this.rows, required this.s});
   final List<Employee> rows;
@@ -245,10 +305,38 @@ class _RecordTable extends StatefulWidget {
 class _RecordTableState extends State<_RecordTable> {
   // Own controller: the Scrollbar and the scroll view MUST share it.
   final _vertical = ScrollController();
+  final _horizontal = ScrollController();
 
+  static const _cols = <(String, double)>[
+    ('Emp ID', 160),
+    ('Name', 100),
+    ('DOB', 110),
+    ('Email', 220),
+    ('Join Date', 110),
+    ('Designation', 140),
+    ('System Name', 140),
+    ('System Type', 120),
+    ('Working Type', 120),
+    ('CL', 80),
+    ('ML', 80),
+    ('Password', 120),
+    ('Mobile', 130),
+    ('Location', 160),
+    ('Created Date', 130),
+    ('Role', 120),
+    ('Cur CL', 90),
+    ('Cur ML', 90),
+    ('Cur LWP', 100),
+    ('Next CL', 90),
+    ('Next ML', 90),
+    ('UI Status', 110),
+    ('Work Status', 120),
+    ("Action", 120)
+  ];
   @override
   void dispose() {
     _vertical.dispose();
+    _horizontal.dispose();
     super.dispose();
   }
 
@@ -256,94 +344,272 @@ class _RecordTableState extends State<_RecordTable> {
   Widget build(BuildContext context) {
     final s = widget.s;
 
-    return LayoutBuilder(
-      builder: (context, c) => Scrollbar(
-        controller: _vertical,
-        thumbVisibility: true,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          controller: _vertical,
+    final baseWidth = _cols.fold<double>(0, (sum, c) => sum + c.$2);
+    return LayoutBuilder(builder: (context, c) {
+      final tableWidth = baseWidth > c.maxWidth ? baseWidth : c.maxWidth;
+      final scale = tableWidth / baseWidth;
+      double w(int i) => _cols[i].$2 * scale;
+
+      return Scrollbar(
+          controller: _horizontal,
+          thumbVisibility: true,
+          notificationPredicate: (n) => n.depth == 0,
           child: SingleChildScrollView(
-            scrollDirection: Axis.vertical, // table never overflows
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minWidth: c.maxWidth), // fill width
-              child: DataTable(
-                columnSpacing: s.gap * 2,
-                headingRowHeight: 40,
-                dataRowMinHeight: 44,
-                dataRowMaxHeight: 54,
-                headingTextStyle:
-                    TextStyle(fontSize: s.text, fontWeight: FontWeight.bold),
-                dataTextStyle:
-                    TextStyle(fontSize: s.text, color: Colors.black87),
-                columns: const [
-                 // DataColumn(label: Text('UUID')),
-                  DataColumn(label: Text('Emp ID')),
-                  DataColumn(label: Text('Name')),
-                  DataColumn(label: Text('DOB')),
-                  DataColumn(label: Text('Email')),
-                  DataColumn(label: Text('Join Date')),
-                  DataColumn(label: Text('Designation')),
-                  DataColumn(label: Text('System Name')),
-                  DataColumn(label: Text('System Type')),
-                  DataColumn(label: Text('Working Type')),
-                  DataColumn(label: Text('CL')),
-                  DataColumn(label: Text('ML')),
-                  DataColumn(label: Text('Password')),
-                  DataColumn(label: Text('Mobile')),
-                  DataColumn(label: Text('Location')),
-                  DataColumn(label: Text('Created Date')),
-                  DataColumn(label: Text('Role')),
-                  DataColumn(label: Text('Cur CL')),
-                  DataColumn(label: Text('Cur ML')),
-                  DataColumn(label: Text('Cur LWP')),
-                  DataColumn(label: Text('Next CL')),
-                  DataColumn(label: Text('Next ML')),
-                  DataColumn(label: Text('UI Status')),
-                  DataColumn(label: Text('Work Status')),
-                ],
-                rows: [
-                  for (final r in widget.rows)
-                    DataRow(cells: [
-                     // DataCell(Text(r.uuid?.toString() ?? 'N/A')),
-                      DataCell(Text(r.empId ?? 'N/A')),
-                      DataCell(Text(r.empName ?? 'N/A',
-                          overflow: TextOverflow.ellipsis)),
-                      DataCell(Text(r.empDob ?? 'N/A')),
-                      DataCell(Text(r.empEmail ?? 'N/A')),
-                      DataCell(Text(r.joinDate ?? 'N/A')),
-                      DataCell(Text(r.empDesignation ?? 'N/A')),
-                      DataCell(Text(r.empSystemName ?? 'N/A')),
-                      DataCell(Text(r.empSystemType ?? 'N/A')),
-                      DataCell(Text(r.empWorkingType ?? 'N/A')),
-                      DataCell(Text(r.empCl?.toString() ?? '0')),
-                      DataCell(Text(r.empMl?.toString() ?? '0')),
-                      DataCell(Text(r.empPassword ?? 'N/A')),
-                      DataCell(Text(r.empMobile ?? 'N/A')),
-                      DataCell(Text(r.empWorkingLocation ?? 'N/A')),
-                      DataCell(Text(r.createdDate ?? 'N/A')),
-                      // Using your _RoleChip component for the role column
-                      DataCell(_RoleChip(
-                          role: r.role ?? 'EMP',
-                          isLeader: r.role == 'ADMIN',
-                          size: s.text - 1)),
-                      DataCell(Text(r.curcl?.toString() ?? '0')),
-                      DataCell(Text(r.cuml?.toString() ?? '0')),
-                      DataCell(Text(r.curlwp?.toString() ?? '0')),
-                      DataCell(Text(r.nextcl?.toString() ?? '0')),
-                      DataCell(Text(r.nextml?.toString() ?? '0')),
-                      DataCell(Text(r.userInterface?.toString() ?? 'Null')),
-                      DataCell(Text(r.workStatus ?? 'N/A')),
-                    ]),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+            scrollDirection: Axis.horizontal,
+            controller: _horizontal,
+            // table never overflows
+            child: SizedBox(
+                width: tableWidth,
+                child: Column(children: [
+                  Container(
+                    height: 35,
+                    decoration: BoxDecoration(
+                      // borderRadius: BorderRadius.circular(10),
+                      color: const Color.fromARGB(255, 128, 176, 223),
+                      border: const Border(
+                        top: BorderSide(
+                          color: Color(0xFFE5E7EB),
+                          width: 1,
+                        ),
+                        bottom: BorderSide(
+                          color: Color(0xFFDDE3EA),
+                          width: 1,
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        for (int i = 0; i < _cols.length; i++)
+                          _cell(
+                            w(i),
+                            Container(
+                              alignment: Alignment.centerLeft,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  right: BorderSide(
+                                    color: const Color(0xFFE5E7EB),
+                                    width: i == _cols.length - 1 ? 0 : 1,
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                _cols[i].$1,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: s.text,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF374151),
+                                  letterSpacing: 0.2,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  Expanded(
+                      child: Scrollbar(
+                          child: ListView.separated(
+                              itemBuilder: (_, index) {
+                                final r = widget.rows[index];
+                                final style = TextStyle(
+                                    fontSize: s.text, color: Colors.black87);
+                                return SizedBox(
+                                  height: 48,
+                                  child: Row(
+                                    children: [
+                                      //  _cell(w(0),Text(r.empName!,style: style,maxLines: 1,overflow: TextOverflow.ellipsis,))
+
+                                      CircleAvatar(
+                                        radius: s.avatar,
+                                        backgroundColor: Colors.blue.shade50,
+                                        child: Text(
+                                          r.empName!.isEmpty
+                                              ? '?'
+                                              : r.empName![0].toUpperCase(),
+                                          style: TextStyle(
+                                              fontSize: s.text,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.blue),
+                                        ),
+                                      ),
+                                      _cell(
+                                          w(0),
+                                          Text(r.empId ?? '',
+                                              style: style,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis)),
+                                      _cell(
+                                          w(1),
+                                          Text(r.empName!,
+                                              style: style,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis)),
+                                      _cell(
+                                          w(2),
+                                          Text(r.empDob!,
+                                              style: style,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis)),
+                                      _cell(
+                                          w(3),
+                                          Text(r.empEmail!,
+                                              style: style,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis)),
+                                      _cell(
+                                          w(4),
+                                          Text(r.joinDate!,
+                                              style: style,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis)),
+                                      _cell(
+                                          w(5),
+                                          Text(r.empDesignation!,
+                                              style: style,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis)),
+                                      _cell(
+                                          w(6),
+                                          Text(r.empSystemName!,
+                                              style: style,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis)),
+                                      _cell(
+                                          w(7),
+                                          Text(r.empSystemType!,
+                                              style: style,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis)),
+                                      _cell(
+                                          w(8),
+                                          Text(r.workStatus!,
+                                              style: style,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis)),
+                                      _cell(
+                                          w(9),
+                                          Text('${r.empCl!}',
+                                              style: style,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis)),
+                                      _cell(
+                                          w(10),
+                                          Text('${r.empMl!}',
+                                              style: style,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis)),
+                                      _cell(
+                                          w(11),
+                                          Text(r.empPassword!,
+                                              style: style,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis)),
+                                      _cell(
+                                          w(12),
+                                          Text(r.empMobile!,
+                                              style: style,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis)),
+                                      _cell(
+                                          w(13),
+                                          Text(r.empWorkingLocation!,
+                                              style: style,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis)),
+                                      _cell(
+                                          w(14),
+                                          Text(r.createdDate ?? '',
+                                              style: style,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis)),
+
+                                      _RoleChip(
+                                          role: r.role!,
+                                          isLeader: true,
+                                          size: s.text - 1),
+
+                                      // _cell(
+                                      //     w(15),
+                                      //     Text(r.role ?? '',
+                                      //         style: style,
+                                      //         maxLines: 1,
+                                      //         overflow: TextOverflow.ellipsis)),
+                                      _cell(
+                                          w(16),
+                                          Text('${r.curcl ?? ''}',
+                                              style: style,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis)),
+                                      _cell(
+                                          w(17),
+                                          Text('${r.cuml ?? ''}',
+                                              style: style,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis)),
+                                      _cell(
+                                          w(18),
+                                          Text('${r.curlwp ?? ''}',
+                                              style: style,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis)),
+                                      _cell(
+                                          w(19),
+                                          Text('${r.nextcl ?? '1'}',
+                                              style: style,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis)),
+                                      _cell(
+                                          w(20),
+                                          Text('${r.nextml ?? '3'}',
+                                              style: style,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis)),
+                                      _cell(
+                                          w(21),
+                                          Text(r.userInterface ?? 'Civil',
+                                              style: style,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis)),
+                                      _cell(
+                                          w(22),
+                                          Text(r.workStatus ?? 'Present',
+                                              style: style,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis)),
+                                      SizedBox(
+                                          child: Row(
+                                        children: [
+                                          IconButton(
+                                              onPressed: () {},
+                                              icon: Icon(Icons.edit)),
+                                          IconButton(
+                                              onPressed: () {},
+                                              icon: Icon(Icons.delete))
+                                        ],
+                                      ))
+                                    ],
+                                  ),
+                                );
+                              },
+                              separatorBuilder: (_, __) => const Divider(
+                                    height: 1,
+                                  ),
+                              itemCount: widget.rows.length))),
+                ])),
+          ));
+    });
   }
+
+  Widget _cell(double width, Widget child) => SizedBox(
+        width: width,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Align(alignment: Alignment.centerLeft, child: child),
+        ),
+      );
 }
-
- 
-
